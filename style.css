@@ -1,19 +1,8 @@
 @charset "UTF-8";
 
 html {
+  font-size: 16px;
   width: 100%;
-}
-
-@media (orientation: portrait) {
-  :root, html {
-    font-size: calc(16px + 0.4vw);
-  }
-}
-
-@media (orientation: landscape) {
-  :root, html {
-    font-size: 16px;
-  }
 }
 
 * {
