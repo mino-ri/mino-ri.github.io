@@ -114,7 +114,7 @@ a:active {
 h2 {
   margin: 1rem 0;
   padding: 0 1rem;
-  font-size: 3rem;
+  font-size: 2.5rem;
   background-color: #287950;
   color: white;
 }
@@ -134,14 +134,11 @@ article > h3 {
   vertical-align: middle;
 }
 
-article > p {
+article p {
   padding: 0.5rem;
 }
 
 img {
-  display: block;
-  max-width: 90vw;
-  max-height: 70vh;
   margin: 0 auto;
 }
 
@@ -153,14 +150,19 @@ img.icon {
   vertical-align: text-bottom;
 }
 
-article > footer {
+article ul {
   display: flex;
   padding: 0 0.25rem 0.25rem 0.25rem;
   flex-direction: row;
   justify-content: left;
 }
 
-article > footer > a {
+article ul > li {
+  list-style: none;
+  display: block;
+}
+
+article ul a {
   display: block;
   margin: 0.25rem;
   padding: 0.25rem;
@@ -176,4 +178,33 @@ body > footer {
   text-align: center;
   background-color: #1A5135;
   color: white;
+}
+
+@media (max-width: 767px) {
+  .article-container > img {
+    display: block;
+    max-width: 90vw;
+    object-fit: contain;
+  }
+}
+
+@media (min-width: 768px) {
+  .article-container {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: left;
+  }
+
+  .article-container > img {
+    display: block;
+    width: 55%;
+    max-height: 60vh;
+    object-fit: contain;
+    flex: none;
+  }
+
+  .article-container > div {
+    flex: auto;
+  } 
 }
