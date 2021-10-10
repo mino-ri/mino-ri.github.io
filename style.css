@@ -1,25 +1,25 @@
 @charset "UTF-8";
 
-* {
-  line-height: 1.5em;
-  margin: 0;
-  padding: 0;
-}
-
 html {
   width: 100%;
 }
 
 @media (orientation: portrait) {
-  :root {
+  :root, html {
     font-size: calc(16px + 0.4vw);
   }
 }
 
 @media (orientation: landscape) {
-  :root {
+  :root, html {
     font-size: 16px;
   }
+}
+
+* {
+  line-height: 1.5em;
+  margin: 0;
+  padding: 0;
 }
 
 body {
@@ -29,6 +29,7 @@ body {
   padding: 0;
   color: black;
   background-color: #f3f3f9;
+  font-size: 1rem;
 }
 
 /* 共通背景 */
@@ -54,7 +55,6 @@ nav {
   display: block;
   position: sticky;
   top: 0;
-  font-size: 0;
 }
 
 nav > ul {
@@ -62,6 +62,7 @@ nav > ul {
   flex-direction: row;
   justify-content: left;
   padding: 0.125rem;
+  height: 2.25rem;
 }
 
 nav > ul > li {
@@ -76,11 +77,13 @@ nav > ul > li > a {
   width: 2rem;
   height: 2rem;
   border-radius: 1rem;
-  font-size: 0;
   background-color: white;
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
+  text-indent: 100%;
+  white-space: nowrap;
+  overflow: hidden;
 }
 
 a.github {
