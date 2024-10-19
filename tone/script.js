@@ -79,9 +79,9 @@ class WaveHeader {
 class WaveData {
     constructor(size) {
         this.size = size;
-        this.data = new Uint8Array(size);
+        this.data = new Float64Array(size);
         for (let i = 0; i < size; i++) {
-            this.data[i] = 128;
+            this.data[i] = 0.0;
         }
     }
 
@@ -91,12 +91,12 @@ class WaveData {
 
     writeDataTo(writer) {
         for (let i = 0; i < this.size; i++) {
-            writer.writeByte(this.data[i]);
+            writer.writeByte(Math.min(255, Math.floor(this.data[i] * 128.0) + 128));
         }
     }
 
     addFloat(index, value) {
-        this.data[index] = Math.max(0, Math.min(255, this.data[index] + Math.floor(value * 127.0)));
+        this.data[index] += value;
     }
 
     addSine(hz, volume, begin, length) {
@@ -104,8 +104,12 @@ class WaveData {
         const length2 = Math.floor(Math.floor(length / wavelength) * wavelength);
         const phase = Math.PI * 2 * hz / 44100;
         for (let i = 0; i < length2; i++) {
-            this.addFloat(i + begin, Math.sin(i * phase) * volume);
+            const startVolume = volume * Math.min(500, i) / 500.0;
+            const endVolume = volume * Math.min(2000, length2 - i) / 2000.0;
+            this.addFloat(i + begin, Math.sin(i * phase) * Math.min(startVolume, endVolume));
         }
+
+        return length2;
     }
 }
 
@@ -248,32 +252,56 @@ function deleteRow(elm) {
     tr.parentNode.deleteRow(tr.sectionRowIndex);
 }
 
-function createAudio() {
-    const source = document.getElementById("textarea_tones").value + "";
+function readAudio(source, autoPlay) {
     const lines = readTones(source);
     if (lines.length == 0) {
         return;
     }
-    const data = new WaveData(44100 * 2);
+    // コード演奏
+    const chordData = new WaveData(44100 * 2);
     for (let i = 0; i < lines.length; i++) {
-        data.addSine(lines[i], 0.95 / lines.length, 0, 80000);
+        chordData.addSine(lines[i], 0.95 / lines.length, 0, 80000);
     }
+    const base64Encoded = "data:audio/wav;base64," + WaveWriter.fromChunks([WaveHeader.monaural, chordData]).encodeBase64();
+    const chordAudio = document.createElement("audio");
+    chordAudio.src = base64Encoded;
+    chordAudio.controls = true;
 
-    const k = WaveWriter.fromChunks([WaveHeader.monaural, data]);
-    const base64Encoded = "data:audio/wav;base64," + k.encodeBase64();
-    const audio = document.createElement("audio");
-    audio.src = base64Encoded;
-    audio.controls = true;
-    audio.play();
+    // アルペジオ演奏
+    const arpData = new WaveData(20000 * lines.length + 10000);
+    for (let i = 0; i < lines.length; i++) {
+        arpData.addSine(lines[i], 0.75, i * 20000, 20000);
+    }
+    const arpAudio = document.createElement("audio");
+    arpAudio.src = "data:audio/wav;base64," + WaveWriter.fromChunks([WaveHeader.monaural, arpData]).encodeBase64();
+    arpAudio.controls = true;
+
+    if (autoPlay) {
+        arpAudio.play();
+    }
     const tdCode = document.createElement("td");
     tdCode.innerText = source;
     const tdAudio = document.createElement("td");
-    tdAudio.appendChild(audio);
+    tdAudio.appendChild(chordAudio);
+    const tdAudio2 = document.createElement("td");
+    tdAudio2.appendChild(arpAudio);
     const tdOperation = document.createElement("td");
     tdOperation.innerHTML = '<input type="button" value="削除" onclick="javascript:deleteRow(this)" />';
     const tr = document.createElement("tr");
     tr.appendChild(tdCode);
     tr.appendChild(tdAudio);
+    tr.appendChild(tdAudio2);
     tr.appendChild(tdOperation);
     document.getElementById("tones").prepend(tr);
 }
+
+function createAudio() {
+    const source = document.getElementById("textarea_tones").value + "";
+    readAudio(source, true);
+}
+
+window.onload = () => {
+    readAudio("C4\nC4 * 5/4\nC4 * 3/2", false);
+    readAudio("'31\nBb3\nD4\nF4\nG#4", false);
+    readAudio("C4\nE4\nG4", false);
+};
