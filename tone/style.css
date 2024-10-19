@@ -1,0 +1,89 @@
+@charset "utf-8";
+
+html {
+    font-size: 16px;
+    width: 100%;
+}
+
+* {
+    line-height: 1.5em;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    width: 100%;
+    font-family: "Segoe UI", "Helvetica Neue", "Hiragino Kaku Gothic ProN", "メイリオ", "meiryo", sans-serif;
+    margin: 0;
+    padding: 0;
+    color: black;
+    background-color: #f3f3f9;
+    font-size: 1rem;
+}
+    
+h1 {
+    background-color: #1A5135;
+    display: block;
+    top: 0;
+    color: white;
+    font-size: 2rem;
+    padding: 0.25rem 0.25rem;
+}
+
+h2 {
+    margin: 1rem 0;
+    padding: 0 1rem;
+    font-size: 2.5rem;
+    background-color: #287950;
+    color: white;
+}
+  
+div {
+    margin-top: 0.8rem;
+    margin-bottom: 0.8rem;
+}
+
+code {
+    padding: 2px;
+    border-radius: 2px;
+    color: #000000;
+    background-color: #d8d8d8;
+}
+
+table {
+    border-collapse: collapse;
+    border-width: 1px;
+    border-color: #203050;
+    border-style: solid;
+    margin-top: 0.8rem;
+    margin-bottom: 0.8rem;
+}
+
+thead tr {
+    background-color: #203050;
+    color: #ffffff;
+}
+
+tbody tr {
+    background-color: #ffffff;
+    color: #000000;
+}
+
+tbody tr:nth-child(odd) {
+    background-color: #f0f4ff;
+}
+
+td {
+    padding: 0.5rem;
+}
+
+article {
+  background-color: white;
+  margin: 1rem;
+  padding: 1rem;
+  border-radius: 0.5rem;
+}
+
+textarea {
+    padding: 4px;
+}
