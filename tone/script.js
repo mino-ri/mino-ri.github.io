@@ -143,6 +143,32 @@ const toneSettings = {
         semiTone: 2.0 ** (2.0 / 31.0),
         quatTone: 2.0 ** (1.0 / 31.0),
     },
+    "M": {
+        baseTones: {
+            C: 27.5 * (5 ** (-0.75)) * 2.0,
+            D: 27.5 * (5 ** (-0.25)),
+            E: 27.5 * (5 ** 0.25) / 2.0,
+            F: 27.5 * 0.8,
+            G: 27.5 * (1.25 ** (-0.5)),
+            A: 27.5,
+            B: 27.5 * (1.25 ** 0.5),
+        },
+        semiTone: (5.0 ** 1.75) / 16.0,
+        quatTone: 128.0 / 125.0,
+    },
+    "P": {
+        baseTones: {
+            C: 27.5 * (16.0 / 27.0),
+            D: 27.5 * (2.0 / 3.0),
+            E: 27.5 * (3.0 / 4.0),
+            F: 27.5 * (64.0 / 81.0),
+            G: 27.5 * (8.0 / 9.0),
+            A: 27.5,
+            B: 27.5 * (9.0 / 8.0),
+        },
+        semiTone: 16.0 / 15.0,
+        quatTone: 4.0 / Math.sqrt(15.0),
+    },
 };
 
 var toneSetting = toneSettings["12"];
@@ -197,6 +223,12 @@ function readTone(text) {
     let result = 0.0;
     if (text == "'31") {
         toneSetting = toneSettings["31"];
+        return 0;
+    } else if (text == "'M") {
+        toneSetting = toneSettings["M"];
+        return 0;
+    } else if (text == "'P") {
+        toneSetting = toneSettings["P"];
         return 0;
     } else if (text == "'12") {
         toneSetting = toneSettings["12"];
