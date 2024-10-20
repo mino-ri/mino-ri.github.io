@@ -87,3 +87,11 @@ article {
 textarea {
     padding: 4px;
 }
+
+.vs-table-container {
+    overflow-x: auto;
+}
+
+.vs-table-container td, .vs-table-container th {
+    text-wrap: nowrap;
+}
