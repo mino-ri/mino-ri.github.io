@@ -14,9 +14,8 @@
     <body>
         <h1>音程可視化</h1>
         <section>
-            <h2>メモ</h2>
+            <h2>ピッチクラス図</h2>
             <article>
-                <h3>ピッチクラス図</h3>
                 <div class="pitch-class">
                     <svg id="pitch_class_figure" width="400" height="300">
                         <circle class="base" />
@@ -25,12 +24,18 @@
                     </svg>
                 </div>
                 <p>
-                    分数をスペース区切りで記述してください。入力した値をxとして、<math><msub><mi>log</mi><mn>2</mn></msub><mi>x</mi></math>の値の小数部分をプロットします。
+                    分数をスペース区切りで記述してください。入力した値をxとして、<math><msub><mi>log</mi><mn>2</mn></msub><mi>x</mi></math> の小数部分をプロットします。
                     <br />
                     例: <code>1 5/4 3/2</code>
                 </p>
                 <div>
-                    <textarea id="textarea_pitches" name="textarea_pitches" rows="5" cols="50" oninput="javascript:createFigure()">1 5/4 3/2</textarea>
+                    <textarea
+                        id="textarea_pitches"
+                        name="textarea_pitches"
+                        rows="5"
+                        placeholder="1 5/4 3/2"
+                        oninput="javascript:createFigure()"
+                    >1 5/4 3/2</textarea>
                 </div>
             </article>
         </section>

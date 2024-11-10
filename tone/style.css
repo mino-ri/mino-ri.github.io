@@ -102,6 +102,7 @@ article {
 
 textarea {
     padding: 4px;
+    width: calc(100% - 8px);
 }
 
 .vs-table-container {
