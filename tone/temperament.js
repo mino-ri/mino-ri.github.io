@@ -92,7 +92,7 @@ function readPitch(text, index) {
 }
 
 var figureRadius = 100;
-var centerX = 200;
+var centerX = 150;
 var centerY = 150;
 
 function calcPitchClass(frequency) {
@@ -123,6 +123,7 @@ function createPitchPoint(frequency) {
     const figureSvg = $("pitch_point_group");
     const pitchPoint = document.createElementNS("http://www.w3.org/2000/svg", "circle");
     pitchPoint.setAttribute("class", "pitch");
+    pitchPoint.setAttribute("r", 6);
     pitchPoint.style.cx = calcX(pitchClass);
     pitchPoint.style.cy = calcY(pitchClass);
     figureSvg.appendChild(pitchPoint);

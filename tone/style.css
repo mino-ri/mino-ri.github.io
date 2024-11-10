@@ -114,20 +114,17 @@ textarea {
 }
 
 div.pitch-class {
-    margin: 0.5rem auto 0.5rem;
+    margin: 0.5rem auto;
+    max-width: 500px;
 }
 
 circle.base {
-    cx: 200;
-    cy: 150;
-    r: 100;
     stroke: gray;
     stroke-width: 2;
     fill: transparent;
 }
 
 circle.pitch {
-    r: 6;
     stroke-width: 0;
     fill: black;
 }
