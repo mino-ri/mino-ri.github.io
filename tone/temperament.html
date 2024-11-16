@@ -15,7 +15,7 @@
         <h1>音程可視化</h1>
         <section>
             <h2>ピッチクラス図</h2>
-            <article>
+            <article class="pitch-class-container">
                 <div class="pitch-class">
                     <svg id="pitch_class_figure" viewbox="0 0 300 300">
                         <circle class="base" cx="150" cy="150" r="100" />
@@ -23,40 +23,30 @@
                         <g id="pitch_point_group"></g>
                     </svg>
                 </div>
-                <p>
-                    分数をスペース区切りで記述してください。入力した値をxとして、<math><msub><mi>log</mi><mn>2</mn></msub><mi>x</mi></math> の小数部分をプロットします。
-                    <br />
-                    例: <code>1 5/4 3/2</code>
-                </p>
-                <div>
-                    <textarea
-                        id="textarea_pitches"
-                        name="textarea_pitches"
-                        rows="5"
-                        placeholder="1 5/4 3/2"
-                        oninput="javascript:createFigure()"
-                    >1 5/4 3/2</textarea>
+                <div class="pitch-class-control">
+                    <p>
+                        「値」には相対的な周波数を整数または分数で入力してください。入力した値をxとして、<math><msub><mi>log</mi><mn>2</mn></msub><mi>x</mi></math> の小数部分をプロットします。
+                        <br />
+                        例: <code>5/4</code>
+                    </p>
+                    <div id="control_container">
+                        <div class="control-tone">
+                            <div>
+                                <label for="freq0">値</label>
+                                <input type="text" id="freq0" name="freq0" value="4" oninput="javascript:createFigure();" />
+                            </div>
+                            <div>
+                                <label for="pitch_color0">色</label>
+                                <input type="color" id="pitch_color0" name="pitch_color0" value="#000000" />
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <input type="button" name="button_add" value="末尾に追加" onclick="javascript:addTone();" />
+                        <input type="button" name="button_add" value="末尾を削除" onclick="javascript:removeLastTone();" />
+                    </div>
                 </div>
             </article>
         </section>
-        <!--
-            <math display="block">
-                <mo>×</mo>
-                <mfrac><mn>3</mn><mn>2</mn></mfrac>
-            </math>
-            <p>
-                累乗
-            </p>
-            <math display="block">
-                <msup><mn>2</mn><mn>5</mn></msup>
-            </math>
-            <p>
-                平方根・n乗根
-            </p>
-            <math display="block">
-                <msqrt><mn>5</mn></msqrt> <mo>×</mo>
-                <mroot><mn>12</mn><mn>3</mn></mroot>
-            </math>
-        -->
     </body>
 </html>

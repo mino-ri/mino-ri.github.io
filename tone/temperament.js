@@ -118,54 +118,152 @@ function resetFigure() {
     }
 }
 
-function createPitchPoint(frequency) {
+function pitchPointId(index) {
+    return `pitch_point${index}`;
+}
+
+function ratioLineId(index) {
+    return `ratio_line${index}`;
+}
+
+function createPitchPoint(frequency, index, color) {
     const pitchClass = calcPitchClass(frequency);
     const figureSvg = $("pitch_point_group");
     const pitchPoint = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    pitchPoint.id = pitchPointId(index);
     pitchPoint.setAttribute("class", "pitch");
     pitchPoint.setAttribute("r", 6);
-    pitchPoint.style.cx = calcX(pitchClass);
-    pitchPoint.style.cy = calcY(pitchClass);
+    pitchPoint.setAttribute("cx", calcX(pitchClass));
+    pitchPoint.setAttribute("cy", calcY(pitchClass));
+    pitchPoint.style.fill = color;
     figureSvg.appendChild(pitchPoint);
 }
 
-function createRatioLine(frequency1, frequency2) {
+function createRatioLine(frequency1, frequency2, index, color) {
     const pitchClass1 = calcPitchClass(frequency1);
     const pitchClass2 = calcPitchClass(frequency2);
     const figureSvg = $("ratio_line_group");
     const ratioLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    ratioLine.id = ratioLineId(index);
     ratioLine.setAttribute("class", "ratio");
     ratioLine.setAttribute("x1", calcX(pitchClass1));
     ratioLine.setAttribute("y1", calcY(pitchClass1));
     ratioLine.setAttribute("x2", calcX(pitchClass2));
     ratioLine.setAttribute("y2", calcY(pitchClass2));
+    ratioLine.style.stroke = color;
     figureSvg.appendChild(ratioLine);
 }
 
 function createFigure() {
-    const source = document.getElementById("textarea_pitches").value + "";
-    const pitches = source
-        .split(" ")
-        .map(s => s.trim())
-        .filter(s => s != "")
-        .map(s => readPitch(s, 0))
-        .filter(pitch => isFinite(pitch) && pitch > 0);
+    const container = $(controlContainerName);
+    const toneCount = (container.childElementCount + 1) / 2;
 
     resetFigure();
-    var prevPitch = NaN;
-    for (let pitch of pitches) {
-        createPitchPoint(pitch);
-        if (prevPitch > 0) {
-            createRatioLine(prevPitch, pitch);
+    let prevPitch = NaN;
+    for (var i = 0; i < toneCount; i++) {
+        var pitch = readPitch($(`freq${i}`).value, 0);
+        if (!isFinite(pitch) || pitch <= 0) {
+            pitch = 1;
+        }
+        createPitchPoint(pitch, i, $(`pitch_color${i}`).value);
+        
+        if (prevPitch > 0 && $(`ratio${i}`).checked) {
+            createRatioLine(prevPitch, pitch, i, $(`ratio_color${i}`).value);
         }
         prevPitch = pitch;
     }
 }
 
+var controlContainerName = "control_container";
+
+function createLabel(forId, content) {
+    const label = document.createElement("label");
+    label.htmlFor = forId;
+    label.innerText = content;
+    return label;
+}
+
+function createTextBox(id, value) {
+    const input = document.createElement("input");
+    input.id = id;
+    input.name = id;
+    input.type = "text";
+    input.value = value;
+    input.oninput = createFigure;
+    return input;
+}
+
+function createCheckBox(id, value) {
+    const input = document.createElement("input");
+    input.id = id;
+    input.name = id;
+    input.type = "checkbox";
+    input.checked = value;
+    input.oninput = createFigure;
+    return input;
+}
+
+function createColor(id, value) {
+    const input = document.createElement("input");
+    input.id = id;
+    input.name = id;
+    input.type = "color";
+    input.value = value;
+    input.oninput = createFigure;
+    return input;
+}
+
+// '末尾に追加'ボタン
+function addTone() {
+    const container = $(controlContainerName);
+    const childCount = (container.childElementCount + 1) / 2;
+    const controlRatio = document.createElement("div");
+    controlRatio.className = "control-ratio";
+    {
+        const divRatioVisible = document.createElement("div");
+        divRatioVisible.appendChild(createCheckBox(`ratio${childCount}`, true));
+        divRatioVisible.append(" ");
+        divRatioVisible.appendChild(createLabel(`ratio${childCount}`, "線を表示"));
+        controlRatio.appendChild(divRatioVisible);
+
+        const divRatioColor = document.createElement("div");
+        divRatioColor.appendChild(createLabel(`ratio_color${childCount}`, "色"));
+        divRatioColor.append(" ");
+        divRatioColor.appendChild(createColor(`ratio_color${childCount}`, "#ff0000"));
+        controlRatio.appendChild(divRatioColor);
+    }
+    container.appendChild(controlRatio);
+
+    const controlTone = document.createElement("div");
+    controlTone.className = "control-tone";
+    {
+        const divFreq = document.createElement("div");
+        divFreq.appendChild(createLabel(`freq${childCount}`, "値"));
+        divFreq.append(" ");
+        divFreq.appendChild(createTextBox(`freq${childCount}`, "1"))
+        controlTone.appendChild(divFreq);
+
+        const divPitchColor = document.createElement("div");
+        divPitchColor.appendChild(createLabel(`pitch_color${childCount}`, "色"));
+        divPitchColor.append(" ");
+        divPitchColor.appendChild(createColor(`pitch_color${childCount}`, "#000000"));
+        controlTone.appendChild(divPitchColor);
+     }
+    container.appendChild(controlTone);
+    createFigure();
+}
+
+// '末尾を削除'ボタン
+function removeLastTone() {
+    const container = $(controlContainerName);
+    if (container.childElementCount <= 1) {
+        return;
+    }
+    container.removeChild(container.lastElementChild);
+    container.removeChild(container.lastElementChild);
+    createFigure();
+}
+
 window.onload = () => {
-    createPitchPoint(1);
-    createPitchPoint(1.25);
-    createPitchPoint(1.5);
-    createRatioLine(1, 1.25);
-    createRatioLine(1.25, 1.5);
+    createPitchPoint(4, 0, "#000000");
 };

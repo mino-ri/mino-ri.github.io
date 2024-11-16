@@ -1,11 +1,5 @@
 @charset "utf-8";
 
-:root {
-    --figure-radius: 100;
-    --figure-height: 200;
-    --figure-width: 50;
-}
-
 html {
     font-size: 16px;
     width: 100%;
@@ -113,11 +107,6 @@ textarea {
     text-wrap: nowrap;
 }
 
-div.pitch-class {
-    margin: 0.5rem auto;
-    max-width: 500px;
-}
-
 circle.base {
     stroke: gray;
     stroke-width: 2;
@@ -132,4 +121,78 @@ circle.pitch {
 line.ratio {
     stroke: red;
     stroke-width: 2;
+}
+
+/* arrangement */
+.pitch-class-container {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: stretch;
+}
+
+.pitch-class {
+    flex: 1;
+    background-color: white;
+}
+
+.pitch-class-control {
+    flex: 1;
+}
+
+.control-tone {
+    background-color: #d8d8d8;
+    padding: 2px;
+    margin: 0;
+    border-radius: 6px;
+    display: flex;
+}
+
+.control-tone > div {
+    margin: 6px;
+    flex: 1;
+}
+
+.control-ratio {
+    margin: 0 0.5rem 0;
+    border-left: 3px solid #d8d8d8;
+    padding: 2px;
+    display: flex;
+}
+
+.control-ratio > div {
+    margin: 6px;
+    flex: 1;
+}
+
+@media (max-width: 767px) {
+    .pitch-class-container {
+        flex-direction: column;
+    }
+
+    #pitch_class_figure {
+        margin: 0.5rem auto;
+    }
+
+    .pitch-class {
+        margin: 0;
+        position: sticky;
+        top: 0;
+    }
+}
+  
+@media (min-width: 768px) {
+    .pitch-class-container {
+        flex-direction: row;
+    }
+
+    #pitch_class_figure {
+        position: sticky;
+        top: 0;
+    }
+
+    .pitch-class {
+        margin: 0 auto;
+        min-width: 500px;
+        max-width: 80vh;
+    }
 }
