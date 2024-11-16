@@ -63,18 +63,87 @@ function readInteger(text, index) {
     return { index: i, num: result };
 }
 
-// text の index 文字目から、n/d の形で表される分数を読み込む
-function readFraction(text, index) {
-    let { index: i, num: value } = readInteger(text, index);
+// 先行するスペースをスキップ
+function skipSpaces(text, index) {
+    let i = index;
+    for (; i < text.length && text.charAt(i).trim() == ""; i++) {
+    }
+    return i;
+}
+
+function readFactor(text, index) {
+    let i = skipSpaces(text, index);
+    if (i < text.length && text.charAt(i) == "(") {
+        let { index: i1, num: value } = readTerm(text, i + 1);
+        i1 = skipSpaces(text, i1);
+        if (i1 < text.length && text.charAt(i1) == ")") {
+            i1++;
+        }
+        return { index: i1, num: value };
+    } else {
+        return readInteger(text, i);
+    }
+}
+
+// text の index 文字目から、 n^i の形で表される累乗を読み込む
+function readPow(text, index) {
+    let { index: i, num: value } = readFactor(text, index);
     for (; i < text.length; i++) {
         const c = text.charAt(i) + "";
         if (c.trim() == "") {
             continue;
-        } else if (c == "/") {
-            let { index: i1, num: denominator } = readInteger(text, i + 1);
-            return { index: i1, num: value / denominator };
+        } else if (c == "^") {
+            let { index: i1, num: power } = readFactor(text, i + 1);
+            return { index: i1, num: value ** power };
         } else {
-            i = i - 1;
+            break;
+        }
+    }
+
+    return { index: i, num: value };
+}
+
+// text の index 文字目から、n/d の形で表される分数を読み込む
+function readFraction(text, index) {
+    let { index: i, num: value } = readPow(text, index);
+    for (; i < text.length; i++) {
+        const c = text.charAt(i) + "";
+        console.log(`index: ${i} : '${c}'`);
+        if (c.trim() == "") {
+            continue;
+        } else if (c == "/") {
+            let { index: i1, num: denominator } = readPow(text, i + 1);
+            i = i1 - 1;
+            value = value / denominator;
+        } else if (c == "*") {
+            let { index: i1, num: operand } = readPow(text, i + 1);
+            i = i1 - 1;
+            value = value * operand;
+        } else {
+            break;
+        }
+    }
+
+    return { index: i, num: value };
+}
+
+// text の index 文字目から、n/d の形で表される分数を読み込む
+function readTerm(text, index) {
+    let { index: i, num: value } = readFraction(text, index);
+    for (; i < text.length; i++) {
+        const c = text.charAt(i) + "";
+        console.log(`index: ${i} : '${c}'`);
+        if (c.trim() == "") {
+            continue;
+        } else if (c == "+") {
+            let { index: i1, num: operand } = readFraction(text, i + 1);
+            i = i1 - 1;
+            value = value + operand;
+        } else if (c == "-") {
+            let { index: i1, num: operand } = readFraction(text, i + 1);
+            i = i1 - 1;
+            value = value - operand;
+        } else {
             break;
         }
     }
@@ -84,7 +153,7 @@ function readFraction(text, index) {
 
 function readPitch(text, index) {
     try {
-        let { num } = readFraction(text, 0);
+        let { num } = readTerm(text, 0);
         return num;
     } catch {
         return NaN;
