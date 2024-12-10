@@ -111,6 +111,19 @@ class WaveData {
 
         return length2;
     }
+
+    addSaw(hz, volume, begin, length) {
+        const wavelength = 44100 / hz;
+        const length2 = Math.floor(Math.floor(length / wavelength) * wavelength);
+        const phase = 44100 / hz;
+        for (let i = 0; i < length2; i++) {
+            const startVolume = volume * Math.min(500, i) / 500.0;
+            const endVolume = volume * Math.min(2000, length2 - i) / 2000.0;
+            this.addFloat(i + begin, (((i % phase) / phase) * 1.2 - 0.6) * Math.min(startVolume, endVolume));
+        }
+
+        return length2;
+    }
 }
 
 const codePoint0 = "0".codePointAt(0);
@@ -284,7 +297,7 @@ function deleteRow(elm) {
     tr.parentNode.deleteRow(tr.sectionRowIndex);
 }
 
-function readAudio(source, autoPlay) {
+function readAudio(source, saw, autoPlay) {
     const lines = readTones(source);
     if (lines.length == 0) {
         return;
@@ -292,7 +305,11 @@ function readAudio(source, autoPlay) {
     // コード演奏
     const chordData = new WaveData(44100 * 2);
     for (let i = 0; i < lines.length; i++) {
-        chordData.addSine(lines[i], 0.95 / lines.length, 0, 80000);
+        if (saw) {
+            chordData.addSaw(lines[i], 0.95 / lines.length, 0, 80000);
+        } else {
+            chordData.addSine(lines[i], 0.95 / lines.length, 0, 80000);
+        }
     }
     const base64Encoded = "data:audio/wav;base64," + WaveWriter.fromChunks([WaveHeader.monaural, chordData]).encodeBase64();
     const chordAudio = document.createElement("audio");
@@ -302,7 +319,11 @@ function readAudio(source, autoPlay) {
     // アルペジオ演奏
     const arpData = new WaveData(20000 * lines.length + 10000);
     for (let i = 0; i < lines.length; i++) {
-        arpData.addSine(lines[i], 0.75, i * 20000, 20000);
+        if (saw) {
+            arpData.addSaw(lines[i], 0.75, i * 20000, 20000);
+        } else {
+            arpData.addSine(lines[i], 0.75, i * 20000, 20000);
+        }
     }
     const arpAudio = document.createElement("audio");
     arpAudio.src = "data:audio/wav;base64," + WaveWriter.fromChunks([WaveHeader.monaural, arpData]).encodeBase64();
@@ -329,11 +350,12 @@ function readAudio(source, autoPlay) {
 
 function createAudio() {
     const source = document.getElementById("textarea_tones").value + "";
-    readAudio(source, true);
+    const sawWave = document.getElementById("checkbox_saw").checked && true;
+    readAudio(source, sawWave, true);
 }
 
 window.onload = () => {
-    readAudio("C4\nC4 * 5/4\nC4 * 3/2", false);
-    readAudio("'31\nBb3\nD4\nF4\nG#4", false);
-    readAudio("C4\nE4\nG4", false);
+    readAudio("C4\nC4 * 5/4\nC4 * 3/2", false, false);
+    readAudio("'31\nBb3\nD4\nF4\nG#4", false, false);
+    readAudio("C4\nE4\nG4", false, false);
 };
