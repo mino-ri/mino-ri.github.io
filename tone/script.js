@@ -254,7 +254,7 @@ function readTone(text) {
             continue;
         } else if (toneSetting.baseTones[c]) {
             result = toneSetting.baseTones[c];
-        } else if (c == "#") {
+        } else if (c == "#" || c == "♯") {
             result *= toneSetting.semiTone;
         } else if (c == "b" || c == "♭") {
             result /= toneSetting.semiTone;
@@ -266,10 +266,14 @@ function readTone(text) {
             let { index, num } = readFraction(text, i + 1);
             i = index;
             result *= num;
-        } else if (c == "+") {
+        } else if (c == ">") {
             let { index, num } = readFraction(text, i + 1);
             i = index;
             result *= 2 ** num;
+        } else if (c == "<") {
+            let { index, num } = readFraction(text, i + 1);
+            i = index;
+            result *= 2 ** (-num);
         } else if (isDigit(c)) {
             let { index, num } = readFraction(text, i);
             i = index;
