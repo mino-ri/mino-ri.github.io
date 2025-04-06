@@ -54,6 +54,13 @@ article > h3 {
     margin-bottom: 0.5rem;
 }
 
+h4 {
+    color: #4E4B26;
+    font-size: 1.5rem;
+    margin-top: 0.8rem;
+    margin-bottom: 0.8rem;
+}
+
 hr {
     margin-top: 0.8rem;
     margin-bottom: 0.8rem;
