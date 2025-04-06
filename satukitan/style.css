@@ -1,0 +1,170 @@
+@charset "utf-8";
+
+@font-face {
+    font-family: 'SatukitanSans';
+    src: url('SatukitanSans.woff') format('woff');
+}
+
+html {
+    font-size: 16px;
+    width: 100%;
+}
+
+* {
+    line-height: 1.5em;
+    color: inherit;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    width: 100%;
+    font-family: sans-serif;
+    margin: 0;
+    padding: 0;
+    color: #363A3E;
+    background-color: #EEEDDA;
+    font-size: 1rem;
+}
+    
+h1 {
+    background-color: #4E4B26;
+    display: block;
+    top: 0;
+    color: #ffffff;
+    font-size: 2rem;
+    padding: 0.25rem 0.25rem;
+}
+
+h2 {
+    margin: 1rem 0;
+    padding: 0 1rem;
+    font-size: 2.5rem;
+    background-color: #775539;
+    color: #ffffff;
+}
+  
+article > h3 {
+    color: #4E4B26;
+    border-bottom: 1px solid #775539;
+    padding: 0.25rem 0.5rem;
+    font-size: 2rem;
+    border-radius: 0.5rem 0.5rem 0 0;
+    vertical-align: middle;
+    margin-bottom: 0.5rem;
+}
+
+hr {
+    margin-top: 0.8rem;
+    margin-bottom: 0.8rem;
+}
+
+div, p {
+    margin-top: 0.8rem;
+    margin-bottom: 0.8rem;
+}
+
+code {
+    padding: 2px;
+    border-radius: 2px;
+    color: #363A3E;
+    background-color: #d8d8d8;
+}
+
+div.table-wrap {
+    border-width: 1px;
+    border-color: #215F5C;
+    border-style: solid;
+}
+
+table {
+    border-collapse: separate;
+    border-width: 0px;
+    border-spacing: 0;
+    margin-top: 0.8rem;
+    margin-bottom: 0.8rem;
+}
+
+table.sticky > thead {
+    position: -webkit-sticky;
+    position: sticky;
+    top: 0px;
+}
+
+thead tr {
+    background-color: #215F5C;
+    color: #ffffff;
+}
+
+tbody tr {
+    background-color: #ffffff;
+    color: #363A3E;
+}
+
+tbody tr:nth-child(odd) {
+    background-color: #EEF8F8;
+}
+
+th, td {
+    padding: 0.2rem 0.5rem;
+}
+
+article {
+  background-color: #ffffff;
+  margin: 1rem;
+  padding: 1rem;
+  border-radius: 0.5rem;
+}
+
+textarea {
+    padding: 4px;
+    width: calc(100% - 8px);
+}
+
+.vs-table-container {
+    overflow-x: auto;
+}
+
+.vs-table-container td, .vs-table-container th {
+    text-wrap: nowrap;
+}
+
+.satu {
+    font-family: 'SatukitanSans';
+    font-feature-settings: "liga" 1;
+    -webkit-font-feature-settings: "liga" 1;
+}
+
+.large {
+    font-size: 2rem;
+}
+
+.thin {
+    font-weight: normal;
+}
+
+input.satu-switch + * + * {
+    font-family: 'SatukitanSans';
+    font-feature-settings: "liga" 1;
+    -webkit-font-feature-settings: "liga" 1;
+}
+
+input.satu-switch:checked + * + * {
+    font-family: sans-serif;
+}
+
+.center {
+    text-align: center;
+}
+
+.left {
+    text-align: left;
+}
+
+.nowrap {
+    white-space: nowrap;
+}
+
+.wrap {
+    white-space: wrap;
+}

@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="ja">
+    <head>
+        <meta charset="UTF-8" />
+        <meta http-equiv="Content-Type" content="text/html" />
+        <meta http-equiv="Content-Style-Type" content="text/css" />
+        <meta name="author" content="mino-ri" />
+        <meta name="copyright" content="copyright(C) 2025 mino-ri All rights reserved." />
+        <meta name="viewport" content="width=device-width">
+        <link href="style.css" rel="stylesheet" />
+        <title>論理人工言語 Satu Kitan</title>
+    </head>
+    <body>
+        <h1>論理人工言語 <span class="satu">satu kitav</span></h1>
+        <section>
+            <h2><span class="satu">sana sapotav!</span> Hello! こんにちは!</h2>
+            <article>
+                <h3>はじめに</h3>
+                <p>
+                    ここは、論理人工言語 <span class="satu">satu kitav</span> (読み方: Satu Kitan サトゥキタン)の紹介ページです。
+                </p>
+                <p>
+                    自由に書いてみよう
+                </p>
+                <div>
+                    <input class="satu-switch" type="checkbox" id="satu-switch" />
+                    <label for="satu-switch">ラテン文字転写を表示</label>
+                    <textarea style="font-size: 24px;">sana sapotav!</textarea>
+                </div>
+
+            </article>
+            <article>
+                <h3>動作環境</h2>
+                <p>
+                    このページは合字のあるフォントを使っています。
+                    下の枠に<b>同じ文字</b>が表示されている環境でのみ正しく表示できます。
+                </p>
+                <table class="center satu" style="font-size: 10rem;">
+                    <tbody>
+                        <tr>
+                            <td style="padding: 0 2rem;">ja</td>
+                            <td style="padding: 0 2rem;">w</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </article>
+        </section>
+        <section>
+            <h2>Satu Kitan の基礎</h2>
+            <article>
+                <h3>文字と記号一覧</h3>
+                <p>
+                    Satu Kitan の文字は音素文字ですが、日本語の「ん」に相当する読み方が変わる文字や、発音する記号があるのが特徴です。
+                    この表にある文字のほか、数を表すのにアラビア数字(0123456789)を使います。
+                </p>
+                <table class="sticky center nowarp">
+                    <thead>
+                        <tr><th>文字</th><th>文字名称</th><th>転写</th><th>音価</th><th>意味傾向</th><th>備考</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="satu large">a</td>
+                            <td><span class="satu">a</span><br />アー</td>
+                            <td>a</td>
+                            <td>/a/</td>
+                            <td class="left wrap">1</td>
+                            <td class="left wrap"></td>
+                        </tr>
+                        <tr>
+                            <td class="satu large">u</td>
+                            <td><span class="satu">u</span><br />ウー</td>
+                            <td>u</td>
+                            <td>/u/</td>
+                            <td class="left wrap">2</td>
+                            <td class="left wrap"></td>
+                        </tr>
+                        <tr>
+                            <td class="satu large">o</td>
+                            <td><span class="satu">o</span><br />オー</td>
+                            <td>o</td>
+                            <td>/o/</td>
+                            <td class="left wrap">3</td>
+                            <td class="left wrap"></td>
+                        </tr>
+                        <tr>
+                            <td class="satu large">e</td>
+                            <td><span class="satu">e</span><br />エー</td>
+                            <td>e</td>
+                            <td>/e/</td>
+                            <td class="left wrap">4</td>
+                            <td class="left wrap"></td>
+                        </tr>
+                        <tr>
+                            <td class="satu large">i</td>
+                            <td><span class="satu">i</span><br />イー</td>
+                            <td>i</td>
+                            <td>/i/</td>
+                            <td class="left wrap">5</td>
+                            <td class="left wrap"></td>
+                        </tr>
+                        <tr>
+                            <td class="satu large">ja</td>
+                            <td><span class="satu">ja</span><br />ヤー</td>
+                            <td>ja</td>
+                            <td>/ja/</td>
+                            <td class="left wrap">6</td>
+                            <td class="left wrap">jは「や行」の発音。</td>
+                        </tr>
+                        <tr>
+                            <td class="satu large">ju</td>
+                            <td><span class="satu">ju</span><br />ユー</td>
+                            <td>ju</td>
+                            <td>/ju/</td>
+                            <td class="left wrap">7</td>
+                            <td class="left wrap"></td>
+                        </tr>
+                        <tr>
+                            <td class="satu large">jo</td>
+                            <td><span class="satu">jo</span><br />ヨー</td>
+                            <td>jo</td>
+                            <td>/jo/</td>
+                            <td class="left wrap">8</td>
+                            <td class="left wrap"></td>
+                        </tr>
+                        <tr>
+                            <td class="satu large">je</td>
+                            <td><span class="satu">je</span><br />イェー</td>
+                            <td>je</td>
+                            <td>/je/</td>
+                            <td class="left wrap">9</td>
+                            <td class="left wrap"></td>
+                        </tr>
+                        <tr>
+                            <td class="satu large">v</td>
+                            <td><span class="satu">em</span><br />エン</td>
+                            <td>v</td>
+                            <td>/m/<br />/əm/</td>
+                            <td class="left wrap">0</td>
+                            <td class="left wrap">
+                                日本語の「ん」に相当し、前後の文字によって [n] [m] [ŋ] などで発音される。<br />
+                                0を表す単語 <span class="satu">rv</span> /rəm/ でのみ母音のように扱われ [əm] と発音する。<br />
+                                転写文字と発音が異なるので注意。
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="satu large">n</td>
+                            <td><span class="satu">na</span><br />ナー</td>
+                            <td>n</td>
+                            <td>/n/</td>
+                            <td class="left wrap">時間、継続</td>
+                            <td class="left wrap"></td>
+                        </tr>
+                        <tr>
+                            <td class="satu large">t</td>
+                            <td><span class="satu">ta</span><br />ター</td>
+                            <td>t</td>
+                            <td>/t/</td>
+                            <td class="left wrap">結果<br />未来</td>
+                            <td class="left wrap"></td>
+                        </tr>
+                        <tr>
+                            <td class="satu large">d</td>
+                            <td><span class="satu">da</span><br />ダー</td>
+                            <td>d</td>
+                            <td>/d/</td>
+                            <td class="left wrap">主要</td>
+                            <td class="left wrap"></td>
+                        </tr>
+                        <tr>
+                            <td class="satu large">s</td>
+                            <td><span class="satu">sa</span><br />サー</td>
+                            <td>s</td>
+                            <td>/s/</td>
+                            <td class="left wrap">動作<br />活動</td>
+                            <td class="left wrap"></td>
+                        </tr>
+                        <tr>
+                            <td class="satu large">m</td>
+                            <td><span class="satu">ma</span><br />マー</td>
+                            <td>m</td>
+                            <td>/m/</td>
+                            <td class="left wrap">否定<br />逆</td>
+                            <td class="left wrap"></td>
+                        </tr>
+                        <tr>
+                            <td class="satu large">p</td>
+                            <td><span class="satu">pa</span><br />パー</td>
+                            <td>p</td>
+                            <td>/p/</td>
+                            <td class="left wrap">生物<br />気持ち</td>
+                            <td class="left wrap"></td>
+                        </tr>
+                        <tr>
+                            <td class="satu large">b</td>
+                            <td><span class="satu">ba</span><br />バー</td>
+                            <td>b</td>
+                            <td>/b/</td>
+                            <td class="left wrap">場所<br />空間</td>
+                            <td class="left wrap"></td>
+                        </tr>
+                        <tr>
+                            <td class="satu large">f</td>
+                            <td><span class="satu">fa</span><br />ファー</td\>
+                            <td>f</td>
+                            <td>/ɸ/</td>
+                            <td class="left wrap">補助的<br />副次的</td>
+                            <td class="left wrap">日本語の「ふ」の子音。[f]で発音してもよい。</td>
+                        </tr>
+                        <tr>
+                            <td class="satu large">q</td>
+                            <td><span class="satu">qa</span><br />カ゚ー</td>
+                            <td>q</td>
+                            <td>/ŋ/</td>
+                            <td class="left wrap">空<br />神聖</td>
+                            <td class="left wrap">転写文字と発音が異なるので注意。</td>
+                        </tr>
+                        <tr>
+                            <td class="satu large">k</td>
+                            <td><span class="satu">ka</span><br />カー</td>
+                            <td>k</td>
+                            <td>/k/</td>
+                            <td class="left wrap">過程<br />過去</td>
+                            <td class="left wrap"></td>
+                        </tr>
+                        <tr>
+                            <td class="satu large">g</td>
+                            <td><span class="satu">ga</span><br />ガー</td>
+                            <td>g</td>
+                            <td>/g/</td>
+                            <td class="left wrap">肯定<br />積極的</td>
+                            <td class="left wrap"></td>
+                        </tr>
+                        <tr>
+                            <td class="satu large">h</td>
+                            <td><span class="satu">ha</span><br />ハー</td>
+                            <td>h</td>
+                            <td>/x/</td>
+                            <td class="left wrap">疑問</td>
+                            <td class="left wrap">日本語の「ひ」の子音。</td>
+                        </tr>
+                        <tr>
+                            <td class="satu large">r</td>
+                            <td><span class="satu">ra</span><br />ラー</td>
+                            <td>r</td>
+                            <td>/r/</td>
+                            <td class="left wrap">数、計算</td>
+                            <td class="left wrap"></td>
+                        </tr>
+                        <tr>
+                            <td class="satu large">'</td>
+                            <td><span class="satu">ete</span><br />エッテ</td>
+                            <td>'</td>
+                            <td>/t/</td>
+                            <td class="left wrap"></td>
+                            <td class="left wrap">
+                                修飾節の始まりを表す記号。<br />
+                                通常は[t]で発音されるが、強調する場合は[t<sup>h</sup>e]と発音する。
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="satu large">,</td>
+                            <td><span class="satu">ete</span><br />エッケ</td>
+                            <td>,</td>
+                            <td>/k/</td>
+                            <td class="left wrap"></td>
+                            <td class="left wrap">
+                                修飾節の終わりを表す記号。文末では発音しない。<br />
+                                通常は[k]で発音されるが、強調する場合は[k<sup>h</sup>e]と発音する。
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="satu large">;</td>
+                            <td><span class="satu">epe</span><br />エッペ</td>
+                            <td>;</td>
+                            <td>/p/</td>
+                            <td class="left wrap"></td>
+                            <td class="left wrap">
+                                動詞節の終わりを表す記号。文末では発音しない。<br />
+                                通常は[p]で発音されるが、強調する場合は[p<sup>h</sup>e]と発音する。
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="satu large">#</td>
+                            <td><span class="satu">ere</span><br />エレ</td>
+                            <td>#</td>
+                            <td>/rə/</td>
+                            <td class="left wrap"></td>
+                            <td class="left wrap">
+                                単語(特に数か一般名詞か紛らわしいもの)が数であることを表す記号。<br />
+                                アラビア数字導入前はよく使われていたが、現代ではあまり使われない。
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="satu large">.</td>
+                            <td><span class="satu">teme</span><br />テメ</td>
+                            <td>.</td>
+                            <td></td>
+                            <td class="left wrap"></td>
+                            <td class="left wrap">
+                                文末を表す記号。いわゆる句点、ピリオド。
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="satu large">!</td>
+                            <td><span class="satu">ateme</span><br />アッテメ</td>
+                            <td>!</td>
+                            <td></td>
+                            <td class="left wrap"></td>
+                            <td class="left wrap">
+                                主張や驚きを表す文で <span class="satu">.</span> のかわりに使う記号。
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="satu large">?</td>
+                            <td><span class="satu">hateme</span><br />ハッテメ</td>
+                            <td>?</td>
+                            <td></td>
+                            <td class="left wrap"></td>
+                            <td class="left wrap">
+                                疑問や質問を表す文で <span class="satu">.</span> のかわりに使う記号。
+                            </td>
+                        </tr>
+
+                    </tbody>
+                </table>
+            </article>
+        </section>
+    </body>
+</html>
