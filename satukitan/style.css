@@ -64,6 +64,10 @@ h4 {
 hr {
     margin-top: 0.8rem;
     margin-bottom: 0.8rem;
+    border-top: 0;
+    border-left: 0;
+    border-right: 0;
+    border-bottom: 1px solid #DBD0C7;
 }
 
 div, p {
@@ -114,6 +118,18 @@ tbody tr:nth-child(odd) {
 
 th, td {
     padding: 0.2rem 0.5rem;
+}
+
+table.cell-alt tbody tr:nth-child(odd) td:nth-child(even),
+table.cell-alt tbody tr:nth-child(even) td:nth-child(odd)
+ {
+    background-color: #ffffff;
+}
+
+table.cell-alt tbody tr:nth-child(odd) td:nth-child(odd),
+table.cell-alt tbody tr:nth-child(even) td:nth-child(even)
+ {
+    background-color: #EEF8F8;
 }
 
 article {
@@ -174,4 +190,53 @@ input.satu-switch:checked + * + * {
 
 .wrap {
     white-space: wrap;
+}
+
+.red {
+    color: #DF4121;
+}
+
+.blue {
+    color: #217BDF;
+}
+
+.green {
+    color: #339564;
+}
+
+.yellow {
+    color: #C3B827;
+}
+
+span.trans {
+    display: inline-block;
+}
+
+dl.trans {
+    display: inline-block;
+}
+
+dl.trans + dl.trans {
+    margin-left: 0.3rem;
+}
+
+dl.trans > dt {
+    font-family: 'SatukitanSans';
+    font-feature-settings: "liga" 1;
+    -webkit-font-feature-settings: "liga" 1;
+
+    border-bottom: solid #775539 1px;
+    display: block;
+    color: #000000;
+    font-size: 1.5rem;
+}
+
+dl.trans > dt + dd {
+    display: block;
+    color: #775539;
+    font-size: 0.8rem;
+}
+
+dl.trans > dt + dd + dd {
+    display: block;
 }

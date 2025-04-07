@@ -35,11 +35,11 @@
                     このページは合字のあるフォントを使っています。
                     下の枠に<b>同じ文字</b>が表示されている環境でのみ正しく表示できます。
                 </p>
-                <table class="center satu" style="font-size: 10rem;">
+                <table class="center satu" style="font-size: 3rem;">
                     <tbody>
                         <tr>
-                            <td style="padding: 0 2rem;">ja</td>
-                            <td style="padding: 0 2rem;">w</td>
+                            <td style="padding: 0 1rem;">ja</td>
+                            <td style="padding: 0 1rem;">w</td>
                         </tr>
                     </tbody>
                 </table>
@@ -48,14 +48,69 @@
         <section>
             <h2>Satu Kitan の基礎</h2>
             <article>
-                <h3>文字と記号一覧</h3>
+                <h3>文字と記号</h3>
                 <p>
-                    Satu Kitan の文字は音素文字ですが、日本語の「ん」に相当する読み方が変わる文字や、発音する記号があるのが特徴です。
-                    この表にある文字のほか、数を表すのにアラビア数字(0123456789)を使います。
+                    Satu Kitan の文字は音素文字であり、<span class="satu">v</span>を除いて2通り以上の読み方を持つ文字は存在しません。
                 </p>
+                <h4>文字表・ラテン文字転写</h3>
+                <p>
+                    Satu Kitan を表記する文字は <span class="satu">ritu kitav</span>(Ritu Kitan)または
+                    <span class="satu">rituskita</span>(Ritus-kita) と呼ばれ、次の表に黒で示した26文字で構成されます。
+                    <br />
+                    記号に見える 「<span class="satu">'</span>」「<span class="satu">;</span>」「<span class="satu">,</span>」も文章中で発音されるため、他の記号とは区別して"アルファベット"側に含めます。
+                    <br />
+                    赤で示した4種類の文字は発音されないため記号として扱われます。
+                </p>
+                <table class="sticky center nowrap cell-alt" style="width: 100%; max-width: 40rem; table-layout: fixed;">
+                    <tbody>
+                        <tr>
+                            <td><span class="satu large">a</span><br />a</td>
+                            <td><span class="satu large">u</span><br />u</td>
+                            <td><span class="satu large">o</span><br />o</td>
+                            <td><span class="satu large">e</span><br />e</td>
+                            <td><span class="satu large">i</span><br />i</td>
+                        </tr>
+                        <tr>
+                            <td><span class="satu large">ja</span><br />ja</td>
+                            <td><span class="satu large">ju</span><br />ju</td>
+                            <td><span class="satu large">jo</span><br />jo</td>
+                            <td><span class="satu large">je</span><br />je</td>
+                            <td><span class="satu large">v</span><br />v</td>
+                        </tr>
+                        <tr>
+                            <td><span class="satu large">n</span><br />n</td>
+                            <td><span class="satu large">t</span><br />t</td>
+                            <td><span class="satu large">d</span><br />d</td>
+                            <td><span class="satu large">s</span><br />s</td>
+                            <td><span class="satu large">'</span><br />'</td>
+                        </tr>
+                        <tr>
+                            <td><span class="satu large">m</span><br />m</td>
+                            <td><span class="satu large">p</span><br />p</td>
+                            <td><span class="satu large">b</span><br />b</td>
+                            <td><span class="satu large">f</span><br />f</td>
+                            <td><span class="satu large">;</span><br />;</td>
+                        </tr>
+                        <tr>
+                            <td><span class="satu large">q</span><br />q</td>
+                            <td><span class="satu large">k</span><br />k</td>
+                            <td><span class="satu large">g</span><br />g</td>
+                            <td><span class="satu large">h</span><br />h</td>
+                            <td><span class="satu large">,</span><br />,</td>
+                        </tr>
+                        <tr>
+                            <td><span class="satu large">r</span><br />r</td>
+                            <td class="red"><span class="satu large">#</span><br />#</td>
+                            <td class="red"><span class="satu large">.</span><br />.</td>
+                            <td class="red"><span class="satu large">!</span><br />!</td>
+                            <td class="red"><span class="satu large">?</span><br />?</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <h4>文字一覧</h3>
                 <table class="sticky center nowarp">
                     <thead>
-                        <tr><th>文字</th><th>文字名称</th><th>転写</th><th>音価</th><th>意味傾向</th><th>備考</th></tr>
+                        <tr><th>文字</th><th>文字名称</th><th>転写</th><th>音価</th><th>意味</th></tr>
                     </thead>
                     <tbody>
                         <tr>
@@ -64,7 +119,6 @@
                             <td>a</td>
                             <td>/a/</td>
                             <td class="left wrap">1</td>
-                            <td class="left wrap"></td>
                         </tr>
                         <tr>
                             <td class="satu large">u</td>
@@ -72,7 +126,6 @@
                             <td>u</td>
                             <td>/u/</td>
                             <td class="left wrap">2</td>
-                            <td class="left wrap"></td>
                         </tr>
                         <tr>
                             <td class="satu large">o</td>
@@ -80,7 +133,6 @@
                             <td>o</td>
                             <td>/o/</td>
                             <td class="left wrap">3</td>
-                            <td class="left wrap"></td>
                         </tr>
                         <tr>
                             <td class="satu large">e</td>
@@ -88,7 +140,6 @@
                             <td>e</td>
                             <td>/e/</td>
                             <td class="left wrap">4</td>
-                            <td class="left wrap"></td>
                         </tr>
                         <tr>
                             <td class="satu large">i</td>
@@ -96,7 +147,6 @@
                             <td>i</td>
                             <td>/i/</td>
                             <td class="left wrap">5</td>
-                            <td class="left wrap"></td>
                         </tr>
                         <tr>
                             <td class="satu large">ja</td>
@@ -104,7 +154,6 @@
                             <td>ja</td>
                             <td>/ja/</td>
                             <td class="left wrap">6</td>
-                            <td class="left wrap">jは「や行」の発音。</td>
                         </tr>
                         <tr>
                             <td class="satu large">ju</td>
@@ -112,7 +161,6 @@
                             <td>ju</td>
                             <td>/ju/</td>
                             <td class="left wrap">7</td>
-                            <td class="left wrap"></td>
                         </tr>
                         <tr>
                             <td class="satu large">jo</td>
@@ -120,7 +168,6 @@
                             <td>jo</td>
                             <td>/jo/</td>
                             <td class="left wrap">8</td>
-                            <td class="left wrap"></td>
                         </tr>
                         <tr>
                             <td class="satu large">je</td>
@@ -128,27 +175,20 @@
                             <td>je</td>
                             <td>/je/</td>
                             <td class="left wrap">9</td>
-                            <td class="left wrap"></td>
                         </tr>
                         <tr>
                             <td class="satu large">v</td>
                             <td><span class="satu">em</span><br />エン</td>
                             <td>v</td>
-                            <td>/m/<br />/əm/</td>
+                            <td>/m/ ※1<br />/əm/</td>
                             <td class="left wrap">0</td>
-                            <td class="left wrap">
-                                日本語の「ん」に相当し、前後の文字によって [n] [m] [ŋ] などで発音される。<br />
-                                0を表す単語 <span class="satu">rv</span> /rəm/ でのみ母音のように扱われ [əm] と発音する。<br />
-                                転写文字と発音が異なるので注意。
-                            </td>
                         </tr>
                         <tr>
                             <td class="satu large">n</td>
                             <td><span class="satu">na</span><br />ナー</td>
                             <td>n</td>
                             <td>/n/</td>
-                            <td class="left wrap">時間、継続</td>
-                            <td class="left wrap"></td>
+                            <td class="left wrap">時間<br />継続</td>
                         </tr>
                         <tr>
                             <td class="satu large">t</td>
@@ -156,7 +196,6 @@
                             <td>t</td>
                             <td>/t/</td>
                             <td class="left wrap">結果<br />未来</td>
-                            <td class="left wrap"></td>
                         </tr>
                         <tr>
                             <td class="satu large">d</td>
@@ -164,7 +203,6 @@
                             <td>d</td>
                             <td>/d/</td>
                             <td class="left wrap">主要</td>
-                            <td class="left wrap"></td>
                         </tr>
                         <tr>
                             <td class="satu large">s</td>
@@ -172,7 +210,6 @@
                             <td>s</td>
                             <td>/s/</td>
                             <td class="left wrap">動作<br />活動</td>
-                            <td class="left wrap"></td>
                         </tr>
                         <tr>
                             <td class="satu large">m</td>
@@ -180,7 +217,6 @@
                             <td>m</td>
                             <td>/m/</td>
                             <td class="left wrap">否定<br />逆</td>
-                            <td class="left wrap"></td>
                         </tr>
                         <tr>
                             <td class="satu large">p</td>
@@ -188,7 +224,6 @@
                             <td>p</td>
                             <td>/p/</td>
                             <td class="left wrap">生物<br />気持ち</td>
-                            <td class="left wrap"></td>
                         </tr>
                         <tr>
                             <td class="satu large">b</td>
@@ -196,7 +231,6 @@
                             <td>b</td>
                             <td>/b/</td>
                             <td class="left wrap">場所<br />空間</td>
-                            <td class="left wrap"></td>
                         </tr>
                         <tr>
                             <td class="satu large">f</td>
@@ -204,7 +238,6 @@
                             <td>f</td>
                             <td>/ɸ/</td>
                             <td class="left wrap">補助的<br />副次的</td>
-                            <td class="left wrap">日本語の「ふ」の子音。[f]で発音してもよい。</td>
                         </tr>
                         <tr>
                             <td class="satu large">q</td>
@@ -212,7 +245,6 @@
                             <td>q</td>
                             <td>/ŋ/</td>
                             <td class="left wrap">空<br />神聖</td>
-                            <td class="left wrap">転写文字と発音が異なるので注意。</td>
                         </tr>
                         <tr>
                             <td class="satu large">k</td>
@@ -220,7 +252,6 @@
                             <td>k</td>
                             <td>/k/</td>
                             <td class="left wrap">過程<br />過去</td>
-                            <td class="left wrap"></td>
                         </tr>
                         <tr>
                             <td class="satu large">g</td>
@@ -228,7 +259,6 @@
                             <td>g</td>
                             <td>/g/</td>
                             <td class="left wrap">肯定<br />積極的</td>
-                            <td class="left wrap"></td>
                         </tr>
                         <tr>
                             <td class="satu large">h</td>
@@ -236,93 +266,189 @@
                             <td>h</td>
                             <td>/x/</td>
                             <td class="left wrap">疑問</td>
-                            <td class="left wrap">日本語の「ひ」の子音。</td>
                         </tr>
                         <tr>
                             <td class="satu large">r</td>
                             <td><span class="satu">ra</span><br />ラー</td>
                             <td>r</td>
-                            <td>/r/</td>
+                            <td>/ɾ/</td>
                             <td class="left wrap">数、計算</td>
-                            <td class="left wrap"></td>
                         </tr>
                         <tr>
                             <td class="satu large">'</td>
                             <td><span class="satu">ete</span><br />エッテ</td>
                             <td>'</td>
                             <td>/t/</td>
-                            <td class="left wrap"></td>
-                            <td class="left wrap">
-                                修飾節の始まりを表す記号。<br />
-                                通常は[t]で発音されるが、強調する場合は[t<sup>h</sup>e]と発音する。
-                            </td>
+                            <td class="left wrap">修飾節の始まり</td>
                         </tr>
                         <tr>
                             <td class="satu large">,</td>
                             <td><span class="satu">ete</span><br />エッケ</td>
                             <td>,</td>
                             <td>/k/</td>
-                            <td class="left wrap"></td>
-                            <td class="left wrap">
-                                修飾節の終わりを表す記号。文末では発音しない。<br />
-                                通常は[k]で発音されるが、強調する場合は[k<sup>h</sup>e]と発音する。
-                            </td>
+                            <td class="left wrap">修飾節の終わり</td>
                         </tr>
                         <tr>
                             <td class="satu large">;</td>
                             <td><span class="satu">epe</span><br />エッペ</td>
                             <td>;</td>
                             <td>/p/</td>
-                            <td class="left wrap"></td>
-                            <td class="left wrap">
-                                動詞節の終わりを表す記号。文末では発音しない。<br />
-                                通常は[p]で発音されるが、強調する場合は[p<sup>h</sup>e]と発音する。
-                            </td>
+                            <td class="left wrap">動詞節の終わり</td>
                         </tr>
+                    </tbody>
+                </table>
+                <p>
+                    ※1: 日本語の「ん」に相当し、前後の文字によって [n] [m] [ŋ] などで発音される。0を表す単語 <span class="satu">rv</span> /ɾəm/ でのみ母音のように扱われ [əm] と発音する。
+                </p>
+                <table class="sticky center nowarp">
+                    <thead>
+                        <tr><th>記号</th><th>記号名称</th><th>転写</th><th>意味</th></tr>
+                    </thead>
+                    <tbody>
                         <tr>
                             <td class="satu large">#</td>
                             <td><span class="satu">ere</span><br />エレ</td>
                             <td>#</td>
-                            <td>/rə/</td>
-                            <td class="left wrap"></td>
-                            <td class="left wrap">
-                                単語(特に数か一般名詞か紛らわしいもの)が数であることを表す記号。<br />
-                                アラビア数字導入前はよく使われていたが、現代ではあまり使われない。
-                            </td>
+                            <td class="left wrap">数単語</td>
                         </tr>
                         <tr>
                             <td class="satu large">.</td>
                             <td><span class="satu">teme</span><br />テメ</td>
                             <td>.</td>
-                            <td></td>
-                            <td class="left wrap"></td>
-                            <td class="left wrap">
-                                文末を表す記号。いわゆる句点、ピリオド。
-                            </td>
+                            <td class="left wrap">文末</td>
                         </tr>
                         <tr>
                             <td class="satu large">!</td>
                             <td><span class="satu">ateme</span><br />アッテメ</td>
                             <td>!</td>
-                            <td></td>
-                            <td class="left wrap"></td>
-                            <td class="left wrap">
-                                主張や驚きを表す文で <span class="satu">.</span> のかわりに使う記号。
-                            </td>
+                            <td class="left wrap">主張文<br />感嘆文</td>
                         </tr>
                         <tr>
                             <td class="satu large">?</td>
                             <td><span class="satu">hateme</span><br />ハッテメ</td>
                             <td>?</td>
-                            <td></td>
-                            <td class="left wrap"></td>
-                            <td class="left wrap">
-                                疑問や質問を表す文で <span class="satu">.</span> のかわりに使う記号。
-                            </td>
+                            <td class="left wrap">疑問文<br />質問文</td>
                         </tr>
-
                     </tbody>
                 </table>
+            </article>
+            <article>
+                <h3>単語と文法</h3>
+                <p>
+                    Satu Kitan の単語は<b>名詞形</b>、<b>動詞形</b>、<b>修飾形</b>、<b>接続形</b>の4種類に活用し、単語の最後に付く文字で判別されます。
+                </p>
+                <table class="nowrap cell-alt">
+                    <thead>
+                        <tr>
+                            <th>名詞形</th>
+                            <th>動詞形</th>
+                            <th>修飾形</th>
+                            <th>接続形</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <dl class="trans">
+                                    <dt>rika</dt>
+                                    <dd>rika</dd>
+                                    <dd>加算</dd>
+                                </dl>
+                            </td>
+                            <td>
+                                <dl class="trans">
+                                    <dt>rika<span class="red">s</span></dt>
+                                    <dd>rikas</dd>
+                                    <dd>足す</dd>
+                                </dl>
+                            </td>
+                            <td>
+                                <dl class="trans">
+                                    <dt>rika<span class="red">v</span></dt>
+                                    <dd>rikav</dd>
+                                    <dd>足している</dd>
+                                </dl>
+                            </td>
+                            <td>
+                                <dl class="trans">
+                                    <dt>rika<span class="red">f</span></dt>
+                                    <dd>rikaf</dd>
+                                    <dd>加えて、さらに</dd>
+                                </dl>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p>
+                    動詞形は動詞節の最初に置き、そこに目的語を続けます。
+                    修飾形は後ろに置き、直前の単語を修飾します。
+                    最も単純な動詞の使い方は客観的な様子を表し、他の言語における受動態の意味を持つことが多いです。
+                </p>
+                <div>
+                    <dl class="trans">
+                        <dt>kikaskas</dt>
+                        <dd>kikaskas</dd>
+                        <dd>証明された</dd>
+                    </dl>
+                    <dl class="trans">
+                        <dt>pokani</dt>
+                        <dd>pokani</dd>
+                        <dd>問題</dd>
+                    </dl>
+                    <dl class="trans">
+                        <dt>fov</dt>
+                        <dd>fov</dd>
+                        <dd>その</dd>
+                    </dl>
+                </div>
+                <div>
+                    <dl class="trans">
+                        <dt>kikaskas pokani fov.</dt>
+                        <dd>kikaskas pokani fov.</dd>
+                        <dd>その問題は証明された。</dd>
+                    </dl>
+                </div>
+                <hr />
+                <p>
+                    文を <span class="satu">' ,</span> で囲むことで、全体を修飾節にすることができます(一般的に文末の <span class="satu">,</span>は省略しますが、ここではあえて書きました)。
+                    修飾節は修飾形と同じように働きます。動詞節ベースの修飾節で名詞節を修飾することで、その動作の主を示します。
+                </p>
+                <div>
+                    <dl class="trans">
+                        <dt><span class="red">a '</span>kikaskas pokani fov<span class="red">,</span>.</dt>
+                        <dd>a 'kikaskas pokani fov.</dd>
+                        <dd>私はその問題を証明した。</dd>
+                    </dl>
+                </div>
+                <hr />
+                <p>
+                    ある動詞節が別の動詞節の目的語になっている場合、<span class="satu">;</span>を使って内側の動詞節の終わりを示します。
+                </p>
+                <div>
+                    <dl class="trans">
+                        <dt>rikas ra ra</dt>
+                        <dd>rikas ra ra</dd>
+                        <dd>1足す1</dd>
+                    </dl>
+                </div>
+                <div>
+                    <dl class="trans">
+                        <dt>gatas <span class="red">rikas</span> ra ra<span class="red">;</span> ru.</dt>
+                        <dd>gatas rikas ra ra; ru.</dd>
+                        <dd>1足す1は2に等しい。</dd>
+                    </dl>
+                </div>
+                <hr />
+                <p>
+                    これらを組み合わせて複雑な文を作ります。文の終わりや、修飾節がかかる先が曖昧になることはありません。
+                </p>
+                <div>
+                    <dl class="trans">
+                        <dt>a 'kikaskas nafitjev gatas rikas ra ra; ru, binef a 'ripokiskas o.</dt>
+                        <dd>a 'kikaskas nafitjev gatas rikas ra ra; ru, binef a 'ripokiskas o.</dd>
+                        <dd>私は1足す1が2に等しいことを古くに証明し、(そして)私はそれを記した。</dd>
+                    </dl>
+                </div>
             </article>
         </section>
         <section>
