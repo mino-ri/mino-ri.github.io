@@ -34,7 +34,7 @@ const codePoint0 = "0".codePointAt(0);
 const codePoint9 = "9".codePointAt(0);
 
 function $(id) {
-    return  document.getElementById(id);
+    return document.getElementById(id);
 }
 
 // text の0文字目が0-9か
@@ -235,7 +235,7 @@ function createFigure() {
             pitch = 1;
         }
         createPitchPoint(pitch, i, $(`pitch_color${i}`).value);
-        
+
         if (prevPitch > 0 && $(`ratio${i}`).checked) {
             createRatioLine(prevPitch, pitch, i, $(`ratio_color${i}`).value);
         }
@@ -317,7 +317,7 @@ function addTone() {
         divPitchColor.append(" ");
         divPitchColor.appendChild(createColor(`pitch_color${childCount}`, "#000000"));
         controlTone.appendChild(divPitchColor);
-     }
+    }
     container.appendChild(controlTone);
     createFigure();
 }

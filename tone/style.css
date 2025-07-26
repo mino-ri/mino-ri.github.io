@@ -20,7 +20,7 @@ body {
     background-color: #f3f3f9;
     font-size: 1rem;
 }
-    
+
 h1 {
     background-color: #1A5135;
     display: block;
@@ -37,7 +37,7 @@ h2 {
     background-color: #287950;
     color: white;
 }
-  
+
 article > h3 {
     color: #1A5135;
     border-bottom: 1px solid #287950;
@@ -47,7 +47,7 @@ article > h3 {
     vertical-align: middle;
     margin-bottom: 0.5rem;
 }
-  
+
 div {
     margin-top: 0.8rem;
     margin-bottom: 0.8rem;
@@ -79,19 +79,19 @@ tbody tr {
     color: #000000;
 }
 
-tbody tr:nth-child(odd) {
-    background-color: #f0f4ff;
-}
+    tbody tr:nth-child(odd) {
+        background-color: #f0f4ff;
+    }
 
 td {
     padding: 0.5rem;
 }
 
 article {
-  background-color: white;
-  margin: 1rem;
-  padding: 1rem;
-  border-radius: 0.5rem;
+    background-color: white;
+    margin: 1rem;
+    padding: 1rem;
+    border-radius: 0.5rem;
 }
 
 textarea {
@@ -103,9 +103,9 @@ textarea {
     overflow-x: auto;
 }
 
-.vs-table-container td, .vs-table-container th {
-    text-wrap: nowrap;
-}
+    .vs-table-container td, .vs-table-container th {
+        text-wrap: nowrap;
+    }
 
 circle.base {
     stroke: gray;
@@ -147,10 +147,10 @@ line.ratio {
     display: flex;
 }
 
-.control-tone > div {
-    margin: 6px;
-    flex: 1;
-}
+    .control-tone > div {
+        margin: 6px;
+        flex: 1;
+    }
 
 .control-ratio {
     margin: 0 0.5rem 0;
@@ -159,10 +159,10 @@ line.ratio {
     display: flex;
 }
 
-.control-ratio > div {
-    margin: 6px;
-    flex: 1;
-}
+    .control-ratio > div {
+        margin: 6px;
+        flex: 1;
+    }
 
 @media (max-width: 767px) {
     .pitch-class-container {
@@ -179,7 +179,7 @@ line.ratio {
         top: 0;
     }
 }
-  
+
 @media (min-width: 768px) {
     .pitch-class-container {
         flex-direction: row;

@@ -1,70 +1,70 @@
 <!DOCTYPE html>
 <html lang="ja">
-    <head>
-        <meta charset="UTF-8" />
-        <meta http-equiv="Content-Type" content="text/html" />
-        <meta http-equiv="Content-Style-Type" content="text/css" />
-        <meta name="author" content="mino-ri" />
-        <meta name="copyright" content="copyright(C) 2024 mino-ri All rights reserved." />
-        <meta name="viewport" content="width=device-width">
-        <link href="style.css" rel="stylesheet" />
-        <script src="script.js"></script>
-        <title>音律・和音試奏</title>
-    </head>
-    <body>
-        <h1>音律・和音試奏</h1>
-        <section>
-            <h2>書き方</h2>
-            <article>
-                <p>
-                    1行に1つの音を書きます。
-                </p>
-                <table>
-                    <thead>
-                        <tr><th>構文</th><th>動作</th></tr>
-                    </thead>
-                    <tbody>
-                        <tr><td><code>C4</code></td><td>A4 = 440Hzを基本として音を鳴らします。</td></tr>
-                        <tr><td><code>C#4</code></td><td>対象の音を半音上げます。</td></tr>
-                        <tr><td><code>Cb4</code> <code>C♭4</code></td><td>対象の音を半音下げます。</td></tr>
-                        <tr><td><code>C+4</code> <code>Cｷ4</code></td><td>対象の音を1/4音上げます。</td></tr>
-                        <tr><td><code>C-4</code> <code>Cd4</code></td><td>対象の音を1/4音下げます。</td></tr>
-                        <tr><td><code>C4 * 5/4</code></td><td>対象の音の周波数にn/mを掛けます。この例ではC4と純正に調和するE4の音が出ます。</td></tr>
-                        <tr><td><code>C4 > 1/12</code></td><td>対象の音高を1オクターブのn/mだけ上げます。この例ではC4の半音上であるC#4の音が出ます。</td></tr>
-                        <tr><td><code>C4 &lt; 1/12</code></td><td>対象の音高を1オクターブのn/mだけ下げます。</td></tr>
-                        <tr><td><code>'31</code></td><td>以降の音を31平均律で解釈します。12平均律では異名同音である音が区別されます。</td></tr>
-                        <tr><td><code>'M</code></td><td>以降の音を中全音律で解釈します。12平均律では異名同音である音が区別されます。</td></tr>
-                        <tr><td><code>'P</code></td><td>以降の音をピタゴラス律で解釈します。12平均律では異名同音である音が区別されます。</td></tr>
-                    </tbody>
-                </table>
-            </article>
-        </section>
-        <section>
-            <h2>演奏</h2>
-            <article>
-                <div>
-                    <textarea id="textarea_tones" name="textarea_tones" rows="5">A3
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Type" content="text/html" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="author" content="mino-ri" />
+  <meta name="copyright" content="copyright(C) 2024 mino-ri All rights reserved." />
+  <meta name="viewport" content="width=device-width">
+  <link href="style.css" rel="stylesheet" />
+  <script src="script.js"></script>
+  <title>音律・和音試奏</title>
+</head>
+<body>
+  <h1>音律・和音試奏</h1>
+  <section>
+    <h2>書き方</h2>
+    <article>
+      <p>
+        1行に1つの音を書きます。
+      </p>
+      <table>
+        <thead>
+          <tr><th>構文</th><th>動作</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>C4</code></td><td>A4 = 440Hzを基本として音を鳴らします。</td></tr>
+          <tr><td><code>C#4</code></td><td>対象の音を半音上げます。</td></tr>
+          <tr><td><code>Cb4</code> <code>C♭4</code></td><td>対象の音を半音下げます。</td></tr>
+          <tr><td><code>C+4</code> <code>Cｷ4</code></td><td>対象の音を1/4音上げます。</td></tr>
+          <tr><td><code>C-4</code> <code>Cd4</code></td><td>対象の音を1/4音下げます。</td></tr>
+          <tr><td><code>C4 * 5/4</code></td><td>対象の音の周波数にn/mを掛けます。この例ではC4と純正に調和するE4の音が出ます。</td></tr>
+          <tr><td><code>C4 > 1/12</code></td><td>対象の音高を1オクターブのn/mだけ上げます。この例ではC4の半音上であるC#4の音が出ます。</td></tr>
+          <tr><td><code>C4 &lt; 1/12</code></td><td>対象の音高を1オクターブのn/mだけ下げます。</td></tr>
+          <tr><td><code>'31</code></td><td>以降の音を31平均律で解釈します。12平均律では異名同音である音が区別されます。</td></tr>
+          <tr><td><code>'M</code></td><td>以降の音を中全音律で解釈します。12平均律では異名同音である音が区別されます。</td></tr>
+          <tr><td><code>'P</code></td><td>以降の音をピタゴラス律で解釈します。12平均律では異名同音である音が区別されます。</td></tr>
+        </tbody>
+      </table>
+    </article>
+  </section>
+  <section>
+    <h2>演奏</h2>
+    <article>
+      <div>
+        <textarea id="textarea_tones" name="textarea_tones" rows="5">A3
 C#4
 E4
 G#4</textarea>
-                </div>
-                <div>
-                    <input type="checkbox" id="checkbox_saw" />
-                    <label for="checkbox_saw">のこぎり波</label>
-                </div>
-                <div>
-                    <input type="button" value="作成" onclick="javascript:createAudio()" />
-                </div>
-                <div class="vs-table-container">
-                    <table>
-                        <thead>
-                            <tr><th>設定</th><th>コード</th><th>アルペジオ</th><th>操作</th></tr>
-                        </thead>
-                        <tbody id="tones">
-                        </tbody>
-                    </table>
-                </div>
-            </article>
-        </section>
-    </body>
+      </div>
+      <div>
+        <input type="checkbox" id="checkbox_saw" />
+        <label for="checkbox_saw">のこぎり波</label>
+      </div>
+      <div>
+        <input type="button" value="作成" onclick="javascript:createAudio()" />
+      </div>
+      <div class="vs-table-container">
+        <table>
+          <thead>
+            <tr><th>設定</th><th>コード</th><th>アルペジオ</th><th>操作</th></tr>
+          </thead>
+          <tbody id="tones">
+          </tbody>
+        </table>
+      </div>
+    </article>
+  </section>
+</body>
 </html>

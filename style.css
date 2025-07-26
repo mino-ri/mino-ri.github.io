@@ -1,210 +1,210 @@
 @charset "UTF-8";
 
 html {
-  font-size: 16px;
-  width: 100%;
+    font-size: 16px;
+    width: 100%;
 }
 
 * {
-  line-height: 1.5em;
-  margin: 0;
-  padding: 0;
+    line-height: 1.5em;
+    margin: 0;
+    padding: 0;
 }
 
 body {
-  width: 100%;
-  font-family: "Segoe UI", "Helvetica Neue", "Hiragino Kaku Gothic ProN", "メイリオ", "meiryo", sans-serif;
-  margin: 0;
-  padding: 0;
-  color: black;
-  background-color: #f3f3f9;
-  font-size: 1rem;
+    width: 100%;
+    font-family: "Segoe UI", "Helvetica Neue", "Hiragino Kaku Gothic ProN", "メイリオ", "meiryo", sans-serif;
+    margin: 0;
+    padding: 0;
+    color: black;
+    background-color: #f3f3f9;
+    font-size: 1rem;
 }
 
 /* 共通背景 */
 h1, nav {
-/*
-  background-image: url("./images/header.png");
-  background-size: 100%;
-  background-attachment: fixed;
-*/
-  background-color: #1A5135;
+    /*
+    background-image: url("./images/header.png");
+    background-size: 100%;
+    background-attachment: fixed;
+    */
+    background-color: #1A5135;
 }
 
 h1 {
-  display: block;
-  top: 0;
-  color: white;
-  font-size: 2rem;
-  padding: 0.25rem 0.25rem;
+    display: block;
+    top: 0;
+    color: white;
+    font-size: 2rem;
+    padding: 0.25rem 0.25rem;
 }
 
 nav {
-  color: black;
-  display: block;
-  position: sticky;
-  top: 0;
+    color: black;
+    display: block;
+    position: sticky;
+    top: 0;
 }
 
 nav > ul {
-  display: flex;
-  flex-direction: row;
-  justify-content: left;
-  padding: 0.125rem;
-  height: 2.25rem;
+    display: flex;
+    flex-direction: row;
+    justify-content: left;
+    padding: 0.125rem;
+    height: 2.25rem;
 }
 
 nav > ul > li {
-  display: block;
-  list-style: none;
-  height: 100%;
+    display: block;
+    list-style: none;
+    height: 100%;
 }
 
 nav > ul > li > a {
-  display: inline-block;
-  margin: 0.125rem;
-  width: 2rem;
-  height: 2rem;
-  border-radius: 1rem;
-  background-color: white;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  text-indent: 100%;
-  white-space: nowrap;
-  overflow: hidden;
+    display: inline-block;
+    margin: 0.125rem;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 1rem;
+    background-color: white;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    text-indent: 100%;
+    white-space: nowrap;
+    overflow: hidden;
 }
 
 a.github {
-  background-image: url("images/github.png");
-  background-size: 105%;
-  background-color: white !important;
+    background-image: url("images/github.png");
+    background-size: 105%;
+    background-color: white !important;
 }
 
 a.twitter {
-  background-image: url("images/twitter.png");
-  background-color: #1D9BF0 !important;
-  background-size: 60%;
+    background-image: url("images/twitter.png");
+    background-color: #1D9BF0 !important;
+    background-size: 60%;
 }
 
 a.instagram {
-  background-image: url("images/instagram.png");
-  background-color: #F00074 !important;
-  background-size: 60%;
+    background-image: url("images/instagram.png");
+    background-color: #F00074 !important;
+    background-size: 60%;
 }
 
 a.youtube-origami {
-  background-image: url("images/hojo_origami.png");
+    background-image: url("images/hojo_origami.png");
 }
 
 a.youtube-minori {
-  background-image: url("images/minori.png");
+    background-image: url("images/minori.png");
 }
 
 a:hover {
-  background-color: #35A16B;
-  color: white;
+    background-color: #35A16B;
+    color: white;
 }
 
 a:active {
-  background-color: #FF9900;
-  color: white;
+    background-color: #FF9900;
+    color: white;
 }
 
 h2 {
-  margin: 1rem 0;
-  padding: 0 1rem;
-  font-size: 2.5rem;
-  background-color: #287950;
-  color: white;
+    margin: 1rem 0;
+    padding: 0 1rem;
+    font-size: 2.5rem;
+    background-color: #287950;
+    color: white;
 }
 
 article {
-  background-color: white;
-  margin: 1rem;
-  border-radius: 0.5rem;
+    background-color: white;
+    margin: 1rem;
+    border-radius: 0.5rem;
 }
 
 article > h3 {
-  color: #1A5135;
-  border-bottom: 1px solid #287950;
-  padding: 0.25rem 0.5rem;
-  font-size: 2rem;
-  border-radius: 0.5rem 0.5rem 0 0;
-  vertical-align: middle;
+    color: #1A5135;
+    border-bottom: 1px solid #287950;
+    padding: 0.25rem 0.5rem;
+    font-size: 2rem;
+    border-radius: 0.5rem 0.5rem 0 0;
+    vertical-align: middle;
 }
 
 article p {
-  padding: 0.5rem;
+    padding: 0.5rem;
 }
 
 img {
-  margin: 0 auto;
+    margin: 0 auto;
 }
 
-img.icon {
-  display: inline-block;
-  margin: 0;
-  height: 2.5rem;
-  width: 2.5rem;
-  vertical-align: text-bottom;
-}
+    img.icon {
+        display: inline-block;
+        margin: 0;
+        height: 2.5rem;
+        width: 2.5rem;
+        vertical-align: text-bottom;
+    }
 
 article ul {
-  display: flex;
-  padding: 0 0.25rem 0.25rem 0.25rem;
-  flex-direction: row;
-  justify-content: left;
+    display: flex;
+    padding: 0 0.25rem 0.25rem 0.25rem;
+    flex-direction: row;
+    justify-content: left;
 }
 
 article ul > li {
-  list-style: none;
-  display: block;
+    list-style: none;
+    display: block;
 }
 
 article ul a {
-  display: block;
-  margin: 0.25rem;
-  padding: 0.25rem;
-  border-radius: 0.25rem;
-  background-color: #287950;
-  color: white;
-  text-decoration: none;
+    display: block;
+    margin: 0.25rem;
+    padding: 0.25rem;
+    border-radius: 0.25rem;
+    background-color: #287950;
+    color: white;
+    text-decoration: none;
 }
 
 body > footer {
-  font-size: 0.5rem;
-  padding: 0.75rem 0.5rem;
-  text-align: center;
-  background-color: #1A5135;
-  color: white;
+    font-size: 0.75rem;
+    padding: 0.75rem 0.5rem;
+    text-align: center;
+    background-color: #1A5135;
+    color: white;
 }
 
 @media (max-width: 767px) {
-  .article-container > img {
-    display: block;
-    max-width: 90vw;
-    object-fit: contain;
-  }
+    .article-container > img {
+        display: block;
+        max-width: 90vw;
+        object-fit: contain;
+    }
 }
 
 @media (min-width: 768px) {
-  .article-container {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: nowrap;
-    justify-content: left;
-  }
+    .article-container {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        justify-content: left;
+    }
 
-  .article-container > img {
-    display: block;
-    width: 55%;
-    max-height: 60vh;
-    object-fit: contain;
-    flex: none;
-  }
+    .article-container > img {
+        display: block;
+        width: 55%;
+        max-height: 60vh;
+        object-fit: contain;
+        flex: none;
+    }
 
-  .article-container > div {
-    flex: auto;
-  } 
+    .article-container > div {
+        flex: auto;
+    }
 }

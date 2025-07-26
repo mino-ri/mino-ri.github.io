@@ -26,15 +26,15 @@ class WaveWriter {
     encodeBase64() {
         return btoa(this.buffer);
     }
-    
+
     static fromChunks(chunks) {
         const waveWriter = new WaveWriter();
         const sumSize = chunks.reduce((acm, chunk) => acm + chunk.size + 8, 0);
-        
+
         waveWriter.writeText("RIFF");
         waveWriter.writeInt32(sumSize + 4);
         waveWriter.writeText("WAVE");
-        
+
         for (let chunk of chunks) {
             waveWriter.writeText(chunk.tag);
             waveWriter.writeInt32(chunk.size);
@@ -54,7 +54,7 @@ class WaveHeader {
         this.blockAlign = channels * bytesPerSample;
         this.bitsPerSample = bytesPerSample * 8;
     }
-    
+
     get size() {
         return 16;
     }
