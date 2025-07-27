@@ -10,6 +10,15 @@ const centerX = 960
 const centerY = 960
 const globalScale = 128
 
+const colorScheme = [
+    { amount: 0.000, h: 360 + 180, s: 220, l: 124 },
+    { amount: 0.250, h: 360 + 177, s: 152, l: 92 },
+    { amount: 0.375, h: 360 + 40, s: 219, l: 122 },
+    { amount: 0.500, h: 345, s: 220, l: 160 },
+    { amount: 0.625, h: 261, s: 210, l: 170 },
+    { amount: 0.750, h: 204, s: 203, l: 145 },
+    { amount: 1.000, h: 180, s: 220, l: 124 },
+]
 
 // テキストからMonzoの配列を取得する
 function parsePitches(text) {
@@ -36,9 +45,13 @@ function parsePitches(text) {
     return monzos
 }
 
-function getIntervalDelta(prime, power) {
+function getPrimePitchClass(prime) {
     const denominator = Math.pow(2, Math.floor(Math.log2(prime)))
-    const pitchClass = prime / denominator
+    return prime / denominator
+}
+
+function getIntervalDelta(prime, power) {
+    const pitchClass = getPrimePitchClass(prime)
     const dx = Math.log2(prime) * power
     const dy = dx * Math.tan(Math.PI * (pitchClass - 0.5))
     return { dx, dy }
@@ -67,6 +80,61 @@ function clearChildren(...elements) {
             element.removeChild(element.firstChild);
         }
     }
+}
+
+function toRgbColor(h, s, l) {
+    h = h % 360
+    s = Math.max(0, Math.min(255, s))
+    l = Math.max(0, Math.min(255, l))
+    const c = (1 - Math.abs(2 * l / 255 - 1)) * s / 255
+    const x = c * (1 - Math.abs((h / 60) % 2 - 1))
+    const m = l / 255 - c / 2
+    let r, g, b
+    if (h < 60) {
+        r = c; g = x; b = 0
+    } else if (h < 120) {
+        r = x; g = c; b = 0
+    } else if (h < 180) {
+        r = 0; g = c; b = x
+    } else if (h < 240) {
+        r = 0; g = x; b = c
+    } else if (h < 300) {
+        r = x; g = 0; b = c
+    } else {
+        r = c; g = 0; b = x
+    }
+    r = Math.max(0, Math.min(255, Math.round((r + m) * 255)))
+    g = Math.max(0, Math.min(255, Math.round((g + m) * 255)))
+    b = Math.max(0, Math.min(255, Math.round((b + m) * 255)))
+
+    return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`
+}
+
+function getPitchClassColor(amount) {
+    // amountがcolorSchemeの範囲外の場合は端の値を返す
+    if (amount <= colorScheme[0].amount) {
+        const { h, s, l } = colorScheme[0]
+        return toRgbColor(h, s, l)
+    }
+    if (amount >= colorScheme[colorScheme.length - 1].amount) {
+        const { h, s, l } = colorScheme[colorScheme.length - 1]
+        return toRgbColor(h, s, l)
+    }
+    // 範囲内の場合、2点間で線形補間
+    for (let i = 0; i < colorScheme.length - 1; i++) {
+        const a0 = colorScheme[i].amount
+        const a1 = colorScheme[i + 1].amount
+        if (amount >= a0 && amount <= a1) {
+            const t = (amount - a0) / (a1 - a0)
+            const h = colorScheme[i].h + t * (colorScheme[i + 1].h - colorScheme[i].h)
+            const s = colorScheme[i].s + t * (colorScheme[i + 1].s - colorScheme[i].s)
+            const l = colorScheme[i].l + t * (colorScheme[i + 1].l - colorScheme[i].l)
+            return toRgbColor(h, s, l)
+        }
+    }
+
+    const { h, s, l } = colorScheme[0]
+    return toRgbColor(h, s, l)
 }
 
 function createPath(d, fill, stroke, strokeWidth) {
@@ -133,6 +201,9 @@ function loadMonzo() {
                 continue
             }
 
+            const intervalClass = Math.pow(2, Math.abs(interval.pitch) % 1) - 1
+            const color = getPitchClassColor(intervalClass)
+
             const { x: x1, y: y1 } = getPitchPoint(monzo1, globalScale)
             const { x: x2, y: y2 } = getPitchPoint(monzo2, globalScale)
             const line = document.createElementNS("http://www.w3.org/2000/svg", "line")
@@ -140,7 +211,7 @@ function loadMonzo() {
             line.setAttribute("y1", y1 + centerY)
             line.setAttribute("x2", x2 + centerX)
             line.setAttribute("y2", y2 + centerY)
-            line.setAttribute("stroke", "#808080")
+            line.setAttribute("stroke", color)
             line.setAttribute("stroke-width", "24")
             lineGroup.appendChild(line)
         }

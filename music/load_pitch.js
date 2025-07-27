@@ -29,6 +29,17 @@ class Monzo {
         return this.pitch % 1
     }
 
+    get minPrime() {
+        let minPrime = 999999999
+        for (const prime in this.factors) {
+            const numPrime = Number(prime)
+            if (this.factors[prime] !== 0 && numPrime < minPrime) {
+                minPrime = numPrime
+            }
+        }
+        return minPrime === Infinity ? 1 : minPrime
+    }
+
     reciprocal() {
         const factors = {}
         for (const prime in this.factors) {
