@@ -94,6 +94,9 @@ article {
     border-radius: 0.5rem;
 }
 
+ul {
+    margin-left: 2rem;
+}
 a {
     display: inline-block;
     margin: 0.25rem;
@@ -156,6 +159,7 @@ circle.base {
 
     #preview_figure {
         margin: 0.5rem auto;
+        max-height: 90vw;
     }
 
     .editor-preview {
@@ -173,6 +177,7 @@ circle.base {
     #preview_figure {
         position: sticky;
         top: 0;
+        max-height: 80vh;
     }
 
     .editor-preview {
