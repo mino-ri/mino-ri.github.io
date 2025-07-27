@@ -3,9 +3,38 @@ var previewSvg;
 var grid;
 var lineGroup;
 var pitchClassGroup;
+var aDownloadSvg;
+var aDownloadPng;
+
 const centerX = 960
 const centerY = 960
 const globalScale = 128
+
+
+// テキストからMonzoの配列を取得する
+function parsePitches(text) {
+    // スペース区切りで分割
+    const tokens = text.trim().split(/\s+/)
+    const monzos = tokens.map(token => {
+        let mute = false
+        if (token.startsWith('x')) {
+            mute = true
+            token = token.substring(1)
+        }
+
+        let monzo = null
+        if (token.includes('/')) {
+            // 分数の場合
+            const [num, denom] = token.split('/').map(Number)
+            monzo = Monzo.fromFraction(num, denom)
+        } else {
+            // 整数の場合
+            monzo = Monzo.fromInt(Number(token))
+        }
+        return { mute, monzo }
+    })
+    return monzos
+}
 
 function getIntervalDelta(prime, power) {
     const denominator = Math.pow(2, Math.floor(Math.log2(prime)))
@@ -49,6 +78,17 @@ function createPath(d, fill, stroke, strokeWidth) {
     return path
 }
 
+function createCircle(cx, cy, r, fill, stroke, strokeWidth) {
+    const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle")
+    circle.setAttribute("cx", cx)
+    circle.setAttribute("cy", cy)
+    circle.setAttribute("r", r)
+    circle.setAttribute("fill", fill)
+    circle.setAttribute("stroke", stroke)
+    circle.setAttribute("stroke-width", strokeWidth)
+    return circle
+}
+
 function loadMonzo() {
     if (!(textArea instanceof HTMLTextAreaElement) ||
         !(previewSvg instanceof SVGElement) ||
@@ -59,13 +99,16 @@ function loadMonzo() {
     }
 
     const text = textArea.value
-    const monzos = parseMonzos(text)
+    const pitches = parsePitches(text)
 
     clearChildren(grid, lineGroup, pitchClassGroup)
     let rootNode = true
-    for (const monzo of monzos) {
+    for (const { mute, monzo } of pitches) {
         const { x, y } = getPitchPoint(monzo, globalScale)
-        if (rootNode) {
+        if (mute) {
+            pitchClassGroup.appendChild(createCircle(
+                x + centerX, y + centerY, 15, "#FFFFFF", "#FDC6FE", "6"))
+        } else if (rootNode) {
             pitchClassGroup.appendChild(createPath(
                 `M ${x + centerX},${y + centerY - 40} l 40,40 l -40,40 l -40,-40 Z`,
                 "#FFFFFF", "#2B2F75", "6"))
@@ -81,10 +124,10 @@ function loadMonzo() {
         }
     }
 
-    for (let i = 0; i < monzos.length; i++) {
-        for (let j = i + 1; j < monzos.length; j++) {
-            const monzo1 = monzos[i]
-            const monzo2 = monzos[j]
+    for (let i = 0; i < pitches.length; i++) {
+        for (let j = i + 1; j < pitches.length; j++) {
+            const monzo1 = pitches[i].monzo
+            const monzo2 = pitches[j].monzo
             const interval = Monzo.divide(monzo1, monzo2)
             if (interval.toneDistance !== 1) {
                 continue
@@ -104,12 +147,41 @@ function loadMonzo() {
     }
 }
 
+function createSvgUrl() {
+    const svgText = new XMLSerializer().serializeToString(previewSvg)
+    const blob = new Blob([svgText], { type: "image/svg+xml" })
+    return URL.createObjectURL(blob)
+}
+
+function downloadSvg() {
+    aDownloadSvg.href = createSvgUrl()
+}
+
+function downloadPng() {
+    const svgImage = document.createElement("img")
+    svgImage.src = createSvgUrl()
+    const svgCanvas = document.createElement("canvas")
+    svgCanvas.width = previewSvg.viewBox.baseVal.width
+    svgCanvas.height = previewSvg.viewBox.baseVal.height
+    const ctx = svgCanvas.getContext("2d")
+    svgImage.onload = () => {
+        ctx.drawImage(svgImage, 0, 0)
+        const a = document.createElement("a")
+        a.href = svgCanvas.toDataURL("image/png")
+        a.setAttribute("download", "chord_graph.png")
+        a.dispatchEvent(new MouseEvent("click"))
+    }
+}
+
 window.addEventListener("load", () => {
     textArea = document.getElementById("textarea_editor")
     previewSvg = document.getElementById("preview_figure")
     grid = document.getElementById("grid")
     lineGroup = document.getElementById("line_group")
     pitchClassGroup = document.getElementById("pitch_class_group")
+    aDownloadSvg = document.getElementById("a_download_svg")
+    aDownloadPng = document.getElementById("a_download_png")
+    svgImage = document.getElementById("dummy_image")
 
     loadMonzo()
 })

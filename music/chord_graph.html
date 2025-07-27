@@ -29,10 +29,15 @@
           <textarea id="textarea_editor"
                     name="textarea_editor"
                     rows="5"
-                    oninput="loadMonzo()">1 3 9 11</textarea>
+                    oninput="loadMonzo()">1 x3 9 11</textarea>
+        </div>
+        <div>
+          <a id="a_download_svg" href="#" download="chordGraph.svg" onclick="downloadSvg()">SVGダウンロード</a>
+          <a id="a_download_png" href="#" download="chordGraph.png" onclick="downloadPng()">PNGダウンロード</a>
         </div>
         <p>
-          スペース区切りで複数の整数または分数を入力してください。
+          スペース区切りで複数の整数または分数を入力してください。<br />
+          数の前に「x」をつけるとミュート・ノートになります。
         </p>
         <div>
           <h3>機能</h3>
@@ -40,9 +45,11 @@
             <li>実装済: 奇数ピッチの入力</li>
             <li>実装済: "隣"にある音と線で繋ぐ</li>
             <li>実装済: ピッチクラスに応じた傾き・長さ</li>
+            <li>実装済: ミュート・ノート</li>
             <li>実装予定: 線の色</li>
+            <li>実装予定: 画像サイズの自動調整</li>
             <li>実装予定: オクターブの表現 (偶数の入力)</li>
-            <li>実装予定: ミュート・ノート</li>
+            <li>実装予定: ミュート・ノートの自動補完</li>
             <li>実装予定: 2^(a/b)型のピッチ</li>
           </ul>
         </div>

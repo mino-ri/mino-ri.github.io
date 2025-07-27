@@ -79,9 +79,9 @@ tbody tr {
     color: #000000;
 }
 
-    tbody tr:nth-child(odd) {
-        background-color: #f0f4ff;
-    }
+tbody tr:nth-child(odd) {
+    background-color: #f0f4ff;
+}
 
 td {
     padding: 0.5rem;
@@ -94,6 +94,26 @@ article {
     border-radius: 0.5rem;
 }
 
+a {
+    display: inline-block;
+    margin: 0.25rem;
+    padding: 0.25rem;
+    border-radius: 0.25rem;
+    background-color: #287950;
+    color: white;
+    text-decoration: none;
+}
+
+a:hover {
+    background-color: #35A16B;
+    color: white;
+}
+
+a:active {
+    background-color: #FF9900;
+    color: white;
+}
+
 textarea {
     padding: 4px;
     width: calc(100% - 8px);
@@ -103,9 +123,9 @@ textarea {
     overflow-x: auto;
 }
 
-    .vs-table-container td, .vs-table-container th {
-        text-wrap: nowrap;
-    }
+.vs-table-container td, .vs-table-container th {
+    text-wrap: nowrap;
+}
 
 circle.base {
     stroke: gray;
