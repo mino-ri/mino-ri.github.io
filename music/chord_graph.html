@@ -32,6 +32,12 @@
                     oninput="loadMonzo()">1 x3 9 11</textarea>
         </div>
         <div>
+          <label>
+            <input type="checkbox" id="checkbox_auto_size" name="checkbox_auto_size" oninput="loadMonzo()" />
+            画像サイズを自動調整する
+          </label>
+        </div>
+        <div>
           <a id="a_download_svg" href="#" download="chordGraph.svg" onclick="downloadSvg()">SVGダウンロード</a>
           <a id="a_download_png" href="#" download="chordGraph.png" onclick="downloadPng()">PNGダウンロード</a>
         </div>
@@ -47,7 +53,7 @@
             <li>実装済: ピッチクラスに応じた傾き・長さ</li>
             <li>実装済: ミュート・ノート</li>
             <li>実装済: 線の色</li>
-            <li>実装予定: 画像サイズの自動調整</li>
+            <li>実装済: 画像サイズの自動調整</li>
             <li>実装予定: オクターブの表現 (偶数の入力)</li>
             <li>実装予定: ミュート・ノートの自動補完</li>
             <li>実装予定: 2^(a/b)型のピッチ</li>

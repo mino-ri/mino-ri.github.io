@@ -5,6 +5,7 @@ var lineGroup;
 var pitchClassGroup;
 var aDownloadSvg;
 var aDownloadPng;
+var checkboxAutoSize;
 
 const centerX = 960
 const centerY = 960
@@ -71,7 +72,7 @@ function getPitchPoint(monzo, scale) {
         y += dy
     }
 
-    return { x: x * scale, y: y * scale }
+    return { x: Math.round(x * scale), y: Math.round(y * scale) }
 }
 
 function clearChildren(...elements) {
@@ -159,20 +160,29 @@ function createCircle(cx, cy, r, fill, stroke, strokeWidth) {
 
 function loadMonzo() {
     if (!(textArea instanceof HTMLTextAreaElement) ||
+        !(checkboxAutoSize instanceof HTMLInputElement) ||
         !(previewSvg instanceof SVGElement) ||
         !(grid instanceof SVGGElement) ||
         !(lineGroup instanceof SVGGElement) ||
         !(pitchClassGroup instanceof SVGGElement)) {
         return
     }
-
+    
     const text = textArea.value
     const pitches = parsePitches(text)
 
     clearChildren(grid, lineGroup, pitchClassGroup)
     let rootNode = true
+    let minX = 0
+    let minY = 0
+    let maxX = 0
+    let maxY = 0
     for (const { mute, monzo } of pitches) {
         const { x, y } = getPitchPoint(monzo, globalScale)
+        minX = Math.min(minX, Math.round(x - 50))
+        minY = Math.min(minY, Math.round(y - 50))
+        maxX = Math.max(maxX, Math.round(x + 50))
+        maxY = Math.max(maxY, Math.round(y + 50))
         if (mute) {
             pitchClassGroup.appendChild(createCircle(
                 x + centerX, y + centerY, 15, "#FFFFFF", "#FDC6FE", "6"))
@@ -190,6 +200,12 @@ function loadMonzo() {
                 "#FFFFFF", "#2B2F75", "6")
             pitchClassGroup.appendChild(pitchClass)
         }
+    }
+
+    if (checkboxAutoSize.checked) {
+        previewSvg.setAttribute("viewBox", `${minX + centerX} ${minY + centerY} ${maxX - minX} ${maxY - minY}`)
+    } else {
+        previewSvg.setAttribute("viewBox", "0 0 1920 1920")
     }
 
     for (let i = 0; i < pitches.length; i++) {
@@ -246,13 +262,13 @@ function downloadPng() {
 
 window.addEventListener("load", () => {
     textArea = document.getElementById("textarea_editor")
+    checkboxAutoSize = document.getElementById("checkbox_auto_size")
     previewSvg = document.getElementById("preview_figure")
     grid = document.getElementById("grid")
     lineGroup = document.getElementById("line_group")
     pitchClassGroup = document.getElementById("pitch_class_group")
     aDownloadSvg = document.getElementById("a_download_svg")
     aDownloadPng = document.getElementById("a_download_png")
-    svgImage = document.getElementById("dummy_image")
 
     loadMonzo()
 })
