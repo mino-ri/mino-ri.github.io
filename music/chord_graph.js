@@ -255,7 +255,7 @@ function downloadPng() {
         ctx.drawImage(svgImage, 0, 0)
         const a = document.createElement("a")
         a.href = svgCanvas.toDataURL("image/png")
-        a.setAttribute("download", "chord_graph.png")
+        a.setAttribute("download", "chordGraph.png")
         a.dispatchEvent(new MouseEvent("click"))
     }
 }
