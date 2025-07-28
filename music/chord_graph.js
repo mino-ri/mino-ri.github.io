@@ -6,6 +6,7 @@ var pitchClassGroup;
 var aDownloadSvg;
 var aDownloadPng;
 var checkboxAutoSize;
+var checkboxIgnoreOctave;
 
 const centerX = 960
 const centerY = 960
@@ -21,11 +22,14 @@ const colorScheme = [
     { amount: 1.000, h: 180, s: 220, l: 124 },
 ]
 
-// テキストからMonzoの配列を取得する
-function parsePitches(text) {
+// テキストからピッチの配列を取得する
+function parsePitches(text, ignoreOctave) {
     // スペース区切りで分割
     const tokens = text.trim().split(/\s+/)
-    const monzos = tokens.map(token => {
+    const resultMap = new Map()
+    const monzos = []
+    for (let token of tokens) {
+        console.log(token)
         let mute = false
         if (token.startsWith('x')) {
             mute = true
@@ -41,8 +45,18 @@ function parsePitches(text) {
             // 整数の場合
             monzo = Monzo.fromInt(Number(token))
         }
-        return { mute, monzo }
-    })
+        if (ignoreOctave) {
+            delete monzo.factors["2"]
+        }
+
+        const sameEntry = monzos.find(m => Monzo.divide(monzo, m.monzo).pitchDistance === 0)
+        if (sameEntry) {
+            sameEntry.mute = mute && sameEntry.mute
+        } else {
+            monzos.push({ mute, monzo })
+        }
+    }
+
     return monzos
 }
 
@@ -51,28 +65,27 @@ function getPrimePitchClass(prime) {
     return prime / denominator
 }
 
-function getIntervalDelta(prime, power) {
+function getIntervalDelta(prime, power, scale) {
     const pitchClass = getPrimePitchClass(prime)
     const dx = Math.log2(prime) * power
-    const dy = dx * Math.tan(Math.PI * (pitchClass - 0.5))
-    return { dx, dy }
+    const dy = prime === 2 ? 0 : dx * Math.tan(Math.PI * (pitchClass - 0.5))
+    return {
+        dx: Math.round(dx * scale),
+        dy: Math.round(dy * scale),
+    }
 }
 
 function getPitchPoint(monzo, scale) {
     let x = 0
     let y = 0
     for (const prime in monzo.factors) {
-        if (prime === "2") {
-            continue
-        }
-
         const power = monzo.factors[prime]
-        const { dx, dy } = getIntervalDelta(Number(prime), power)
+        const { dx, dy } = getIntervalDelta(Number(prime), power, scale)
         x += dx
         y += dy
     }
 
-    return { x: Math.round(x * scale), y: Math.round(y * scale) }
+    return { x, y }
 }
 
 function clearChildren(...elements) {
@@ -147,10 +160,16 @@ function createPath(d, fill, stroke, strokeWidth) {
     return path
 }
 
+function createDiamond(x, y, size, fill, stroke, strokeWidth) {
+    return createPath(
+        `M ${x + centerX},${y + centerY - size} l ${size},${size} l -${size},${size} l -${size},-${size} Z`,
+        fill, stroke, strokeWidth)
+}
+
 function createCircle(cx, cy, r, fill, stroke, strokeWidth) {
     const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle")
-    circle.setAttribute("cx", cx)
-    circle.setAttribute("cy", cy)
+    circle.setAttribute("cx", cx + centerX)
+    circle.setAttribute("cy", cy + centerY)
     circle.setAttribute("r", r)
     circle.setAttribute("fill", fill)
     circle.setAttribute("stroke", stroke)
@@ -158,9 +177,36 @@ function createCircle(cx, cy, r, fill, stroke, strokeWidth) {
     return circle
 }
 
+function createLine(x1, y1, x2, y2, stroke, strokeWidth) {
+    const line = document.createElementNS("http://www.w3.org/2000/svg", "line")
+    line.setAttribute("x1", x1 + centerX)
+    line.setAttribute("y1", y1 + centerY)
+    line.setAttribute("x2", x2 + centerX)
+    line.setAttribute("y2", y2 + centerY)
+    line.setAttribute("stroke", stroke)
+    line.setAttribute("stroke-width", strokeWidth)
+    return line
+}
+
+function createOctaveArc(x1, y1, x2, y2, scale, stroke, strokeWidth) {
+    if (x1 > x2) {
+        let d = x1
+        x1 = x2
+        x2 = d
+        d = y1
+        y1 = y2
+        y2 = d
+    }
+
+    return createPath(
+        `M ${x1 + centerX},${y1 + centerY} A ${scale * 0.625} ${scale * 0.625} 0 0 0 ${x2 + centerX},${y2 + centerY}`,
+        "none", stroke, strokeWidth)
+}
+
 function loadMonzo() {
     if (!(textArea instanceof HTMLTextAreaElement) ||
         !(checkboxAutoSize instanceof HTMLInputElement) ||
+        !(checkboxIgnoreOctave instanceof HTMLInputElement) ||
         !(previewSvg instanceof SVGElement) ||
         !(grid instanceof SVGGElement) ||
         !(lineGroup instanceof SVGGElement) ||
@@ -169,14 +215,14 @@ function loadMonzo() {
     }
     
     const text = textArea.value
-    const pitches = parsePitches(text)
+    const pitches = parsePitches(text, checkboxIgnoreOctave.checked)
 
     clearChildren(grid, lineGroup, pitchClassGroup)
     let rootNode = true
-    let minX = 0
-    let minY = 0
-    let maxX = 0
-    let maxY = 0
+    let minX = -50
+    let minY = -50
+    let maxX = 50
+    let maxY = 50
     for (const { mute, monzo } of pitches) {
         const { x, y } = getPitchPoint(monzo, globalScale)
         minX = Math.min(minX, Math.round(x - 50))
@@ -184,21 +230,13 @@ function loadMonzo() {
         maxX = Math.max(maxX, Math.round(x + 50))
         maxY = Math.max(maxY, Math.round(y + 50))
         if (mute) {
-            pitchClassGroup.appendChild(createCircle(
-                x + centerX, y + centerY, 15, "#FFFFFF", "#FDC6FE", "6"))
+            pitchClassGroup.appendChild(createCircle(x, y, 15, "#FFFFFF", "#FDC6FE", "6"))
         } else if (rootNode) {
-            pitchClassGroup.appendChild(createPath(
-                `M ${x + centerX},${y + centerY - 40} l 40,40 l -40,40 l -40,-40 Z`,
-                "#FFFFFF", "#2B2F75", "6"))
-            pitchClassGroup.appendChild(createPath(
-                `M ${x + centerX},${y + centerY - 30} l 30,30 l -30,30 l -30,-30 Z`,
-                "#2B2F75", "#FFFFFF", "2"))
+            pitchClassGroup.appendChild(createDiamond(x, y, 40, "#FFFFFF", "#2B2F75", "6"))
+            pitchClassGroup.appendChild(createDiamond(x, y, 30, "#2B2F75", "#FFFFFF", "2"))
             rootNode = false
         } else {
-            const pitchClass = createPath(
-                `M ${x + centerX},${y + centerY - 30} l 30,30 l -30,30 l -30,-30 Z`,
-                "#FFFFFF", "#2B2F75", "6")
-            pitchClassGroup.appendChild(pitchClass)
+            pitchClassGroup.appendChild(createDiamond(x, y, 30, "#FFFFFF", "#2B2F75", "6"))
         }
     }
 
@@ -213,23 +251,20 @@ function loadMonzo() {
             const monzo1 = pitches[i].monzo
             const monzo2 = pitches[j].monzo
             const interval = Monzo.divide(monzo1, monzo2)
-            if (interval.toneDistance !== 1) {
+            if (interval.pitchDistance !== 1) {
                 continue
             }
 
-            const intervalClass = Math.pow(2, Math.abs(interval.pitch) % 1) - 1
-            const color = getPitchClassColor(intervalClass)
-
             const { x: x1, y: y1 } = getPitchPoint(monzo1, globalScale)
             const { x: x2, y: y2 } = getPitchPoint(monzo2, globalScale)
-            const line = document.createElementNS("http://www.w3.org/2000/svg", "line")
-            line.setAttribute("x1", x1 + centerX)
-            line.setAttribute("y1", y1 + centerY)
-            line.setAttribute("x2", x2 + centerX)
-            line.setAttribute("y2", y2 + centerY)
-            line.setAttribute("stroke", color)
-            line.setAttribute("stroke-width", "24")
-            lineGroup.appendChild(line)
+
+            const intervalClass = Math.pow(2, Math.abs(interval.pitch) % 1) - 1
+            if (interval.isOnly2) {
+                lineGroup.appendChild(createOctaveArc(x1, y1, x2, y2, globalScale, "#FDC6FE", "12"))
+            } else {
+                const color = getPitchClassColor(intervalClass)
+                lineGroup.appendChild(createLine(x1, y1, x2, y2, color, "24"))
+            }
         }
     }
 }
@@ -263,6 +298,7 @@ function downloadPng() {
 window.addEventListener("load", () => {
     textArea = document.getElementById("textarea_editor")
     checkboxAutoSize = document.getElementById("checkbox_auto_size")
+    checkboxIgnoreOctave = document.getElementById("checkbox_ignore_octave")
     previewSvg = document.getElementById("preview_figure")
     grid = document.getElementById("grid")
     lineGroup = document.getElementById("line_group")

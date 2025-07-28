@@ -29,7 +29,7 @@
           <textarea id="textarea_editor"
                     name="textarea_editor"
                     rows="5"
-                    oninput="loadMonzo()">1 x3 9 11</textarea>
+                    oninput="loadMonzo()">1 x3 9 11 11/2</textarea>
         </div>
         <div>
           <label>
@@ -41,23 +41,41 @@
           <a id="a_download_svg" href="#" download="chordGraph.svg" onclick="downloadSvg()">SVGダウンロード</a>
           <a id="a_download_png" href="#" onclick="downloadPng()">PNGダウンロード</a>
         </div>
-        <p>
-          スペース区切りで複数の整数または分数を入力してください。<br />
-          数の前に「x」をつけるとミュート・ノートになります。
-        </p>
         <div>
-          <h3>機能</h3>
-          <ul>
-            <li>実装済: 奇数ピッチの入力</li>
-            <li>実装済: "隣"にある音と線で繋ぐ</li>
-            <li>実装済: ピッチクラスに応じた傾き・長さ</li>
-            <li>実装済: ミュート・ノート</li>
-            <li>実装済: 線の色</li>
-            <li>実装済: 画像サイズの自動調整</li>
-            <li>実装予定: オクターブの表現 (偶数の入力)</li>
-            <li>実装予定: ミュート・ノートの自動補完</li>
-            <li>実装予定: 2^(a/b)型のピッチ</li>
-          </ul>
+          <details open>
+            <summary>x軸オプション</summary>
+            <div>
+              <label>
+                <input type="checkbox" id="checkbox_ignore_octave" name="checkbox_ignore_octave" oninput="loadMonzo()" />
+                オクターブを無視する
+              </label>
+            </div>
+          </details>
+          <details open>
+            <summary>説明</summary>
+            <p>
+              スペース区切りで複数の整数または分数を入力してください。<br />
+              数の前に「x」をつけるとミュート・ノートになります。<br />
+              <a target="_blank" href="https://youtu.be/zt7p_n3wR_o?si=Vwv0BF2-oQRfe2qn">説明動画</a>
+            </p>
+          </details>
+          <details>
+            <summary>機能一覧</summary>
+            <ul>
+              <li>実装済: 奇数ピッチの入力</li>
+              <li>実装済: "隣"にある音と線で繋ぐ</li>
+              <li>実装済: ピッチクラスに応じた傾き・長さ</li>
+              <li>実装済: ミュート・ノート</li>
+              <li>実装済: 線の色</li>
+              <li>実装済: 画像サイズの自動調整</li>
+              <li>実装済: オクターブの表現</li>
+              <li>実装予定: x長の「オクターブ縮退モード」「シャサフ式互換モード」</li>
+              <li>実装予定: コードの演奏</li>
+              <li>実装予定: URLに和音情報を保存</li>
+              <li>実装予定: ミュート・ノートの自動補完</li>
+              <li>実装予定: 2^(a/b)型のピッチ</li>
+            </ul>
+          </details>
         </div>
       </div>
     </article>

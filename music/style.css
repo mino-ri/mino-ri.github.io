@@ -97,6 +97,7 @@ article {
 ul {
     margin-left: 2rem;
 }
+
 a {
     display: inline-block;
     margin: 0.25rem;
@@ -117,23 +118,17 @@ a:active {
     color: white;
 }
 
+
+summary {
+    color: #1A5135;
+    font-weight: bold;
+    border-bottom: 1px solid #287950;
+    padding-left: 0.5rem;
+}
+
 textarea {
     padding: 4px;
     width: calc(100% - 8px);
-}
-
-.vs-table-container {
-    overflow-x: auto;
-}
-
-.vs-table-container td, .vs-table-container th {
-    text-wrap: nowrap;
-}
-
-circle.base {
-    stroke: gray;
-    stroke-width: 2;
-    fill: transparent;
 }
 
 /* arrangement */
