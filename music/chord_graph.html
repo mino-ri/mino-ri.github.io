@@ -50,6 +50,20 @@
                 オクターブを無視する
               </label>
             </div>
+            <div>
+              <label>
+                <input type="radio" id="radio_x_integer" name="radio_x_length" checked oninput="loadMonzo()" />
+                整数
+              </label>
+              <label>
+                <input type="radio" id="radio_x_octave_reduced" name="radio_x_length" oninput="loadMonzo()" />
+                オクターブ縮退
+              </label>
+              <label>
+                <input type="radio" id="radio_x_shasavic" name="radio_x_length" oninput="loadMonzo()" />
+                シャサフ式互換
+              </label>
+            </div>
           </details>
           <details open>
             <summary>説明</summary>
@@ -69,7 +83,7 @@
               <li>実装済: 線の色</li>
               <li>実装済: 画像サイズの自動調整</li>
               <li>実装済: オクターブの表現</li>
-              <li>実装予定: x長の「オクターブ縮退モード」「シャサフ式互換モード」</li>
+              <li>実装済: x長の「オクターブ縮退モード」「シャサフ式互換モード」</li>
               <li>実装予定: コードの演奏</li>
               <li>実装予定: URLに和音情報を保存</li>
               <li>実装予定: ミュート・ノートの自動補完</li>

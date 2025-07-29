@@ -133,6 +133,48 @@ class Monzo {
         return Monzo.multiply(a, b.reciprocal())
     }
 
+    static getOctaveFactor(monzo) {
+        let power2 = 0
+        for (const prime in monzo.factors) {
+            if (prime !== "2") {
+                power2 += Math.floor(Math.log2(prime)) * monzo.factors[prime]
+            }
+        }
+        return power2
+    }
+
+    static toOctaveReduced(monzo) {
+        let power2 = Monzo.getOctaveFactor(monzo)
+        return power2 === 0 ? monzo : Monzo.multiply(monzo, new Monzo({ "2": power2 }))
+    }
+
+    static fromOctaveReduced(monzo) {
+        let power2 = Monzo.getOctaveFactor(monzo)
+        return power2 === 0 ? monzo : Monzo.divide(monzo, new Monzo({ "2": power2 }))
+    }
+
+    static getShasavicOctaveFactor(monzo) {
+        let power2 = 0
+        for (const prime in monzo.factors) {
+            if (prime === "3") {
+                power2 += monzo.factors[prime]
+            } else if (prime !== "2") {
+                power2 += monzo.factors[prime] * 2
+            }
+        }
+        return power2
+    }
+
+    static toShasavic(monzo) {
+        let power2 = Monzo.getShasavicOctaveFactor(monzo)
+        return power2 === 0 ? monzo : Monzo.multiply(monzo, new Monzo({ "2": power2 }))
+    }
+
+    static fromShasavic(monzo) {
+        let power2 = Monzo.getShasavicOctaveFactor(monzo)
+        return power2 === 0 ? monzo : Monzo.divide(monzo, new Monzo({ "2": power2 }))
+    }
+
     // テキストからMonzoの配列を取得する
     static parseMonzos(text) {
         // スペース区切りで分割

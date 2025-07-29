@@ -126,6 +126,14 @@ summary {
     padding-left: 0.5rem;
 }
 
+label {
+    display: inline-block;
+}
+
+label + label {
+        margin-left: 0.5rem;
+}
+
 textarea {
     padding: 4px;
     width: calc(100% - 8px);
