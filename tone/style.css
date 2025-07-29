@@ -21,12 +21,20 @@ body {
     font-size: 1rem;
 }
 
-h1 {
+header {
     background-color: #1A5135;
-    display: block;
+    display: flex;
+    flex-direction: row;
+    justify-content: right;
+    position: sticky;
     top: 0;
+}
+
+h1 {
     color: white;
-    font-size: 2rem;
+    font-size: 1rem;
+    margin-right: auto;
+    font-size: 1.25rem;
     padding: 0.25rem 0.25rem;
 }
 
@@ -46,6 +54,33 @@ article > h3 {
     border-radius: 0.5rem 0.5rem 0 0;
     vertical-align: middle;
     margin-bottom: 0.5rem;
+}
+
+nav.language-switcher {
+    display: flex;
+    flex-direction: row;
+    justify-content: right;
+}
+
+nav.language-switcher > label {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #287950;
+    color: white;
+    border: 1px solid #1A5135;
+    margin: 0;
+    padding: 0 0.5rem;
+    vertical-align: central;
+}
+
+nav.language-switcher > label:has(input:checked) {
+    background-color: #35A16B;
+}
+
+nav.language-switcher > label > input[type="radio"] {
+    appearance: none;
+    display: none;
 }
 
 div {

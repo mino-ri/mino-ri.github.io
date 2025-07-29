@@ -41,7 +41,9 @@ h1 {
 
 nav {
     color: black;
-    display: block;
+    display: flex;
+    flex-direction: row;
+    justify-content: left;
     position: sticky;
     top: 0;
 }
@@ -73,6 +75,34 @@ nav > ul > li > a {
     text-indent: 100%;
     white-space: nowrap;
     overflow: hidden;
+}
+
+nav > .language-switcher {
+    margin-left: auto;
+    display: flex;
+    flex-direction: row;
+    justify-content: left;
+}
+
+nav > .language-switcher > label {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #287950;
+    color: white;
+    border: 1px solid #1A5135;
+    margin: 0;
+    padding: 0 0.5rem;
+    vertical-align: central;
+}
+
+nav > .language-switcher > label:has(input:checked) {
+    background-color: #35A16B;
+}
+
+nav > .language-switcher > label > input[type="radio"] {
+    appearance: none;
+    display: none;
 }
 
 a.github {

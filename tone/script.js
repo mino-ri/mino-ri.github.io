@@ -343,7 +343,7 @@ function readAudio(source, saw, autoPlay) {
     const tdAudio2 = document.createElement("td");
     tdAudio2.appendChild(arpAudio);
     const tdOperation = document.createElement("td");
-    tdOperation.innerHTML = '<input type="button" value="削除" onclick="javascript:deleteRow(this)" />';
+    tdOperation.innerHTML = '<input type="button" value="Delete" onclick="javascript:deleteRow(this)" />';
     const tr = document.createElement("tr");
     tr.appendChild(tdCode);
     tr.appendChild(tdAudio);

@@ -8,6 +8,7 @@
   <meta name="copyright" content="copyright(C) 2021-2025 mino-ri All rights reserved." />
   <meta name="viewport" content="width=device-width">
   <link rel="stylesheet" type="text/css" href="./style.css" />
+  <script src="language_switcher.js"></script>
   <title>mino-ri</title>
 </head>
 <body>
@@ -20,6 +21,16 @@
       <li><a class="twitter" href="https://twitter.com/hojo_origami">Twitter</a></li>
       <li><a class="instagram" href="https://www.instagram.com/hojo.origami/">Instagram</a></li>
     </ul>
+    <div class="language-switcher">
+      <label>
+        <input type="radio" name="language" value="ja" checked onclick="switchLanguage(this)" />
+        日本語
+      </label>
+      <label>
+        <input type="radio" name="language" value="en" onclick="switchLanguage(this)" />
+        English
+      </label>
+    </div>
   </nav>
   <!--
   <section>
@@ -32,7 +43,7 @@
   </section>
   -->
   <section>
-    <h2>Projects</h2>
+    <h2 data-ls-en="Projects">プロジェクト</h2>
     <article>
       <h3>
         <img class="icon" src="images/orimath.png" alt="icon" />
@@ -41,10 +52,10 @@
       <div class="article-container">
         <img src="https://repository-images.githubusercontent.com/257803170/ee3ede80-7eda-11eb-8898-0ae61660c3e2" alt="Orimath logo" />
         <div>
-          <p>Origami simulator for mathemiticians & creators</p>
+          <p data-ls-en="Origami simulator for mathemiticians &amp; creators">数学と創作のための折り紙シミュレータ</p>
           <ul>
-            <li><a href="https://github.com/mino-ri/Orimath">Repository</a></li>
-            <li><a href="https://github.com/mino-ri/Orimath#how-to-install">Download</a></li>
+            <li><a href="https://github.com/mino-ri/Orimath" data-ls-en="Repository">リポジトリ</a></li>
+            <li><a href="https://github.com/mino-ri/Orimath#how-to-install" data-ls-en="Download">ダウンロード</a></li>
           </ul>
         </div>
       </div>
@@ -57,37 +68,37 @@
       <div class="article-container">
         <img src="https://repository-images.githubusercontent.com/330656263/8d86fa8c-fad5-4cb8-bf7a-6c9c976dc547" alt="Symirror logo" />
         <div>
-          <p>A Wythoff construction visualizer</p>
+          <p data-ls-en="A Wythoff construction visualizer">ワイソフ構成ビジュアライザー</p>
           <ul>
-            <li><a href="https://github.com/mino-ri/Symirror">Repository</a></li>
-            <li><a href="https://github.com/mino-ri/Symirror?tab=readme-ov-file#symirror">Download</a></li>
+            <li><a href="https://github.com/mino-ri/Symirror" data-ls-en="Repository">リポジトリ</a></li>
+            <li><a href="https://github.com/mino-ri/Symirror?tab=readme-ov-file#symirror" data-ls-en="Download">ダウンロード</a></li>
           </ul>
         </div>
       </div>
     </article>
   </section>
   <section>
-    <h2>Pages</h2>
+    <h2 data-ls-en="Web Pages">Webページ</h2>
     <article>
-      <h3>Music and Mathematics</h3>
+      <h3 data-ls-en="Music and Mathematics">音楽と数学</h3>
       <div class="article-container">
         <img src="images/music_math.png" alt="Music and Mathematics logo" />
         <div>
-          <p>Interactive pages about music and mathematics</p>
+          <p data-ls-en="Interactive pages about music and mathematics">音楽と数学のWebアプリ</p>
           <ul>
-            <li><a href="tone/">Microtone Tester</a></li>
-            <li><a href="tone/scale.html">Diatonic Scale Visualization</a></li>
-            <li><a href="music/chord_graph.html">Chord Graph</a></li>
+            <li><a href="tone/" data-ls-en="Microtone Tester">微分音試奏</a></li>
+            <li><a href="tone/scale.html" data-ls-en="Diatonic Scale Visualization">ダイアトニックスケール可視化</a></li>
+            <li><a href="music/chord_graph.html" data-ls-en="Chord Graph">和音グラフ</a></li>
           </ul>
         </div>
       </div>
     </article>
     <article>
-      <h3>Constructed Language</h3>
+      <h3 data-ls-en="Constructed Language">言語創作</h3>
       <div class="article-container">
         <img src="images/satukitan.png" alt="Satu Kitan" />
         <div>
-          <p>An introduction to my constructed language</p>
+          <p data-ls-en="An introduction to my constructed language">創作した言語の紹介ページ</p>
           <ul>
             <li><a href="satukitan/">Satu Kitan</a></li>
           </ul>

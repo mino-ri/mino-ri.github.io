@@ -8,6 +8,7 @@
   <meta name="copyright" content="copyright(C) 2024 mino-ri All rights reserved." />
   <meta name="viewport" content="width=device-width">
   <link href="style.css" rel="stylesheet" />
+  <script src="../language_switcher.js"></script>
   <title>Diatonic Scale Visualization</title>
   <style>
     .tone-container {
@@ -58,7 +59,19 @@
   </script>
 </head>
 <body>
-  <h1>Diatonic Scale Visualization</h1>
+  <header>
+    <h1 data-ls-en="Diatonic Scale Visualization">ダイアトニックスケール可視化</h1>
+    <nav class="language-switcher">
+      <label>
+        <input type="radio" name="language" value="ja" checked onclick="switchLanguage(this)" />
+        日本語
+      </label>
+      <label>
+        <input type="radio" name="language" value="en" onclick="switchLanguage(this)" />
+        English
+      </label>
+    </nav>
+  </header>
   <section>
     <article>
       <input type="range" min="0" max="200" oninput="resizeTones(this);" style="width: 200px;" />
@@ -75,13 +88,13 @@
         <div class="tone" style="flex: 112;"><span>15/8</span></div>
       </div>
       <div class="tone-container">
-        <div class="whole-tone"><span>Do</span></div>
-        <div class="whole-tone"><span>Re</span></div>
-        <div class="semi-tone"><span>Mi</span></div>
-        <div class="whole-tone"><span>Fa</span></div>
-        <div class="whole-tone"><span>So</span></div>
-        <div class="whole-tone"><span>La</span></div>
-        <div class="semi-tone"><span>Si</span></div>
+        <div class="whole-tone"><span data-ls-en="Do">ド</span></div>
+        <div class="whole-tone"><span data-ls-en="Re">レ</span></div>
+        <div class="semi-tone"><span data-ls-en="Mi">ミ</span></div>
+        <div class="whole-tone"><span data-ls-en="Fa">ファ</span></div>
+        <div class="whole-tone"><span data-ls-en="So">ソ</span></div>
+        <div class="whole-tone"><span data-ls-en="La">ラ</span></div>
+        <div class="semi-tone"><span data-ls-en="Si">シ</span></div>
       </div>
     </article>
     <article>
@@ -96,13 +109,13 @@
         <div class="tone" style="flex: 182;"><span>9/5</span></div>
       </div>
       <div class="tone-container">
-        <div class="whole-tone"><span>La</span></div>
-        <div class="semi-tone"><span>Si</span></div>
-        <div class="whole-tone"><span>Do</span></div>
-        <div class="whole-tone"><span>Re</span></div>
-        <div class="semi-tone"><span>Mi</span></div>
-        <div class="whole-tone"><span>Fa</span></div>
-        <div class="whole-tone"><span>So</span></div>
+        <div class="whole-tone"><span data-ls-en="La">ラ</span></div>
+        <div class="semi-tone"><span data-ls-en="Si">シ</span></div>
+        <div class="whole-tone"><span data-ls-en="Do">ド</span></div>
+        <div class="whole-tone"><span data-ls-en="Re">レ</span></div>
+        <div class="semi-tone"><span data-ls-en="Mi">ミ</span></div>
+        <div class="whole-tone"><span data-ls-en="Fa">ファ</span></div>
+        <div class="whole-tone"><span data-ls-en="So">ソ</span></div>
       </div>
     </article>
   </section>

@@ -9,38 +9,51 @@
   <meta name="viewport" content="width=device-width">
   <link href="style.css" rel="stylesheet" />
   <script src="script.js"></script>
+  <script src="../language_switcher.js"></script>
   <title>音律・和音試奏</title>
 </head>
 <body>
-  <h1>音律・和音試奏</h1>
+  <header>
+    <h1 data-ls-en="Microtone tester">音律・和音試奏</h1>
+    <nav class="language-switcher">
+      <label>
+        <input type="radio" name="language" value="ja" checked onclick="switchLanguage(this)" />
+        日本語
+      </label>
+      <label>
+        <input type="radio" name="language" value="en" onclick="switchLanguage(this)" />
+        English
+      </label>
+    </nav>
+  </header>
   <section>
-    <h2>書き方</h2>
+    <h2 data-ls-en="How to write">書き方</h2>
     <article>
-      <p>
-        1行に1つの音を書きます。
+      <p data-ls-en="Enter one note per line.">
+        1行に1つの音を表すコードを書きます。
       </p>
       <table>
         <thead>
-          <tr><th>構文</th><th>動作</th></tr>
+          <tr><th data-ls-en="Code">構文</th><th data-ls-en="Tone">動作</th></tr>
         </thead>
         <tbody>
-          <tr><td><code>C4</code></td><td>A4 = 440Hzを基本として音を鳴らします。</td></tr>
-          <tr><td><code>C#4</code></td><td>対象の音を半音上げます。</td></tr>
-          <tr><td><code>Cb4</code> <code>C♭4</code></td><td>対象の音を半音下げます。</td></tr>
-          <tr><td><code>C+4</code> <code>Cｷ4</code></td><td>対象の音を1/4音上げます。</td></tr>
-          <tr><td><code>C-4</code> <code>Cd4</code></td><td>対象の音を1/4音下げます。</td></tr>
-          <tr><td><code>C4 * 5/4</code></td><td>対象の音の周波数にn/mを掛けます。この例ではC4と純正に調和するE4の音が出ます。</td></tr>
-          <tr><td><code>C4 > 1/12</code></td><td>対象の音高を1オクターブのn/mだけ上げます。この例ではC4の半音上であるC#4の音が出ます。</td></tr>
-          <tr><td><code>C4 &lt; 1/12</code></td><td>対象の音高を1オクターブのn/mだけ下げます。</td></tr>
-          <tr><td><code>'31</code></td><td>以降の音を31平均律で解釈します。12平均律では異名同音である音が区別されます。</td></tr>
-          <tr><td><code>'M</code></td><td>以降の音を中全音律で解釈します。12平均律では異名同音である音が区別されます。</td></tr>
-          <tr><td><code>'P</code></td><td>以降の音をピタゴラス律で解釈します。12平均律では異名同音である音が区別されます。</td></tr>
+          <tr><td><code>C4</code></td><td data-ls-en="Define a tone with A4 = 440Hz as the reference.">A4 = 440Hzを基本として音を鳴らします。</td></tr>
+          <tr><td><code>C#4</code></td><td data-ls-en="Raise the pitch by a semitone.">対象の音を半音上げます。</td></tr>
+          <tr><td><code>Cb4</code> <code>C♭4</code></td><td data-ls-en="Lower the pitch by a semitone.">対象の音を半音下げます。</td></tr>
+          <tr><td><code>C+4</code> <code>Cｷ4</code></td><td data-ls-en="Raise the pitch by a quarter tone.">対象の音を1/4音上げます。</td></tr>
+          <tr><td><code>C-4</code> <code>Cd4</code></td><td data-ls-en="Lower the pitch by a quarter tone.">対象の音を1/4音下げます。</td></tr>
+          <tr><td><code>C4 * 5/4</code></td><td data-ls-en="Multiply the frequency by n/m.">対象の音の周波数にn/mを掛けます。この例ではC4と純正に調和するE4の音が出ます。</td></tr>
+          <tr><td><code>C4 > 1/12</code></td><td data-ls-en="Raise the pitch by n/m of one octave.">対象の音高を1オクターブのn/mだけ上げます。この例ではC4の半音上であるC#4の音が出ます。</td></tr>
+          <tr><td><code>C4 &lt; 1/12</code></td><td data-ls-en="Lower the pitch by n/m of one octave.">対象の音高を1オクターブのn/mだけ下げます。</td></tr>
+          <tr><td><code>'31</code></td><td data-ls-en="Subsequent notes are interpreted using 31EDO. Notes that are enharmonic in 12-EDO are distinguished.">以降の音を31平均律で解釈します。12平均律では異名同音である音が区別されます。</td></tr>
+          <tr><td><code>'M</code></td><td data-ls-en="Subsequent notes are interpreted using meantone. Notes that are enharmonic in 12-EDO are distinguished.">以降の音を中全音律で解釈します。12平均律では異名同音である音が区別されます。</td></tr>
+          <tr><td><code>'P</code></td><td data-ls-en="Subsequent notes are interpreted using Pythagorean tuning. Notes that are enharmonic in 12-EDO are distinguished.">以降の音をピタゴラス律で解釈します。12平均律では異名同音である音が区別されます。</td></tr>
         </tbody>
       </table>
     </article>
   </section>
   <section>
-    <h2>演奏</h2>
+    <h2 data-ls-en="Playing">演奏</h2>
     <article>
       <div>
         <textarea id="textarea_tones" name="textarea_tones" rows="5">A3
@@ -50,15 +63,15 @@ G#4</textarea>
       </div>
       <div>
         <input type="checkbox" id="checkbox_saw" />
-        <label for="checkbox_saw">のこぎり波</label>
+        <label for="checkbox_saw" data-ls-en="Saw wave">のこぎり波</label>
       </div>
       <div>
-        <input type="button" value="作成" onclick="javascript:createAudio()" />
+        <input type="button" value="Generate" onclick="javascript:createAudio()" />
       </div>
       <div class="vs-table-container">
         <table>
           <thead>
-            <tr><th>設定</th><th>コード</th><th>アルペジオ</th><th>操作</th></tr>
+            <tr><th data-ls-en="Code">設定</th><th data-ls-en="Chord">コード</th><th data-ls-en="Arpeggio">アルペジオ</th><th data-ls-en="Actions">操作</th></tr>
           </thead>
           <tbody id="tones">
           </tbody>
