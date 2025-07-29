@@ -19,6 +19,18 @@ body {
     color: black;
     background-color: #f3f3f9;
     font-size: 1rem;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+body > footer {
+    font-size: 0.75rem;
+    padding: 0.75rem 0.5rem;
+    text-align: center;
+    background-color: #1A5135;
+    color: white;
+    margin-top: auto;
 }
 
 header {

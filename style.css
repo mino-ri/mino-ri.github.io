@@ -19,6 +19,9 @@ body {
     color: black;
     background-color: #f3f3f9;
     font-size: 1rem;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
 }
 
 /* 共通背景 */
@@ -208,6 +211,7 @@ body > footer {
     text-align: center;
     background-color: #1A5135;
     color: white;
+    margin-top: auto;
 }
 
 @media (max-width: 767px) {
