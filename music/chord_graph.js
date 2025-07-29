@@ -77,7 +77,6 @@ function parsePitches(text, ignoreOctave, xLengthType) {
         if (sameEntry) {
             sameEntry.mute = mute && sameEntry.mute
         } else {
-            console.log(monzo.factors)
             monzos.push({ mute, monzo, originalMonzo })
         }
     }
@@ -228,7 +227,7 @@ function createOctaveArc(x1, y1, x2, y2, scale, stroke, strokeWidth) {
         "none", stroke, strokeWidth)
 }
 
-function loadMonzo() {
+function loadMonzo(ignoreSave) {
     if (!(textArea instanceof HTMLTextAreaElement) ||
         !(checkboxAutoSize instanceof HTMLInputElement) ||
         !(checkboxIgnoreOctave instanceof HTMLInputElement) ||
@@ -241,7 +240,7 @@ function loadMonzo() {
         !(pitchClassGroup instanceof SVGGElement)) {
         return
     }
-    
+
     const text = textArea.value
     const xLengthType =
         radioXOctaveReduced.checked ? XLengthType.OctaveReduced :
@@ -298,6 +297,10 @@ function loadMonzo() {
             }
         }
     }
+
+    if (!ignoreSave) {
+        saveToHash()
+    }
 }
 
 function createSvgUrl() {
@@ -326,6 +329,49 @@ function downloadPng() {
     }
 }
 
+function encodeHash(obj) {
+    return Object.keys(obj).map(key => `${key}=${obj[key]}`).join('&')
+}
+
+function decodeHash(hash) {
+    const obj = {}
+    hash.split('&').forEach(pair => {
+        const [key, value] = pair.split('=')
+        if (key && value) {
+            obj[key] = value
+        }
+    })
+    return obj
+}
+
+function saveToHash() {
+    const hashData = {
+        c: textArea.value.replace(/[^0-9x/\s]+/g, '').trim().replace(/\s+/g, '_'),
+        i: checkboxIgnoreOctave.checked ? '1' : '0',
+        x: radioXInteger.checked ? 'i' : radioXOctaveReduced.checked ? 'o' : 's',
+    }
+    location.hash = encodeHash(hashData)
+}
+
+function loadFromHash() {
+    const { c: chord, i: ignoreOctave, x: xType } = decodeHash(location.hash.replace('#', ''))
+    if (chord && chord.length > 0) {
+        textArea.value = chord.replace(/_/g, ' ')
+    }
+    if (ignoreOctave && ignoreOctave === '1') {
+        checkboxIgnoreOctave.checked = true
+    }
+    if (xType) {
+        if (xType === 'i') {
+            radioXInteger.checked = true
+        } else if (xType === 'o') {
+            radioXOctaveReduced.checked = true
+        } else if (xType === 's') {
+            radioXShasavic.checked = true
+        }
+    }
+}
+
 window.addEventListener("load", () => {
     textArea = document.getElementById("textarea_editor")
     checkboxAutoSize = document.getElementById("checkbox_auto_size")
@@ -340,5 +386,6 @@ window.addEventListener("load", () => {
     aDownloadSvg = document.getElementById("a_download_svg")
     aDownloadPng = document.getElementById("a_download_png")
 
-    loadMonzo()
+    loadFromHash()
+    loadMonzo(true)
 })
