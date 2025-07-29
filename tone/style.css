@@ -95,6 +95,46 @@ nav.language-switcher > label > input[type="radio"] {
     display: none;
 }
 
+a {
+    display: inline-block;
+    margin: 0.25rem;
+    padding: 0.25rem;
+    border-radius: 0.25rem;
+    background-color: #287950;
+    color: white;
+    text-decoration: none;
+}
+
+a:hover {
+    background-color: #35A16B;
+    color: white;
+}
+
+a:active {
+    background-color: #FF9900;
+    color: white;
+}
+
+header > a.back {
+    margin: 1px;
+    border-radius: 0;
+    background-color: #1A5135;
+    background-image: url("../images/back.png");
+    background-size: 60%;
+    background-position: center;
+    background-repeat: no-repeat;
+    display: block;
+    width: 1rem;
+    height: 1.75rem;
+    text-indent: 200%;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+header > a.back:hover {
+    background-color: #35A16B;
+}
+
 div {
     margin-top: 0.8rem;
     margin-bottom: 0.8rem;

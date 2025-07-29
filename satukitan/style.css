@@ -30,6 +30,16 @@ body {
     min-height: 100vh;
 }
 
+header {
+    background-color: #4E4B26;
+    display: flex;
+    flex-direction: row;
+    justify-content: right;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
 body > footer {
     font-size: 0.75rem;
     padding: 0.75rem 0.5rem;
@@ -40,11 +50,9 @@ body > footer {
 }
 
 h1 {
-    background-color: #4E4B26;
-    display: block;
-    top: 0;
     color: #ffffff;
-    font-size: 2rem;
+    margin-right: auto;
+    font-size: 1.25rem;
     padding: 0.25rem 0.25rem;
 }
 
@@ -71,6 +79,47 @@ h4 {
     font-size: 1.5rem;
     margin-top: 0.8rem;
     margin-bottom: 0.8rem;
+}
+
+
+a {
+    display: inline-block;
+    margin: 0.25rem;
+    padding: 0.25rem;
+    border-radius: 0.25rem;
+    background-color: #775539;
+    color: white;
+    text-decoration: none;
+}
+
+a:hover {
+    background-color: #35A16B;
+    color: white;
+}
+
+a:active {
+    background-color: #FF9900;
+    color: white;
+}
+
+header > a.back {
+    margin: 1px;
+    border-radius: 0;
+    background-color: #4E4B26;
+    background-image: url("../images/back.png");
+    background-size: 60%;
+    background-position: center;
+    background-repeat: no-repeat;
+    display: block;
+    width: 1rem;
+    height: 1.75rem;
+    text-indent: 200%;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+header > a.back:hover {
+    background-color: #775539;
 }
 
 hr {
@@ -111,7 +160,7 @@ table {
 table.sticky > thead {
     position: -webkit-sticky;
     position: sticky;
-    top: 0px;
+    top: 2.25rem;
 }
 
 thead tr {

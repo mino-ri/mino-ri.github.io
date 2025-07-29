@@ -45,7 +45,6 @@ header {
 
 h1 {
     color: white;
-    font-size: 1rem;
     margin-right: auto;
     font-size: 1.25rem;
     padding: 0.25rem 0.25rem;
@@ -166,6 +165,26 @@ a:active {
     color: white;
 }
 
+header > a.back {
+    margin: 1px;
+    border-radius: 0;
+    background-color: #1A5135;
+    background-image: url("../images/back.png");
+    background-size: 60%;
+    background-position: center;
+    background-repeat: no-repeat;
+
+    display: block;
+    width: 1rem;
+    height: 1.75rem;
+    text-indent: 200%;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+header > a.back:hover {
+    background-color: #35A16B;
+}
 
 summary {
     color: #1A5135;

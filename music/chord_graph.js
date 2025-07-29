@@ -350,7 +350,8 @@ function saveToHash() {
         i: checkboxIgnoreOctave.checked ? '1' : '0',
         x: radioXInteger.checked ? 'i' : radioXOctaveReduced.checked ? 'o' : 's',
     }
-    location.hash = encodeHash(hashData)
+
+    history.replaceState(null, "", `${location.pathname}#${encodeHash(hashData)}`)
 }
 
 function loadFromHash() {
