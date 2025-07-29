@@ -7,7 +7,8 @@
   <meta name="author" content="mino-ri" />
   <meta name="copyright" content="copyright(C) 2024 mino-ri All rights reserved." />
   <meta name="viewport" content="width=device-width">
-  <link href="style.css" rel="stylesheet" />
+  <link rel="stylesheet" type="text/css" href="../color_standard.css" />
+  <link rel="stylesheet" type="text/css" href="../style.css" />
   <script src="load_pitch.js"></script>
   <script src="chord_graph.js"></script>
   <script src="../language_switcher.js"></script>
@@ -41,7 +42,7 @@
         <div>
           <textarea id="textarea_editor"
                     name="textarea_editor"
-                    rows="5"
+                    rows="2"
                     oninput="loadMonzo()">1 x3 9 11 11/2</textarea>
         </div>
         <div>
@@ -52,59 +53,57 @@
         </div>
         <div>
           <a id="a_download_svg"
-             href="#"
-             download="chordGraph.svg"
-             onclick="downloadSvg()"
-             data-ls-en="Download SVG">SVGダウンロード</a>
+              href="#"
+              download="chordGraph.svg"
+              onclick="downloadSvg()"
+              data-ls-en="Download SVG">SVGダウンロード</a>
           <a id="a_download_png"
-             href="#"
-             onclick="downloadPng()"
-             data-ls-en="Download PNG">PNGダウンロード</a>
+              href="#"
+              onclick="downloadPng()"
+              data-ls-en="Download PNG">PNGダウンロード</a>
         </div>
-        <div>
-          <details open>
-            <summary data-ls-en="X-direction options">x方向のオプション</summary>
-            <div>
-              <label>
-                <input type="checkbox" id="checkbox_ignore_octave" name="checkbox_ignore_octave" oninput="loadMonzo()" />
-                <span data-ls-en="Ignore octaves">オクターブを無視する</span>
-              </label>
-            </div>
-            <div>
-              <label>
-                <input type="radio" id="radio_x_integer" name="radio_x_length" checked oninput="loadMonzo()" />
-                <span data-ls-en="Integer">整数</span>
-              </label>
-              <label>
-                <input type="radio" id="radio_x_octave_reduced" name="radio_x_length" oninput="loadMonzo()" />
-                <span data-ls-en="Octave reducing">オクターブ縮退</span>
-              </label>
-              <label>
-                <input type="radio" id="radio_x_shasavic" name="radio_x_length" oninput="loadMonzo()" />
-                <span data-ls-en="Shasavic compatible">シャサフ式互換</span>
-              </label>
-            </div>
-          </details>
-          <details open>
-            <summary data-ls-en="How to use">使い方</summary>
-            <p>
-              <span data-ls-en="Enter multiple integers or fractions separated by spaces.">スペース区切りで複数の整数または分数を入力してください。</span><br />
-              <span data-ls-en="Prefix a number with 'x' to indicate a muted note.">数の前に「x」をつけるとミュート・ノートになります。</span><br />
-              <a target="_blank" href="https://youtu.be/zt7p_n3wR_o?si=Vwv0BF2-oQRfe2qn" data-ls-en="Conceptual video">
-                説明動画
-              </a>
-            </p>
-          </details>
-          <details>
-            <summary data-ls-en="Planned features">実装予定の機能一覧</summary>
-            <ul>
-              <li data-ls-en="Playing chord">コードの演奏</li>
-              <li data-ls-en="Y-length limit">Y方向の距離制限</li>
-              <li data-ls-en="Muted note auto-fill">ミュート・ノートの自動補完</li>
-              <li data-ls-en="Pitch formed 2^(a/b)">2^(a/b)型のピッチ</li>
-            </ul>
-          </details>
-        </div>
+        <details open>
+          <summary data-ls-en="X-direction options">x方向のオプション</summary>
+          <div>
+            <label>
+              <input type="checkbox" id="checkbox_ignore_octave" name="checkbox_ignore_octave" oninput="loadMonzo()" />
+              <span data-ls-en="Ignore octaves">オクターブを無視する</span>
+            </label>
+          </div>
+          <div>
+            <label>
+              <input type="radio" id="radio_x_integer" name="radio_x_length" checked oninput="loadMonzo()" />
+              <span data-ls-en="Integer">整数</span>
+            </label>
+            <label>
+              <input type="radio" id="radio_x_octave_reduced" name="radio_x_length" oninput="loadMonzo()" />
+              <span data-ls-en="Octave reducing">オクターブ縮退</span>
+            </label>
+            <label>
+              <input type="radio" id="radio_x_shasavic" name="radio_x_length" oninput="loadMonzo()" />
+              <span data-ls-en="Shasavic compatible">シャサフ式互換</span>
+            </label>
+          </div>
+        </details>
+        <details open>
+          <summary data-ls-en="How to use">使い方</summary>
+          <p>
+            <span data-ls-en="Enter multiple integers or fractions separated by spaces.">スペース区切りで複数の整数または分数を入力してください。</span><br />
+            <span data-ls-en="Prefix a number with 'x' to indicate a muted note.">数の前に「x」をつけるとミュート・ノートになります。</span><br />
+            <a target="_blank" href="https://youtu.be/zt7p_n3wR_o?si=Vwv0BF2-oQRfe2qn" data-ls-en="Conceptual video">
+              説明動画
+            </a>
+          </p>
+        </details>
+        <details>
+          <summary data-ls-en="Planned features">実装予定の機能一覧</summary>
+          <ul>
+            <li data-ls-en="Playing chord">コードの演奏</li>
+            <li data-ls-en="Y-length limit">Y方向の距離制限</li>
+            <li data-ls-en="Muted note auto-fill">ミュート・ノートの自動補完</li>
+            <li data-ls-en="Pitch formed 2^(a/b)">2^(a/b)型のピッチ</li>
+          </ul>
+        </details>
       </div>
     </article>
   </section>

@@ -1,0 +1,119 @@
+@charset "UTF-8";
+
+/* body 直下 h1 はトップページのみ。他ページでは header が間に入る */
+body > h1 {
+    display: block;
+    top: 0;
+    padding: 0.25rem 0.25rem;
+    background-color: var(--color-primary-dark);
+    color: var(--color-primary-text);
+    font-size: 2rem;
+}
+
+nav {
+    display: flex;
+    flex-direction: row;
+    justify-content: left;
+    position: sticky;
+    top: 0;
+    background-color: var(--color-primary-dark);
+    color: var(--color-primary-text);
+
+    & > ul {
+        display: flex;
+        flex-direction: row;
+        justify-content: left;
+        height: 2.25rem;
+        padding: 0.125rem;
+
+        & li {
+            display: block;
+            height: 100%;
+            list-style: none;
+
+            & a {
+                display: inline-block;
+                width: 2rem;
+                height: 2rem;
+                margin: 0.125rem;
+                padding: 0;
+                border-radius: 1rem;
+                background-size: cover;
+                background-position: center;
+                background-repeat: no-repeat;
+                /* テキストを事実上非表示にする */
+                text-indent: 100%;
+                white-space: nowrap;
+                overflow: hidden;
+                                
+                &.github {
+                    background-image: url("images/github.png");
+                    background-size: 105%;
+                    background-color: white;
+                }
+
+                &.twitter {
+                    background-image: url("images/twitter.png");
+                    background-color: #1D9BF0;
+                    background-size: 60%;
+                }
+
+                &.instagram {
+                    background-image: url("images/instagram.png");
+                    background-color: #F00074;
+                    background-size: 60%;
+                }
+
+                &.youtube-origami {
+                    background-image: url("images/hojo_origami.png");
+                }
+
+                &.youtube-minori {
+                    background-image: url("images/minori.png");
+                }
+            }
+        }
+    }
+}
+
+/* article-container */
+article > .article-container {
+    margin: 0;
+
+    & > img {
+        padding: 0.8rem;
+    }
+    
+    & > div > * {
+        margin: 0.8rem;
+    }
+}
+
+@media (max-width: 767px) {
+    .article-container > img {
+        display: block;
+        max-width: 90vw;
+        object-fit: contain;
+    }
+}
+
+@media (min-width: 768px) {
+    .article-container {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        justify-content: left;
+
+        & img {
+            display: block;
+            flex: none;
+            width: 55%;
+            max-height: 60vh;
+            object-fit: contain;
+        }
+    
+        & > div {
+            flex: auto;
+        }
+    }
+}

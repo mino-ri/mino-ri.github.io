@@ -1,0 +1,22 @@
+@charset "UTF-8";
+
+:root {
+    /* ページ全体の後ろにある背景色 */
+    --color-global-background: #f3f3f9;
+    /* メイン色(暗・中・明) */
+    --color-primary-dark: #1A5135;
+    --color-primary: #287950;
+    --color-primary-light: #35A16B;
+    --color-primary-text: #FFFFFF;
+    --color-primary-accent: #FF9900;
+    /* 本文の色 */
+    --color-article-background: #FFFFFF;
+    --color-article-text: #000000;
+    --color-code-background: #d8d8d8;
+
+    /* テーブルの色 */
+    --color-table-header-background: #203050;
+    --color-table-header-text: #ffffff;
+    --color-table-background: #ffffff;
+    --color-table-background-alt: #f0f4ff;
+}

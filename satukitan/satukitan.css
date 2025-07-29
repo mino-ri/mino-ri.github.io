@@ -1,0 +1,76 @@
+@charset "utf-8";
+
+@font-face {
+    font-family: 'SatukitanSans';
+    src: url('SatukitanSans.woff') format('woff');
+}
+
+:root {
+    /* ページ全体の後ろにある背景色 */
+    --color-global-background: #EEEDDA;
+    /* メイン色(暗・中・明) */
+    --color-primary-dark: #4E4B26;
+    --color-primary: #775539;
+    --color-primary-light: #DBD0C7;
+    --color-primary-text: #FFFFFF;
+    --color-primary-accent: #FF9900;
+    /* 本文の色 */
+    --color-article-background: #FFFFFF;
+    --color-article-text: #363A3E;
+    --color-code-background: #d8d8d8;
+
+    /* テーブルの色 */
+    --color-table-header-background: #215F5C;
+    --color-table-header-text: #ffffff;
+    --color-table-background: #ffffff;
+    --color-table-background-alt: #EEF8F8;
+}
+
+.satu {
+    font-family: 'SatukitanSans';
+    font-feature-settings: "liga" 1;
+    -webkit-font-feature-settings: "liga" 1;
+}
+
+input.satu-switch + * + * {
+    font-family: 'SatukitanSans';
+    font-feature-settings: "liga" 1;
+    -webkit-font-feature-settings: "liga" 1;
+}
+
+input.satu-switch:checked + * + * {
+    font-family: sans-serif;
+}
+
+span.trans {
+    display: inline-block;
+}
+
+dl.trans {
+    display: inline-block;
+}
+
+dl.trans + dl.trans {
+    margin-left: 0.3rem;
+}
+
+dl.trans > dt {
+    font-family: 'SatukitanSans';
+    font-feature-settings: "liga" 1;
+    -webkit-font-feature-settings: "liga" 1;
+
+    border-bottom: solid 1px var(--color-primary);
+    display: block;
+    color: #000000;
+    font-size: 1.5rem;
+}
+
+dl.trans > dt + dd {
+    display: block;
+    color: var(--color-primary);
+    font-size: 0.8rem;
+}
+
+dl.trans > dt + dd + dd {
+    display: block;
+}

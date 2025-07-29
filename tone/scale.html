@@ -7,10 +7,15 @@
   <meta name="author" content="mino-ri" />
   <meta name="copyright" content="copyright(C) 2024 mino-ri All rights reserved." />
   <meta name="viewport" content="width=device-width">
-  <link href="style.css" rel="stylesheet" />
+  <link rel="stylesheet" type="text/css" href="../color_standard.css" />
+  <link rel="stylesheet" type="text/css" href="../style.css" />
   <script src="../language_switcher.js"></script>
   <title>Diatonic Scale Visualization</title>
   <style>
+    article {
+        padding: 0.8rem 2px;
+    }
+
     .tone-container {
       display: flex;
       flex-direction: row;
@@ -42,13 +47,13 @@
       overflow: hidden;
     }
 
-      .whole-tone span, .semi-tone span, .tone span {
-        display: block;
-        margin: 0px;
-        padding: 2px;
-        border-left: 3px solid darkgray;
-        border-right: 3px solid darkgray;
-      }
+    .whole-tone span, .semi-tone span, .tone span {
+      display: block;
+      margin: 0px;
+      padding: 2px;
+      border-left: 3px solid darkgray;
+      border-right: 3px solid darkgray;
+    }
   </style>
   <script>
     function resizeTones(elm) {
