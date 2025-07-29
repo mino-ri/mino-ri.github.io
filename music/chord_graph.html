@@ -86,6 +86,40 @@
           </div>
         </details>
         <details open>
+          <summary data-ls-en="Color Scheme">配色</summary>
+          <ul class="color-list">
+            <li>
+              <label>
+                <div data-ls-en="Main">メイン</div>                
+                <input type="color" id="color_main" value="#2B2F75" oninput="colorScheme.noteStroke = this.value; loadMonzo()" />
+              </label>
+            </li>
+            <li>
+              <label>
+                <div data-ls-en="Sub">サブ</div>
+                <input type="color" id="color_sub" value="#FDC6FE" oninput="colorScheme.gridStroke = this.value; loadMonzo()" />
+              </label>
+            </li>
+            <li>
+              <label>
+                <div data-ls-en="Fill">塗りつぶし</div>
+                <input type="color" id="color_fill" value="#FFFFFF" oninput="colorScheme.noteFill = this.value; loadMonzo()" />
+              </label>
+            </li>
+          </ul>
+          <div>
+            <div data-ls-en="Pitch Class">ピッチクラス</div>
+            <ul class="color-list">
+              <li><input type="color" id="color0" value="#11EDE8" oninput="colorScheme.setPitchClassColor(0, this.value); loadMonzo()" /></li>
+              <li><input type="color" id="color1" value="#25938E" oninput="colorScheme.setPitchClassColor(1, this.value); loadMonzo()" /></li>
+              <li><input type="color" id="color2" value="#E39D11" oninput="colorScheme.setPitchClassColor(2, this.value); loadMonzo()" /></li>
+              <li><input type="color" id="color3" value="#F24E75" oninput="colorScheme.setPitchClassColor(3, this.value); loadMonzo()" /></li>
+              <li><input type="color" id="color4" value="#9664F0" oninput="colorScheme.setPitchClassColor(4, this.value); loadMonzo()" /></li>
+              <li><input type="color" id="color5" value="#39A2E9" oninput="colorScheme.setPitchClassColor(5, this.value); loadMonzo()" /></li>
+            </ul>
+          </div>
+        </details>
+        <details open>
           <summary data-ls-en="How to use">使い方</summary>
           <p>
             <span data-ls-en="Enter multiple integers or fractions separated by spaces.">スペース区切りで複数の整数または分数を入力してください。</span><br />

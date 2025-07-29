@@ -19,6 +19,140 @@ class XLengthType {
     }
 }
 
+class ColorScheme {
+    constructor() {
+        this.gridStroke = "#FDC6FE"
+        this.noteStroke = "#2B2F75"
+        this.noteFill = "#FFFFFF"
+        this.pitchScheme = [
+            { amount: 0.000, h: 180, s: 220, l: 124 },
+            { amount: 0.250, h: 177, s: 152, l: 92 },
+            { amount: 0.375, h: 40, s: 219, l: 122 },
+            { amount: 0.500, h: 345, s: 220, l: 160 },
+            { amount: 0.625, h: 261, s: 210, l: 170 },
+            { amount: 0.750, h: 204, s: 203, l: 145 },
+            { amount: 1.000, h: 180, s: 220, l: 124 },
+        ]
+    }
+
+    static toRgbColor(h, s, l) {
+        h = h % 360
+        s = Math.max(0, Math.min(255, s))
+        l = Math.max(0, Math.min(255, l))
+        const c = (1 - Math.abs(2 * l / 255 - 1)) * s / 255
+        const x = c * (1 - Math.abs((h / 60) % 2 - 1))
+        const m = l / 255 - c / 2
+        let r, g, b
+        if (h < 60) {
+            r = c; g = x; b = 0
+        } else if (h < 120) {
+            r = x; g = c; b = 0
+        } else if (h < 180) {
+            r = 0; g = c; b = x
+        } else if (h < 240) {
+            r = 0; g = x; b = c
+        } else if (h < 300) {
+            r = x; g = 0; b = c
+        } else {
+            r = c; g = 0; b = x
+        }
+        r = Math.max(0, Math.min(255, Math.round((r + m) * 255)))
+        g = Math.max(0, Math.min(255, Math.round((g + m) * 255)))
+        b = Math.max(0, Math.min(255, Math.round((b + m) * 255)))
+
+        return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`
+    }
+
+    static toHslValue(rgb) {
+        // Remove '#' if present
+        rgb = rgb.replace(/^#/, '')
+        // Parse r, g, b values
+        let r = parseInt(rgb.substring(0, 2), 16) / 255
+        let g = parseInt(rgb.substring(2, 4), 16) / 255
+        let b = parseInt(rgb.substring(4, 6), 16) / 255
+
+        let max = Math.max(r, g, b)
+        let min = Math.min(r, g, b)
+        let h, s, l
+        l = (max + min) / 2
+
+        if (max === min) {
+            h = 0
+            s = 0
+        } else {
+            let d = max - min
+            s = l > 0.5 ? d / (2 - max - min) : d / (max + min)
+            switch (max) {
+                case r:
+                    h = (g - b) / d + (g < b ? 6 : 0)
+                    break;
+                case g:
+                    h = (b - r) / d + 2
+                    break;
+                case b:
+                    h = (r - g) / d + 4
+                    break;
+            }
+            h /= 6
+        }
+        // Convert to 0-360, 0-255 scale
+        h = Math.round(h * 360)
+        s = Math.round(s * 255)
+        l = Math.round(l * 255)
+        return { h, s, l }
+    }
+
+    setPitchClassColor(index, rgb) {
+        const { h, s, l } = ColorScheme.toHslValue(rgb)
+        this.pitchScheme[index].h = h
+        this.pitchScheme[index].s = s
+        this.pitchScheme[index].l = l
+        if (index == 0) {
+            this.pitchScheme[this.pitchScheme.length - 1].h = h
+            this.pitchScheme[this.pitchScheme.length - 1].s = s
+            this.pitchScheme[this.pitchScheme.length - 1].l = l
+        }
+    }
+
+    getPitchClassHsl(amount) {
+        // amountがpitchSchemeの範囲外の場合は端の値を返す
+        if (amount <= this.pitchScheme[0].amount) {
+            return this.pitchScheme[0]
+        }
+        if (amount >= this.pitchScheme[this.pitchScheme.length - 1].amount) {
+            return this.pitchScheme[this.pitchScheme.length - 1]
+        }
+        // 範囲内の場合、2点間で線形補間（hは色相なので0-360をラップし、最短経路で補間）
+        for (let i = 0; i < this.pitchScheme.length - 1; i++) {
+            const a0 = this.pitchScheme[i].amount
+            const a1 = this.pitchScheme[i + 1].amount
+            if (amount >= a0 && amount <= a1) {
+                const t = (amount - a0) / (a1 - a0)
+                let h0 = this.pitchScheme[i].h % 360
+                let h1 = this.pitchScheme[i + 1].h % 360
+                let dh = h1 - h0
+                // 色相の最短経路で補間
+                if (dh > 180) {
+                    dh -= 360
+                } else if (dh < -180) {
+                    dh += 360
+                }
+                let h = (h0 + 360 + t * dh) % 360
+                const s = this.pitchScheme[i].s + t * (this.pitchScheme[i + 1].s - this.pitchScheme[i].s)
+                const l = this.pitchScheme[i].l + t * (this.pitchScheme[i + 1].l - this.pitchScheme[i].l)
+                return { h, s, l }
+            }
+        }
+
+        return this.pitchScheme[0]
+    }
+
+    getPitchClassColor(amount) {
+        const { h, s, l } = this.getPitchClassHsl(amount)
+        return ColorScheme.toRgbColor(h, s, l)
+    }
+}
+
 var textArea;
 var previewSvg;
 var grid;
@@ -35,15 +169,7 @@ var radioXShasavic;
 const centerX = 960
 const centerY = 960
 
-const colorScheme = [
-    { amount: 0.000, h: 360 + 180, s: 220, l: 124 },
-    { amount: 0.250, h: 360 + 177, s: 152, l: 92 },
-    { amount: 0.375, h: 360 + 40, s: 219, l: 122 },
-    { amount: 0.500, h: 345, s: 220, l: 160 },
-    { amount: 0.625, h: 261, s: 210, l: 170 },
-    { amount: 0.750, h: 204, s: 203, l: 145 },
-    { amount: 1.000, h: 180, s: 220, l: 124 },
-]
+const colorScheme = new ColorScheme()
 
 // テキストからピッチの配列を取得する
 function parsePitches(text, ignoreOctave, xLengthType) {
@@ -118,61 +244,6 @@ function clearChildren(...elements) {
             element.removeChild(element.firstChild);
         }
     }
-}
-
-function toRgbColor(h, s, l) {
-    h = h % 360
-    s = Math.max(0, Math.min(255, s))
-    l = Math.max(0, Math.min(255, l))
-    const c = (1 - Math.abs(2 * l / 255 - 1)) * s / 255
-    const x = c * (1 - Math.abs((h / 60) % 2 - 1))
-    const m = l / 255 - c / 2
-    let r, g, b
-    if (h < 60) {
-        r = c; g = x; b = 0
-    } else if (h < 120) {
-        r = x; g = c; b = 0
-    } else if (h < 180) {
-        r = 0; g = c; b = x
-    } else if (h < 240) {
-        r = 0; g = x; b = c
-    } else if (h < 300) {
-        r = x; g = 0; b = c
-    } else {
-        r = c; g = 0; b = x
-    }
-    r = Math.max(0, Math.min(255, Math.round((r + m) * 255)))
-    g = Math.max(0, Math.min(255, Math.round((g + m) * 255)))
-    b = Math.max(0, Math.min(255, Math.round((b + m) * 255)))
-
-    return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`
-}
-
-function getPitchClassColor(amount) {
-    // amountがcolorSchemeの範囲外の場合は端の値を返す
-    if (amount <= colorScheme[0].amount) {
-        const { h, s, l } = colorScheme[0]
-        return toRgbColor(h, s, l)
-    }
-    if (amount >= colorScheme[colorScheme.length - 1].amount) {
-        const { h, s, l } = colorScheme[colorScheme.length - 1]
-        return toRgbColor(h, s, l)
-    }
-    // 範囲内の場合、2点間で線形補間
-    for (let i = 0; i < colorScheme.length - 1; i++) {
-        const a0 = colorScheme[i].amount
-        const a1 = colorScheme[i + 1].amount
-        if (amount >= a0 && amount <= a1) {
-            const t = (amount - a0) / (a1 - a0)
-            const h = colorScheme[i].h + t * (colorScheme[i + 1].h - colorScheme[i].h)
-            const s = colorScheme[i].s + t * (colorScheme[i + 1].s - colorScheme[i].s)
-            const l = colorScheme[i].l + t * (colorScheme[i + 1].l - colorScheme[i].l)
-            return toRgbColor(h, s, l)
-        }
-    }
-
-    const { h, s, l } = colorScheme[0]
-    return toRgbColor(h, s, l)
 }
 
 function createPath(d, fill, stroke, strokeWidth) {
@@ -260,13 +331,13 @@ function loadMonzo(ignoreSave) {
         maxX = Math.max(maxX, Math.round(x + 50))
         maxY = Math.max(maxY, Math.round(y + 150))
         if (mute) {
-            pitchClassGroup.appendChild(createCircle(x, y, 15, "#FFFFFF", "#FDC6FE", "6"))
+            pitchClassGroup.appendChild(createCircle(x, y, 15, colorScheme.noteFill, colorScheme.gridStroke, "6"))
         } else if (rootNode) {
-            pitchClassGroup.appendChild(createDiamond(x, y, 40, "#FFFFFF", "#2B2F75", "6"))
-            pitchClassGroup.appendChild(createDiamond(x, y, 30, "#2B2F75", "#FFFFFF", "2"))
+            pitchClassGroup.appendChild(createDiamond(x, y, 40, colorScheme.noteFill, colorScheme.noteStroke, "6"))
+            pitchClassGroup.appendChild(createDiamond(x, y, 30, colorScheme.noteStroke, colorScheme.noteFill, "2"))
             rootNode = false
         } else {
-            pitchClassGroup.appendChild(createDiamond(x, y, 30, "#FFFFFF", "#2B2F75", "6"))
+            pitchClassGroup.appendChild(createDiamond(x, y, 30, colorScheme.noteFill, colorScheme.noteStroke, "6"))
         }
     }
 
@@ -290,10 +361,28 @@ function loadMonzo(ignoreSave) {
 
             const intervalClass = Math.pow(2, Math.abs(interval.pitch) % 1) - 1
             if (interval.isOnly2) {
-                lineGroup.appendChild(createOctaveArc(x1, y1, x2, y2, xLengthType.scale, "#FDC6FE", "12"))
+                const line = createOctaveArc(x1, y1, x2, y2, xLengthType.scale, colorScheme.gridStroke, "12")
+                line.setAttribute("data-prime", interval.minPrime)
+                // オクターブ線は必ず最後に入れる
+                lineGroup.appendChild(line)
             } else {
-                const color = getPitchClassColor(intervalClass)
-                lineGroup.appendChild(createLine(x1, y1, x2, y2, color, "24"))
+                const color = colorScheme.getPitchClassColor(intervalClass)
+                const line = createLine(x1, y1, x2, y2, color, "24")
+                const prime = interval.minPrime
+                line.setAttribute("data-prime", prime)
+                if (lineGroup.firstChild) {
+                    for (let child = lineGroup.firstChild; child !== null; child = child.nextSibling) {
+                        if (child instanceof SVGElement && child.dataset.prime && 
+                            (child.dataset.prime === "2" || prime < Number(child.dataset.prime))) {
+                            lineGroup.insertBefore(line, child)
+                            break
+                        } else if (!child.nextSibling) {
+                            lineGroup.appendChild(line)
+                        }
+                    }
+                } else {
+                    lineGroup.appendChild(line)
+                }
             }
         }
     }

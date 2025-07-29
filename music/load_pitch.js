@@ -40,7 +40,7 @@ class Monzo {
     }
 
     get minPrime() {
-        let minPrime = 999999999
+        let minPrime = Infinity
         for (const prime in this.factors) {
             const numPrime = Number(prime)
             if (this.factors[prime] !== 0 && numPrime < minPrime) {
