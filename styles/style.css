@@ -38,7 +38,7 @@ body {
             margin: 1px;
             border-radius: 0;
             background-color: var(--color-primary-dark);
-            background-image: url("./images/back.png");
+            background-image: url("./../images/back.png");
             background-size: 60%;
             background-position: center;
             background-repeat: no-repeat;

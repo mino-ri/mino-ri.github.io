@@ -47,29 +47,29 @@ nav {
                 overflow: hidden;
                                 
                 &.github {
-                    background-image: url("images/github.png");
+                    background-image: url("./../images/github.png");
                     background-size: 105%;
                     background-color: white;
                 }
 
                 &.twitter {
-                    background-image: url("images/twitter.png");
+                    background-image: url("./../images/twitter.png");
                     background-color: #1D9BF0;
                     background-size: 60%;
                 }
 
                 &.instagram {
-                    background-image: url("images/instagram.png");
+                    background-image: url("./../images/instagram.png");
                     background-color: #F00074;
                     background-size: 60%;
                 }
 
                 &.youtube-origami {
-                    background-image: url("images/hojo_origami.png");
+                    background-image: url("./../images/hojo_origami.png");
                 }
 
                 &.youtube-minori {
-                    background-image: url("images/minori.png");
+                    background-image: url("./../images/minori.png");
                 }
             }
         }

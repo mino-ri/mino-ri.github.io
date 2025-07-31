@@ -1,2 +1,5 @@
 # mino-ri.github.io
-web page
+
+私のWebサイトです。
+
+サイトURL : https://mino-ri.github.io/

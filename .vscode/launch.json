@@ -1,0 +1,13 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "chrome",
+            "request": "launch",
+            "preLaunchTask": "ts build",
+            "name": "Launch Chrome",
+            "file": "${workspaceFolder}/index.html",
+            "webRoot": "${workspaceFolder}"
+        }
+    ]
+}
