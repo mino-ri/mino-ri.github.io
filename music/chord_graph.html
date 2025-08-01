@@ -49,10 +49,11 @@
             <span data-ls-en="Automatically adjust image size">画像サイズを自動調整する</span>
           </label>
         </div>
-        <div>
-          <a id="a_download_svg" href="#" download="chordGraph.svg" data-ls-en="Download SVG">SVGダウンロード</a>
-          <a id="a_download_png" href="#" data-ls-en="Download PNG">PNGダウンロード</a>
-        </div>
+        <ul class="link-list">
+          <li><a id="a_download_svg" href="#" download="chordGraph.svg" data-ls-en="Download SVG">SVGダウンロード</a></li>
+          <li><a id="a_download_png" href="#" data-ls-en="Download PNG">PNGダウンロード</a></li>
+          <li><input id="button_play" type="button" value="Play" /></li>
+        </ul>
         <details open>
           <summary data-ls-en="X-direction options">x方向のオプション</summary>
           <div>
@@ -123,7 +124,6 @@
         <details>
           <summary data-ls-en="Planned features">実装予定の機能一覧</summary>
           <ul>
-            <li data-ls-en="Playing chord">コードの演奏</li>
             <li data-ls-en="Y-length limit">Y方向の距離制限</li>
             <li data-ls-en="Muted note auto-fill">ミュート・ノートの自動補完</li>
             <li data-ls-en="Pitch formed 2^(a/b)">2^(a/b)型のピッチ</li>
