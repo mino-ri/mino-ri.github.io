@@ -1,0 +1,60 @@
+name: Auto Merge main into develop and build
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  merge-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout develop branch
+        uses: actions/checkout@v4
+        with:
+          ref: develop
+          fetch-depth: 0
+
+      - name: Set up Git user
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Get current date/time for branch name
+        id: datetime
+        run: echo "BRANCH=merge/$(date +'%Y%m%d_%H%M')" >> $GITHUB_ENV
+
+      - name: Create and checkout new branch
+        run: |
+          git checkout -b $BRANCH
+
+      - name: Merge main into new branch
+        run: |
+          git merge origin/main --no-edit
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Compile TypeScript in src
+        run: |
+          cd src
+          npm install -D tsc
+          npx tsc
+          cd ..
+
+      - name: Remove src directory
+        run: rm -rf src
+
+      - name: Commit changes
+        run: |
+          git add -A
+          git commit -m "Auto TypeScript Release"
+
+      - name: Merge branch into main
+        run: |
+          git checkout main
+          git pull origin main
+          git merge $BRANCH --no-edit
+          git push origin main

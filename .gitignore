@@ -1,2 +1,3 @@
 .vs/**
 *.js.map
+scripts/**
