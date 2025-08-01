@@ -38,12 +38,12 @@ line.ratio {
     margin: 0;
     border-radius: 6px;
     display: flex;
-}
-
-    .control-tone > div {
+    
+    & > div {
         margin: 6px;
         flex: 1;
     }
+}
 
 .control-ratio {
     margin: 0 0.5rem 0;

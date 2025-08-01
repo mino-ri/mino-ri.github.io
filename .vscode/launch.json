@@ -7,7 +7,8 @@
             "preLaunchTask": "ts build",
             "name": "Launch Chrome",
             "file": "${workspaceFolder}/index.html",
-            "webRoot": "${workspaceFolder}"
+            "webRoot": "${workspaceFolder}",
+            "runtimeArgs": ["--allow-file-access-from-files"]
         }
     ]
 }

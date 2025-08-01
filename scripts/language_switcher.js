@@ -46,4 +46,3 @@ function loadLanguages() {
     }
 }
 window.addEventListener("load", loadLanguages);
-//# sourceMappingURL=language_switcher.js.map

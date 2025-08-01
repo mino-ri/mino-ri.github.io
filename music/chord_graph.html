@@ -9,8 +9,7 @@
   <meta name="viewport" content="width=device-width">
   <link rel="stylesheet" type="text/css" href="./../styles/color_standard.css" />
   <link rel="stylesheet" type="text/css" href="./../styles/style.css" />
-  <script src="./load_pitch.js"></script>
-  <script src="./chord_graph.js"></script>
+  <script type="module" src="./../scripts/chord_graph.js"></script>
   <script src="./../scripts/language_switcher.js"></script>
   <title>和音グラフジェネレータ</title>
 </head>
@@ -42,45 +41,37 @@
         <div>
           <textarea id="textarea_editor"
                     name="textarea_editor"
-                    rows="2"
-                    oninput="loadMonzo()">1 x3 9 11 11/2</textarea>
+                    rows="2">1 x3 9 11 11/2</textarea>
         </div>
         <div>
           <label>
-            <input type="checkbox" id="checkbox_auto_size" name="checkbox_auto_size" checked oninput="loadMonzo()" />
+            <input type="checkbox" id="checkbox_auto_size" name="checkbox_auto_size" checked />
             <span data-ls-en="Automatically adjust image size">画像サイズを自動調整する</span>
           </label>
         </div>
         <div>
-          <a id="a_download_svg"
-              href="#"
-              download="chordGraph.svg"
-              onclick="downloadSvg()"
-              data-ls-en="Download SVG">SVGダウンロード</a>
-          <a id="a_download_png"
-              href="#"
-              onclick="downloadPng()"
-              data-ls-en="Download PNG">PNGダウンロード</a>
+          <a id="a_download_svg" href="#" download="chordGraph.svg" data-ls-en="Download SVG">SVGダウンロード</a>
+          <a id="a_download_png" href="#" data-ls-en="Download PNG">PNGダウンロード</a>
         </div>
         <details open>
           <summary data-ls-en="X-direction options">x方向のオプション</summary>
           <div>
             <label>
-              <input type="checkbox" id="checkbox_ignore_octave" name="checkbox_ignore_octave" oninput="loadMonzo()" />
+              <input type="checkbox" id="checkbox_ignore_octave" name="checkbox_ignore_octave" />
               <span data-ls-en="Ignore octaves">オクターブを無視する</span>
             </label>
           </div>
           <div>
             <label>
-              <input type="radio" id="radio_x_integer" name="radio_x_length" checked oninput="loadMonzo()" />
+              <input type="radio" id="radio_x_integer" name="radio_x_length" checked />
               <span data-ls-en="Integer">整数</span>
             </label>
             <label>
-              <input type="radio" id="radio_x_octave_reduced" name="radio_x_length" oninput="loadMonzo()" />
+              <input type="radio" id="radio_x_octave_reduced" name="radio_x_length" />
               <span data-ls-en="Octave reducing">オクターブ縮退</span>
             </label>
             <label>
-              <input type="radio" id="radio_x_shasavic" name="radio_x_length" oninput="loadMonzo()" />
+              <input type="radio" id="radio_x_shasavic" name="radio_x_length" />
               <span data-ls-en="Shasavic compatible">シャサフ式互換</span>
             </label>
           </div>
@@ -91,31 +82,31 @@
             <li>
               <label>
                 <div data-ls-en="Main">メイン</div>                
-                <input type="color" id="color_main" value="#2B2F75" oninput="colorScheme.noteStroke = this.value; loadMonzo()" />
+                <input type="color" id="color_main" value="#2B2F75" />
               </label>
             </li>
             <li>
               <label>
                 <div data-ls-en="Sub">サブ</div>
-                <input type="color" id="color_sub" value="#FDC6FE" oninput="colorScheme.gridStroke = this.value; loadMonzo()" />
+                <input type="color" id="color_sub" value="#FDC6FE" />
               </label>
             </li>
             <li>
               <label>
                 <div data-ls-en="Fill">塗りつぶし</div>
-                <input type="color" id="color_fill" value="#FFFFFF" oninput="colorScheme.noteFill = this.value; loadMonzo()" />
+                <input type="color" id="color_fill" value="#FFFFFF" />
               </label>
             </li>
           </ul>
           <div>
             <div data-ls-en="Pitch Class">ピッチクラス</div>
             <ul class="color-list">
-              <li><input type="color" id="color0" value="#11EDE8" oninput="colorScheme.setPitchClassColor(0, this.value); loadMonzo()" /></li>
-              <li><input type="color" id="color1" value="#25938E" oninput="colorScheme.setPitchClassColor(1, this.value); loadMonzo()" /></li>
-              <li><input type="color" id="color2" value="#E39D11" oninput="colorScheme.setPitchClassColor(2, this.value); loadMonzo()" /></li>
-              <li><input type="color" id="color3" value="#F24E75" oninput="colorScheme.setPitchClassColor(3, this.value); loadMonzo()" /></li>
-              <li><input type="color" id="color4" value="#9664F0" oninput="colorScheme.setPitchClassColor(4, this.value); loadMonzo()" /></li>
-              <li><input type="color" id="color5" value="#39A2E9" oninput="colorScheme.setPitchClassColor(5, this.value); loadMonzo()" /></li>
+              <li><input type="color" id="color0" value="#11EDE8" /></li>
+              <li><input type="color" id="color1" value="#25938E" /></li>
+              <li><input type="color" id="color2" value="#E39D11" /></li>
+              <li><input type="color" id="color3" value="#F24E75" /></li>
+              <li><input type="color" id="color4" value="#9664F0" /></li>
+              <li><input type="color" id="color5" value="#39A2E9" /></li>
             </ul>
           </div>
         </details>

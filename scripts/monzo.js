@@ -1,0 +1,160 @@
+export class Monzo {
+    static #primes = [
+        2, 3, 5, 7, 11, 13, 17, 19, 23, 29,
+        31, 37, 41, 43, 47, 53, 59, 61, 67,
+        71, 73, 79, 83, 89, 97,
+    ];
+    factors;
+    constructor(factors) {
+        this.factors = factors;
+    }
+    get value() {
+        let value = 1;
+        for (const [prime, factor] of this.factors) {
+            value *= Math.pow(prime, factor);
+        }
+        return value;
+    }
+    get pitchDistance() {
+        let distance = 0;
+        for (const [_, factor] of this.factors) {
+            distance += Math.abs(factor);
+        }
+        return distance;
+    }
+    get isOnly2() {
+        return this.factors.size === 1 && this.factors.has(2);
+    }
+    get pitch() {
+        return Math.log2(this.value);
+    }
+    get pitchClass() {
+        return this.pitch % 1;
+    }
+    get minPrime() {
+        let minPrime = Infinity;
+        for (const [prime, factor] of this.factors) {
+            if (factor !== 0 && prime < minPrime) {
+                minPrime = prime;
+            }
+        }
+        return minPrime === Infinity ? 1 : minPrime;
+    }
+    reciprocal() {
+        const factors = new Map();
+        for (const [prime, factor] of this.factors) {
+            factors.set(prime, -factor);
+        }
+        return new Monzo(factors);
+    }
+    toString() {
+        let result = '';
+        for (const [prime, factor] of this.factors) {
+            if (factor > 0) {
+                result += `${prime}^${factor} `;
+            }
+            else if (factor < 0) {
+                result += `${prime}^(${-factor}) `;
+            }
+        }
+        return result.trim();
+    }
+    static fromInt(value) {
+        const factors = new Map();
+        let n = value;
+        for (const i of Monzo.#primes) {
+            while (i <= n && n % i === 0) {
+                factors.set(i, (factors.get(i) ?? 0) + 1);
+                n /= i;
+                if (n <= 1) {
+                    return new Monzo(factors);
+                }
+            }
+        }
+        for (let i = 101; i <= n; i++) {
+            while (i <= n && n % i === 0) {
+                factors.set(i, (factors.get(i) ?? 0) + 1);
+                n /= i;
+                if (n <= 1) {
+                    return new Monzo(factors);
+                }
+            }
+        }
+        return new Monzo(factors);
+    }
+    static fromFraction(numerator, denominator) {
+        return Monzo.divide(Monzo.fromInt(numerator), Monzo.fromInt(denominator));
+    }
+    static multiply(a, b) {
+        const factors = new Map();
+        for (const [prime, factor] of a.factors) {
+            factors.set(prime, factor);
+        }
+        for (const [prime, factor] of b.factors) {
+            const newFactor = (factors.get(prime) ?? 0) + factor;
+            if (newFactor === 0) {
+                factors.delete(prime);
+            }
+            else {
+                factors.set(prime, newFactor);
+            }
+        }
+        return new Monzo(factors);
+    }
+    static divide(a, b) {
+        return Monzo.multiply(a, b.reciprocal());
+    }
+    static getOctaveFactor(monzo) {
+        let power2 = 0;
+        for (const [prime, factor] of monzo.factors) {
+            if (prime !== 2) {
+                power2 += Math.floor(Math.log2(prime)) * factor;
+            }
+        }
+        return power2;
+    }
+    static from2Factor(factor) {
+        return new Monzo(new Map([[2, factor]]));
+    }
+    static toOctaveReduced(monzo) {
+        let power2 = Monzo.getOctaveFactor(monzo);
+        return power2 === 0 ? monzo : Monzo.multiply(monzo, Monzo.from2Factor(power2));
+    }
+    static fromOctaveReduced(monzo) {
+        let power2 = Monzo.getOctaveFactor(monzo);
+        return power2 === 0 ? monzo : Monzo.divide(monzo, Monzo.from2Factor(power2));
+    }
+    static getShasavicOctaveFactor(monzo) {
+        let power2 = 0;
+        for (const [prime, factor] of monzo.factors) {
+            if (prime === 3) {
+                power2 += factor;
+            }
+            else if (prime !== 2) {
+                power2 += factor * 2;
+            }
+        }
+        return power2;
+    }
+    static toShasavic(monzo) {
+        let power2 = Monzo.getShasavicOctaveFactor(monzo);
+        return power2 === 0 ? monzo : Monzo.multiply(monzo, Monzo.from2Factor(power2));
+    }
+    static fromShasavic(monzo) {
+        let power2 = Monzo.getShasavicOctaveFactor(monzo);
+        return power2 === 0 ? monzo : Monzo.divide(monzo, Monzo.from2Factor(power2));
+    }
+    static parseMonzos(text) {
+        const tokens = text.trim().split(/\s+/);
+        const monzos = tokens.map(token => {
+            if (token.includes('/')) {
+                const [num, denom] = token.split('/').map(Number);
+                return Monzo.fromFraction(num ?? 1, denom ?? 1);
+            }
+            else {
+                return Monzo.fromInt(Number(token));
+            }
+        });
+        return monzos;
+    }
+}
