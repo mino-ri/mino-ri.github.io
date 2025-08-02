@@ -50,7 +50,12 @@ jobs:
         run: |
           cd src_build
           npm install typescript
+          npm install terser
           npx tsc
+          for f in $(ls *.js); do
+            npx terser -c -m -o "${f}" -- "${f}"
+            npx terser -c -m -o "${f}" -- "${f}"
+          done
           cd ..
 
       - name: Remove src directory
