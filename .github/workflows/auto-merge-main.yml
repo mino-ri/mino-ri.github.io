@@ -8,6 +8,8 @@ on:
 jobs:
   merge-and-build:
     runs-on: ubuntu-latest
+    env:
+      TZ: 'Asia/Tokyo'
     steps:
       - name: Checkout develop branch
         uses: actions/checkout@v4
@@ -22,35 +24,49 @@ jobs:
 
       - name: Get current date/time for branch name
         id: datetime
-        run: echo "BRANCH=merge/$(date +'%Y%m%d_%H%M')" >> $GITHUB_ENV
+        run: echo "BRANCH=merge/$(date +'%Y%m%d_%H%M%S')" >> $GITHUB_ENV
 
       - name: Create and checkout new branch
-        run: |
-          git checkout -b $BRANCH
+        run: git checkout -b $BRANCH
 
-      - name: Merge main into new branch
+      - name: Move source directory
         run: |
-          git merge origin/main --no-edit
+          mv src/ src_build/
+
+      - name: Remove src from git
+        run: |
+          git add -A
+          git commit -m "Remove TypeScript"
+
+      - name: Merge main branch into working
+        run: git merge origin/main --no-edit
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
-      - name: Compile TypeScript in src
+      - name: Compile TypeScript in src_build
         run: |
-          cd src
-          npm install -D tsc
+          cd src_build
+          npm install typescript
+          npm install terser
           npx tsc
+          for f in $(ls *.js); do
+            npx terser -c -m -o "${f}" -- "${f}"
+            npx terser -c -m -o "${f}" -- "${f}"
+          done
           cd ..
 
       - name: Remove src directory
-        run: rm -rf src
+        run: |
+          rm -rf src
+          rm -rf src_build
 
       - name: Commit changes
         run: |
           git add -A
-          git commit -m "Auto TypeScript Release"
+          git commit -m "Auto TypeScript Release" || true
 
       - name: Merge branch into main
         run: |
