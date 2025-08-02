@@ -61,7 +61,7 @@ jobs:
       - name: Commit changes
         run: |
           git add -A
-          git commit -m "Auto TypeScript Release"
+          git commit -m "Auto TypeScript Release" || true
 
       - name: Merge branch into main
         run: |
