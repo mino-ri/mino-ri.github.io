@@ -1,4 +1,4 @@
-name: Auto Merge main into develop and build
+name: Auto Merge main into develop
 
 on:
   push:
@@ -11,10 +11,10 @@ jobs:
     env:
       TZ: 'Asia/Tokyo'
     steps:
-      - name: Checkout develop branch
+      - name: Checkout build branch
         uses: actions/checkout@v4
         with:
-          ref: develop
+          ref: build
           fetch-depth: 0
 
       - name: Set up Git user
@@ -22,55 +22,52 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-      - name: Get current date/time for branch name
-        id: datetime
-        run: echo "BRANCH=merge/$(date +'%Y%m%d_%H%M%S')" >> $GITHUB_ENV
-
-      - name: Create and checkout new branch
-        run: git checkout -b $BRANCH
-
-      - name: Move source directory
-        run: |
-          mv src/ src_build/
-
-      - name: Remove src from git
-        run: |
-          git add -A
-          git commit -m "Remove TypeScript"
-
-      - name: Merge main branch into working
-        run: git merge origin/main --no-edit
+      - name: Merge branch into build
+        run: git merge origin/develop --no-edit
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
-      - name: Compile TypeScript in src_build
+      - name: Compile TypeScript
         run: |
-          cd src_build
+          cd src
           npm install typescript
           npm install terser
           npx tsc
+          cd ../scripts
           for f in $(ls *.js); do
             npx terser -c -m -o "${f}" -- "${f}"
             npx terser -c -m -o "${f}" -- "${f}"
           done
           cd ..
 
+      - name: Commit changes
+        run: |
+          git add ./scripts/*.*
+          git commit -m "Auto TypeScript Build" || true
+          git push origin build
+
+      - name: Get current datetime for branch name
+        id: datetime
+        run: echo "BRANCH=merge/$(date +'%Y%m%d_%H%M%S')" >> $GITHUB_ENV
+
+      - name: Create new branch
+        run: git checkout -b $BRANCH
+
       - name: Remove src directory
         run: |
           rm -rf src
-          rm -rf src_build
 
       - name: Commit changes
         run: |
           git add -A
-          git commit -m "Auto TypeScript Release" || true
+          git commit -m "Remove TypeScript" || true
 
       - name: Merge branch into main
         run: |
-          git checkout main
+          git switch main
           git pull origin main
           git merge $BRANCH --no-edit
           git push origin main
