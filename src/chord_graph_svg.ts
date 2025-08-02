@@ -5,6 +5,13 @@ type HslValue = { h: number, s: number, l: number }
 
 type ColorScalePart = { amount: number, h: number, s: number, l: number }
 
+export type Option = {
+    xLengthType: XLengthType,
+    autoSize: boolean,
+    isAngleLog: boolean,
+    yLengthLimit: boolean,
+}
+
 export class ColorScheme {
     gridStroke: string
     noteStroke: string
@@ -163,26 +170,46 @@ const centerY = 960
 
 // const colorScheme = new ColorScheme()
 
-function getPrimePitchClass(prime: number) {
-    const denominator = Math.pow(2, Math.floor(Math.log2(prime)))
-    return prime / denominator
-}
-
-function getIntervalDelta(prime: number, power: number, xLengthType: XLengthType) {
-    const pitchClass = getPrimePitchClass(prime)
-    const dx = Math.log2(prime) * power - xLengthType.getOctaveFactor(new Monzo(new Map([[prime, power]])))
-    const dy = prime === 2 ? 0 : dx * Math.tan(Math.PI * (pitchClass - 0.5))
-    return {
-        dx: Math.round(dx * xLengthType.scale),
-        dy: Math.round(dy * xLengthType.scale),
+function getPrimePitchClass(prime: number, isAngleLog: boolean): number {
+    if (isAngleLog) {
+        return (Math.log2(prime) % 1 + 1) % 1 + 1
+    } else {
+        const denominator = Math.pow(2, Math.floor(Math.log2(prime)))
+        return prime / denominator
     }
 }
 
-function getPitchPoint(monzo: Monzo, xLengthType: XLengthType) {
+function getIntervalDelta(prime: number, power: number, option: Option) {
+    const pitchClass = getPrimePitchClass(prime, option.isAngleLog)
+    const dx = (Math.log2(prime) * power - option.xLengthType.getOctaveFactor(new Monzo(new Map([[prime, power]]))))
+        * option.xLengthType.scale
+    let tangent = Math.tan(Math.PI * (pitchClass - 0.5))
+    let dy = Math.round(prime === 2 ? 0 : dx * tangent)
+    let middlePoint: { dx: number, dy: number } | null = null
+    if (option.yLengthLimit && Math.abs(dy) > 512) {
+        dy = Math.sign(dy) * 512
+        middlePoint = { dx: Math.round(dy / tangent), dy }
+    }
+
+    return {
+        dx: Math.round(dx),
+        dy,
+        middlePoint,
+    }
+}
+
+function getPitchInterval(monzo: Monzo, option: Option) {
+    for (const [prime, power] of monzo.factors) {
+        return getIntervalDelta(Number(prime), power, option)
+    }
+    return { dx: 0, dy: 0, middlePoint: null }
+}
+
+function getPitchPoint(monzo: Monzo, option: Option) {
     let x = 0
     let y = 0
     for (const [prime, power] of monzo.factors) {
-        const { dx, dy } = getIntervalDelta(Number(prime), power, xLengthType)
+        const { dx, dy } = getIntervalDelta(Number(prime), power, option)
         x += dx
         y += dy
     }
@@ -235,6 +262,14 @@ function createLine(x1: number, y1: number, x2: number, y2: number, stroke: stri
     return line
 }
 
+function createYLimitedLine(x1: number, y1: number, x2: number, y2: number, middlePoint: { dx: number, dy: number }, stroke: string, strokeWidth: string) {
+    const { dx, dy } = middlePoint
+
+    return createPath(
+        `M ${x1 + centerX},${y1 + centerY} C ${x1 + dx + centerX},${y1 + dy + centerY} ${x2 - dx + centerX},${y2 - dy + centerY} ${x2 + centerX},${y2 + centerY}`,
+        "none", stroke, strokeWidth)
+}
+
 function createOctaveArc(x1: number, y1: number, x2: number, y2: number, scale: number, stroke: string, strokeWidth: string) {
     if (x1 > x2) {
         let d = x1
@@ -265,24 +300,28 @@ export class PitchSvgGenerator {
         this.colorScheme = colorScheme
     }
     
-    addIntervalLine(monzo1: Monzo, monzo2: Monzo, xLengthType: XLengthType) {
-        const interval = Monzo.divide(monzo1, monzo2)
+    addIntervalLine(monzo1: Monzo, monzo2: Monzo, option: Option) {
+        const interval = Monzo.divide(monzo2, monzo1)
         if (interval.pitchDistance !== 1) {
             return
         }
     
-        const { x: x1, y: y1 } = getPitchPoint(monzo1, xLengthType)
-        const { x: x2, y: y2 } = getPitchPoint(monzo2, xLengthType)
+        const { x: x1, y: y1 } = getPitchPoint(monzo1, option)
+        const { dx, dy, middlePoint } = getPitchInterval(interval, option)
+        const x2 = x1 + dx
+        const y2 = y1 + dy
     
         const intervalClass = Math.pow(2, Math.abs(interval.pitch) % 1) - 1
         if (interval.isOnly2) {
-            const line = createOctaveArc(x1, y1, x2, y2, xLengthType.scale, this.colorScheme.gridStroke, "12")
+            const line = createOctaveArc(x1, y1, x2, y2, option.xLengthType.scale, this.colorScheme.gridStroke, "12")
             line.setAttribute("data-prime", interval.minPrime.toString())
             // オクターブ線は必ず最後に入れる
             this.lineGroup.appendChild(line)
         } else {
             const color = this.colorScheme.getPitchClassColor(intervalClass)
-            const line = createLine(x1, y1, x2, y2, color, "24")
+            const line = middlePoint
+                ? createYLimitedLine(x1, y1, x2, y2, middlePoint, color, "24")
+                : createLine(x1, y1, x2, y2, color, "24")
             const prime = interval.minPrime
             line.setAttribute("data-prime", prime.toString())
             if (this.lineGroup.firstChild) {
@@ -301,7 +340,7 @@ export class PitchSvgGenerator {
         }
     }
     
-    createSvg(xLengthType: XLengthType, pitches: PitchInfo[], autoSize: boolean) {
+    createSvg(pitches: PitchInfo[], option: Option) {
         clearChildren(this.grid, this.lineGroup, this.pitchClassGroup)
         let rootNode = true
         let minX = -50
@@ -309,7 +348,7 @@ export class PitchSvgGenerator {
         let maxX = 50
         let maxY = 150
         for (const { mute, monzo } of pitches) {
-            const { x, y } = getPitchPoint(monzo, xLengthType)
+            const { x, y } = getPitchPoint(monzo, option)
             minX = Math.min(minX, Math.round(x - 50))
             minY = Math.min(minY, Math.round(y - 50))
             maxX = Math.max(maxX, Math.round(x + 50))
@@ -325,7 +364,7 @@ export class PitchSvgGenerator {
             }
         }
     
-        if (autoSize) {
+        if (option.autoSize) {
             this.previewSvg.setAttribute("viewBox", `${minX + centerX} ${minY + centerY} ${maxX - minX} ${maxY - minY}`)
         } else {
             this.previewSvg.setAttribute("viewBox", "0 0 1920 1920")
@@ -333,7 +372,7 @@ export class PitchSvgGenerator {
     
         for (let i = 0; i < pitches.length; i++) {
             for (let j = i + 1; j < pitches.length; j++) {
-                this.addIntervalLine(pitches[i]!.monzo, pitches[j]!.monzo, xLengthType)
+                this.addIntervalLine(pitches[i]!.monzo, pitches[j]!.monzo, option)
             }
         }
     }

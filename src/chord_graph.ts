@@ -4,6 +4,8 @@ import { AudioSource } from "./sound.js"
 
 let textArea: HTMLTextAreaElement
 let checkboxAutoSize: HTMLInputElement
+let checkboxAngleLog: HTMLInputElement
+let checkboxLimitYLength: HTMLInputElement
 let checkboxIgnoreOctave: HTMLInputElement
 let radioXInteger: HTMLInputElement
 let radioXOctaveReduced: HTMLInputElement
@@ -20,7 +22,12 @@ function loadMonzo(ignoreSave?: boolean) {
         radioXOctaveReduced.checked ? XLengthType.OctaveReduced :
             radioXShasavic.checked ? XLengthType.Shasavic : XLengthType.Integer
     pitches = parsePitches(text, checkboxIgnoreOctave.checked, xLengthType)
-    svgGenerator.createSvg(xLengthType, pitches, checkboxAutoSize.checked)
+    svgGenerator.createSvg(pitches, {
+        xLengthType,
+        autoSize: checkboxAutoSize.checked,
+        isAngleLog: checkboxAngleLog.checked,
+        yLengthLimit: checkboxLimitYLength.checked,
+     })
 
     if (!ignoreSave) {
         saveToHash()
@@ -87,7 +94,9 @@ function decodeHash(hash: string) {
 function saveToHash() {
     const hashData = {
         c: textArea.value.replace(/[^0-9x/\s]+/g, '').trim().replace(/\s+/g, '_'),
-        i: checkboxIgnoreOctave.checked ? '1' : '0',
+        i: (Number(checkboxIgnoreOctave.checked) |
+            (Number(checkboxAngleLog.checked) << 1) |
+            (Number(checkboxLimitYLength.checked) << 2)).toString(),
         x: radioXInteger.checked ? 'i' : radioXOctaveReduced.checked ? 'o' : 's',
     }
 
@@ -95,12 +104,15 @@ function saveToHash() {
 }
 
 function loadFromHash() {
-    const { c: chord, i: ignoreOctave, x: xType } = decodeHash(location.hash.replace('#', ''))
+    const { c: chord, i, x: xType } = decodeHash(location.hash.replace('#', ''))
     if (chord && chord.length > 0) {
         textArea.value = chord.replace(/_/g, ' ')
     }
-    if (ignoreOctave && ignoreOctave === '1') {
-        checkboxIgnoreOctave.checked = true
+    if (i) {
+        const flags = Number(i)
+        checkboxIgnoreOctave.checked = flags % 2 >= 1
+        checkboxAngleLog.checked = flags % 4 >= 2
+        checkboxLimitYLength.checked = flags % 8 >= 4
     }
     if (xType) {
         if (xType === 'i') {
@@ -121,6 +133,8 @@ function addEventListnerById<T extends HTMLElement>(id: string, eventName: strin
 window.addEventListener("load", () => {
     textArea = document.getElementById("textarea_editor") as HTMLTextAreaElement
     checkboxAutoSize = document.getElementById("checkbox_auto_size") as HTMLInputElement
+    checkboxAngleLog = document.getElementById("checkbox_angle_log") as HTMLInputElement
+    checkboxLimitYLength = document.getElementById("limit_y_length") as HTMLInputElement
     checkboxIgnoreOctave = document.getElementById("checkbox_ignore_octave") as HTMLInputElement
     radioXInteger = document.getElementById("radio_x_integer") as HTMLInputElement
     radioXOctaveReduced = document.getElementById("radio_x_octave_reduced") as HTMLInputElement
@@ -136,6 +150,8 @@ window.addEventListener("load", () => {
     const uiElements: HTMLElement[] = [
         textArea,
         checkboxAutoSize,
+        checkboxAngleLog,
+        checkboxLimitYLength,
         checkboxIgnoreOctave,
         radioXInteger,
         radioXOctaveReduced,
