@@ -50,19 +50,30 @@
           </label>
         </div>
         <ul class="link-list">
+          <li><input id="button_play" type="button" value="再生" data-ls-value-en="Play" /></li>
           <li><a id="a_download_svg" href="#" download="chordGraph.svg" data-ls-en="Download SVG">SVGダウンロード</a></li>
           <li><a id="a_download_png" href="#" data-ls-en="Download PNG">PNGダウンロード</a></li>
-          <li><input id="button_play" type="button" value="再生" data-ls-value-en="Play" /></li>
         </ul>
-        <details open>
-          <summary data-ls-en="X-direction options">x方向のオプション</summary>
-          <div>
+        <details>
+          <summary data-ls-en="Position of Pitch Class">ピッチクラスの位置</summary>
+          <div class="control-list">
             <label>
               <input type="checkbox" id="checkbox_ignore_octave" name="checkbox_ignore_octave" />
-              <span data-ls-en="Ignore octaves">オクターブを無視する</span>
+              <span data-ls-en="Adjust octaves">オクターブを自動調整</span>
+            </label>
+            <label>
+              <input type="checkbox" id="checkbox_angle_log" name="checkbox_angle_log" />
+              <span data-ls-en="Use log scale for angles">角度に対数スケールを使う</span>
+            </label>
+            <label>
+              <input type="checkbox" id="limit_y_length" name="limit_y_length" />
+              <span data-ls-en="Limit Y-length">Y方向の距離制限</span>
             </label>
           </div>
-          <div>
+        </details>
+        <details>
+          <summary data-ls-en="X-length">X方向の長さ</summary>
+          <div class="control-list">
             <label>
               <input type="radio" id="radio_x_integer" name="radio_x_length" checked />
               <span data-ls-en="Integer">整数</span>
@@ -77,38 +88,32 @@
             </label>
           </div>
         </details>
-        <details open>
+        <details>
           <summary data-ls-en="Color Scheme">配色</summary>
-          <ul class="color-list">
-            <li>
-              <label>
-                <div data-ls-en="Main">メイン</div>                
-                <input type="color" id="color_main" value="#2B2F75" />
-              </label>
-            </li>
-            <li>
-              <label>
-                <div data-ls-en="Sub">サブ</div>
-                <input type="color" id="color_sub" value="#FDC6FE" />
-              </label>
-            </li>
-            <li>
-              <label>
-                <div data-ls-en="Fill">塗りつぶし</div>
-                <input type="color" id="color_fill" value="#FFFFFF" />
-              </label>
-            </li>
-          </ul>
+          <div class="control-list">
+            <label>
+              <div data-ls-en="Main">メイン</div>                
+              <input type="color" id="color_main" value="#2B2F75" />
+            </label>
+            <label>
+              <div data-ls-en="Sub">サブ</div>
+              <input type="color" id="color_sub" value="#FDC6FE" />
+            </label>
+            <label>
+              <div data-ls-en="Fill">塗りつぶし</div>
+              <input type="color" id="color_fill" value="#FFFFFF" />
+            </label>
+          </div>
           <div>
             <div data-ls-en="Pitch Class">ピッチクラス</div>
-            <ul class="color-list">
-              <li><input type="color" id="color0" value="#11EDE8" /></li>
-              <li><input type="color" id="color1" value="#25938E" /></li>
-              <li><input type="color" id="color2" value="#E39D11" /></li>
-              <li><input type="color" id="color3" value="#F24E75" /></li>
-              <li><input type="color" id="color4" value="#9664F0" /></li>
-              <li><input type="color" id="color5" value="#39A2E9" /></li>
-            </ul>
+            <div class="control-list">
+              <input type="color" id="color0" value="#11EDE8" />
+              <input type="color" id="color1" value="#25938E" />
+              <input type="color" id="color2" value="#E39D11" />
+              <input type="color" id="color3" value="#F24E75" />
+              <input type="color" id="color4" value="#9664F0" />
+              <input type="color" id="color5" value="#39A2E9" />
+            </div>
           </div>
         </details>
         <details open>
@@ -124,9 +129,8 @@
         <details>
           <summary data-ls-en="Planned features">実装予定の機能一覧</summary>
           <ul>
-            <li data-ls-en="Y-length limit">Y方向の距離制限</li>
-            <li data-ls-en="Muted note auto-fill">ミュート・ノートの自動補完</li>
             <li data-ls-en="Pitch formed 2^(a/b)">2^(a/b)型のピッチ</li>
+            <li data-ls-en="Muted note auto-fill"><del>ミュート・ノートの自動補完</del></li>
           </ul>
         </details>
       </div>
