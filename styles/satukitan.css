@@ -1,10 +1,5 @@
 @charset "utf-8";
 
-@font-face {
-    font-family: 'SatukitanSans';
-    src: url('SatukitanSans.woff') format('woff');
-}
-
 :root {
     /* ページ全体の後ろにある背景色 */
     --color-global-background: #EEEDDA;
@@ -24,12 +19,6 @@
     --color-table-header-text: #ffffff;
     --color-table-background: #ffffff;
     --color-table-background-alt: #EEF8F8;
-}
-
-.satu {
-    font-family: 'SatukitanSans';
-    font-feature-settings: "liga" 1;
-    -webkit-font-feature-settings: "liga" 1;
 }
 
 input.satu-switch + * + * {
