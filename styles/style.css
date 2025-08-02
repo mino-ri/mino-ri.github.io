@@ -1,5 +1,10 @@
 @charset "UTF-8";
 
+@font-face {
+    font-family: 'SatukitanSans';
+    src: url('SatukitanSans.woff') format('woff');
+}
+
 html {
     width: 100%;
     font-size: 16px;
@@ -320,6 +325,18 @@ table.cell-alt tbody tr:nth-child(even) td:nth-child(even) {
             display: none;
         }
     }
+}
+
+.satu {
+    font-family: 'SatukitanSans';
+    font-feature-settings: "liga" 1;
+    -webkit-font-feature-settings: "liga" 1;
+}
+
+*[data-ls-kt]:lang(kt), *[data-ls-value-kt]:lang(kt) {
+    font-family: 'SatukitanSans';
+    font-feature-settings: "liga" 1;
+    -webkit-font-feature-settings: "liga" 1;
 }
 
 /* editor */

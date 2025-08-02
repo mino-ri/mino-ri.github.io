@@ -1,6 +1,7 @@
 let defaultLangCode = ""
 let switchingElements: HTMLElement[] = []
 let altSwitchingElements: HTMLImageElement[] = []
+let valueSwitchingElements: HTMLElement[] = []
 
 function switchLanguage(radioButton: HTMLInputElement) {
     const langCode = radioButton.value
@@ -26,9 +27,11 @@ function switchLanguage(radioButton: HTMLInputElement) {
 function loadLanguages() {
     switchingElements = [...document.querySelectorAll("[data-ls-en]")].filter((e) => e instanceof HTMLElement)
     altSwitchingElements = [...document.querySelectorAll("[data-ls-alt-en]")].filter((e) => e instanceof HTMLImageElement)
+    valueSwitchingElements = [...document.querySelectorAll("[data-ls-value-en]")].filter((e) => e instanceof HTMLElement)
     defaultLangCode = document.documentElement.lang
     const lsKey = `data-ls-${defaultLangCode}`
     const lsAltKey = `data-ls-alt-${defaultLangCode}`
+    const lsValueKey = `data-ls-value-${defaultLangCode}`
 
     for (const element of switchingElements) {
         element.setAttribute(lsKey, element.textContent ?? "")
@@ -36,6 +39,10 @@ function loadLanguages() {
 
     for (const element of altSwitchingElements) {
         element.setAttribute(lsAltKey, element.alt)
+    }
+
+    for (const element of valueSwitchingElements) {
+        element.setAttribute(lsValueKey, element.getAttribute("input") ?? "")
     }
 
     const languageSwitchers = [...document.querySelectorAll("input[name='language']")].filter((e) => e instanceof HTMLInputElement)
