@@ -1,4 +1,3 @@
 src_build/**
 .vs/**
 *.js.map
-scripts/**
