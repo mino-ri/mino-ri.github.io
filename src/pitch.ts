@@ -67,3 +67,154 @@ export function parsePitches(text: string, ignoreOctave: boolean, xLengthType: X
 
     return monzos
 }
+
+type InterpolatingPitch = {
+    pitch: PitchInfo,
+    distances: number[],
+    norm: number,
+    added: boolean
+}
+
+// 現在の状態から、結果グループに含めてよいピッチの added フラグを立てる
+function addNearPitch(interpolatings: InterpolatingPitch[]): boolean {
+    for (const intp of interpolatings) {
+        if (intp.added) {
+            continue
+        }
+
+        for (let i = 0; i <= intp.distances.length; i++) {
+            if (intp.distances[i] === 1 && interpolatings[i]?.added) {
+                intp.added = true
+                return true
+            }
+        }
+    }
+
+    return false
+}
+
+function addNearPitches(interpolatings: InterpolatingPitch[]) {
+    while (addNearPitch(interpolatings)) { }
+}
+
+function isAllAdded(interpolatings: InterpolatingPitch[]) {
+    return interpolatings.every((intp) => intp.added)
+}
+
+// 現在の状態で結果グループに含まれないピッチのうち、結果グループに含まれるピッチに最も近いものを取得
+function getNearestAddablePitch(interpolatings: InterpolatingPitch[]) {
+    let minDistance = Number.MAX_VALUE
+    let minPitch: { pitch: Monzo, other: Monzo } | null = null
+    for (const intp of interpolatings) {
+        if (intp.added) {
+            continue
+        }
+
+        // added な中で最も近いピッチと、それとの距離を取得
+        let newMinDistance = intp.norm
+        let other = Monzo.one
+        for (let i = 0; i <= intp.distances.length; i++) {
+            const target = interpolatings[i]
+            const distance = intp.distances[i]
+            if (target && distance && target.added && distance < newMinDistance) {
+                newMinDistance = distance
+                other = target.pitch.monzo
+            }
+        }
+
+        if (newMinDistance < minDistance) {
+            minDistance = newMinDistance
+            minPitch = { pitch: intp.pitch.monzo, other: other }
+        }
+    }
+
+    return minPitch
+}
+
+function getInterpolatedPitch(interpolatings: InterpolatingPitch[]): PitchInfo[] {
+    const minPitch = getNearestAddablePitch(interpolatings)
+    if (!minPitch) {
+        return []
+    }
+
+    const { pitch, other } = minPitch
+    const interval = Monzo.divide(pitch, other)
+    const result: PitchInfo[] = []
+    let acmMap = other.factors
+    for (const [prime, count] of [...interval.factors].sort(([p1], [p2]) => p1 === 2 ? 1 : p2 === 2 ? -1 : p1 - p2)) {
+        const countAbs = Math.abs(count)
+        const countSign = Math.sign(count)
+
+        for (let i = 0; i < countAbs; i++) {
+            acmMap = new Map(acmMap)
+            acmMap.set(prime, (acmMap.get(prime) ?? 0) + countSign)
+            const newPitch = new Monzo(acmMap)
+            result.push({
+                mute: true,
+                monzo: newPitch,
+                originalMonzo: newPitch,
+            })
+        }
+    }
+    result.pop()
+
+    return result
+}
+
+function addInterpolatings(interpolatings: InterpolatingPitch[], newPitches: PitchInfo[]) {
+    for (const intp of interpolatings) {
+        if (intp.added) {
+            continue
+        }
+
+        intp.distances.push(...newPitches.map((p) => Monzo.divide(intp.pitch.monzo, p.monzo).pitchDistance))
+    }
+
+    // 追加されるピッチは存在確認にしか使われず、 added: true であればよい。他のパラメータは適当にする
+    interpolatings.push(...newPitches.map((p) => ({
+        pitch: p,
+        distances: [],
+        norm: 0,
+        added: true,
+    })))
+}
+
+export function interpolateMutedNote(pitches: PitchInfo[]) {
+    const interpolatings: InterpolatingPitch[] = pitches
+        .map((pitch) => {
+            const norm = pitch.monzo.pitchDistance
+            return {
+                pitch,
+                distances: pitches.map((other) => Monzo.divide(pitch.monzo, other.monzo).pitchDistance),
+                norm,
+                added: norm <= 1
+            }
+        })
+
+    // 原点は必ず追加する
+    if (interpolatings.every((intp) => intp.norm !== 0)) {
+        const mutedOne = {
+            mute: true,
+            monzo: Monzo.one,
+            originalMonzo: Monzo.one,
+        }
+        pitches.push(mutedOne)
+        addInterpolatings(interpolatings, [mutedOne])
+    }
+
+    // 理論上は無限ループだが、補間できる距離には上限を設ける
+    for (let i = 0; i < 100; i++) {
+        addNearPitches(interpolatings)
+        if (isAllAdded(interpolatings)) {
+            return
+        }
+
+        const addingPitches = getInterpolatedPitch(interpolatings)
+        if (addingPitches.length === 0) {
+            return
+        }
+
+        pitches.push(...addingPitches)
+        addInterpolatings(interpolatings, addingPitches)
+    }
+}
