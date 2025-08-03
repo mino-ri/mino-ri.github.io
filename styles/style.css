@@ -365,7 +365,7 @@ table.cell-alt tbody tr:nth-child(even) td:nth-child(even) {
 
     #preview_figure {
         margin: 0.5rem auto;
-        max-height: 90vw;
+        max-height: min(90vw, 50vh);
     }
 
     .editor-preview {
