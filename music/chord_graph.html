@@ -31,7 +31,7 @@
   <section>
     <article class="editor-container">
       <div class="editor-preview">
-        <svg id="preview_figure" viewBox="0 0 1920 1920">
+        <svg id="preview_figure" viewBox="0 0 1920 1920" style="background: #FEFAEE">
           <g id="grid"></g>
           <g id="line_group"></g>
           <g id="pitch_class_group"></g>
@@ -39,9 +39,7 @@
       </div>
       <div class="editor-control">
         <div>
-          <textarea id="textarea_editor"
-                    name="textarea_editor"
-                    rows="2">1 x3 9 11 11/2</textarea>
+          <textarea id="textarea_editor" name="textarea_editor" rows="2">1 x3 9 11 11/2</textarea>
         </div>
         <div>
           <label>
@@ -70,29 +68,33 @@
               <span data-ls-en="Limit Y-length">Y方向の距離制限</span>
             </label>
           </div>
-        </details>
-        <details>
-          <summary data-ls-en="X-length">X方向の長さ</summary>
-          <div class="control-list">
+          <div>
             <label>
-              <input type="radio" id="radio_x_integer" name="radio_x_length" checked />
-              <span data-ls-en="Integer">整数</span>
-            </label>
-            <label>
-              <input type="radio" id="radio_x_octave_reduced" name="radio_x_length" />
-              <span data-ls-en="Octave reducing">オクターブ縮退</span>
-            </label>
-            <label>
-              <input type="radio" id="radio_x_shasavic" name="radio_x_length" />
-              <span data-ls-en="Shasavic compatible">シャサフ式互換</span>
+              <span data-ls-en="X-length">X方向の長さ</span>
+              <select id="selecd_x_length" name="selecd_x_length">
+                <option value="i" data-ls-en="Integer">整数</option>
+                <option value="o" data-ls-en="Octave reducing">オクターブ縮退</option>
+                <option value="s" data-ls-en="Shasavic compatible">シャサフ式互換</option>
+              </select>
             </label>
           </div>
         </details>
         <details>
           <summary data-ls-en="Color Scheme">配色</summary>
+          <div>
+            <select id="select_color_palette" name="select_color_palette">
+              <option value="0">P`URE</option>
+              <option value="1">Tone Palette</option>
+              <option value="2" data-ls-en="semi-Shasavic">準シャサフ式</option>
+            </select>
+          </div>
           <div class="control-list">
             <label>
-              <div data-ls-en="Main">メイン</div>                
+              <div data-ls-en="BG">背景</div>
+              <input type="color" id="color_back" value="#FEFAEE" />
+            </label>
+            <label>
+              <div data-ls-en="Main">メイン</div>
               <input type="color" id="color_main" value="#2B2F75" />
             </label>
             <label>
@@ -116,24 +118,25 @@
             </div>
           </div>
         </details>
-        <details open>
-          <summary data-ls-en="How to use">使い方</summary>
-          <p>
-            <span data-ls-en="Enter multiple integers or fractions separated by spaces.">スペース区切りで複数の整数または分数を入力してください。</span><br />
-            <span data-ls-en="Prefix a number with 'x' to indicate a muted note.">数の前に「x」をつけるとミュート・ノートになります。</span><br />
-            <a target="_blank" href="https://youtu.be/zt7p_n3wR_o?si=Vwv0BF2-oQRfe2qn" data-ls-en="Conceptual video">
-              説明動画
-            </a>
-          </p>
-        </details>
-        <details>
-          <summary data-ls-en="Planned features">実装予定の機能一覧</summary>
-          <ul>
-            <li data-ls-en="Pitch formed 2^(a/b)">2^(a/b)型のピッチ</li>
-            <li data-ls-en="Muted note auto-fill"><del>ミュート・ノートの自動補完</del></li>
-          </ul>
-        </details>
       </div>
+    </article>
+    <article>
+      <h3>使い方</h3>
+      <p>
+        <span
+          data-ls-en="Enter multiple integers or fractions separated by spaces.">スペース区切りで複数の整数または分数を入力してください。</span><br />
+        <span data-ls-en="Prefix a number with 'x' to indicate a muted note.">数の前に「x」をつけるとミュート・ノートになります。</span><br />
+      </p>
+      <p>
+        <a target="_blank" href="https://youtu.be/zt7p_n3wR_o?si=Vwv0BF2-oQRfe2qn" data-ls-en="Conceptual video">
+          説明動画
+        </a>
+      </p>
+      <h4 data-ls-en="Planned features">実装予定の機能一覧</h4>
+      <ul>
+        <li data-ls-en="Pitch formed 2^(a/b)">2^(a/b)型のピッチ</li>
+        <li data-ls-en="Muted note auto-fill"><del>ミュート・ノートの自動補完</del></li>
+      </ul>
     </article>
   </section>
   <footer>
