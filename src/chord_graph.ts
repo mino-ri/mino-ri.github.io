@@ -1,4 +1,4 @@
-import { PitchInfo, XLengthType, parsePitches } from "./pitch.js"
+import { PitchInfo, XLengthType, interpolateMutedNote, parsePitches } from "./pitch.js"
 import { ColorScheme, PitchSvgGenerator } from "./chord_graph_svg.js"
 import { AudioSource } from "./sound.js"
 
@@ -21,6 +21,7 @@ let checkboxAngleLog: HTMLInputElement
 let checkboxLimitYLength: HTMLInputElement
 let checkboxIgnoreOctave: HTMLInputElement
 let checkboxQuantize: HTMLInputElement
+let checkboxInterpolateMuted: HTMLInputElement
 let textEdo: HTMLInputElement
 let editorPreview: HTMLElement
 let selectXLength: HTMLSelectElement
@@ -74,6 +75,10 @@ function loadMonzo(ignoreSave?: boolean) {
     const xLengthType = selectXLength.value == "o" ? XLengthType.OctaveReduced
         : selectXLength.value == "s" ? XLengthType.Shasavic : XLengthType.Integer
     pitches = parsePitches(text, checkboxIgnoreOctave.checked, xLengthType)
+    if (checkboxInterpolateMuted.checked) {
+        interpolateMutedNote(pitches)
+    }
+
     svgGenerator.createSvg(pitches, {
         xLengthType,
         autoSize: checkboxAutoSize.checked,
@@ -151,7 +156,8 @@ function saveToHash() {
         c: textArea.value.replace(/[^0-9x/\s]+/g, '').trim().replace(/\s+/g, '_'),
         i: (Number(checkboxIgnoreOctave.checked) |
             (Number(checkboxAngleLog.checked) << 1) |
-            (Number(checkboxLimitYLength.checked) << 2)).toString(),
+            (Number(checkboxLimitYLength.checked) << 2) |
+            (Number(checkboxInterpolateMuted.checked) << 3)).toString(),
         x: selectXLength.value,
         e: checkboxQuantize.checked ? textEdo.value : "0"
     }
@@ -169,6 +175,7 @@ function loadFromHash() {
         checkboxIgnoreOctave.checked = flags % 2 >= 1
         checkboxAngleLog.checked = flags % 4 >= 2
         checkboxLimitYLength.checked = flags % 8 >= 4
+        checkboxInterpolateMuted.checked = flags % 16 >= 8
     }
     if (xType) {
         selectXLength.value = xType
@@ -219,9 +226,10 @@ window.addEventListener("load", () => {
     textArea = document.getElementById("textarea_editor") as HTMLTextAreaElement
     checkboxAutoSize = document.getElementById("checkbox_auto_size") as HTMLInputElement
     checkboxAngleLog = document.getElementById("checkbox_angle_log") as HTMLInputElement
-    checkboxLimitYLength = document.getElementById("limit_y_length") as HTMLInputElement
+    checkboxLimitYLength = document.getElementById("checkbox_limit_y_length") as HTMLInputElement
     checkboxIgnoreOctave = document.getElementById("checkbox_ignore_octave") as HTMLInputElement
     checkboxQuantize = document.getElementById("checkbox_quantize") as HTMLInputElement
+    checkboxInterpolateMuted = document.getElementById("checkbox_interpolate_muted") as HTMLInputElement
     textEdo = document.getElementById("text_edo") as HTMLInputElement
     selectXLength = document.getElementById("selecd_x_length") as HTMLSelectElement
     editorPreview = document.getElementById("editor_preview") as HTMLElement
@@ -240,13 +248,14 @@ window.addEventListener("load", () => {
         checkboxLimitYLength,
         checkboxIgnoreOctave,
         checkboxQuantize,
+        checkboxInterpolateMuted,
         textEdo,
         selectXLength,
     ]
     for (const element of uiElements) {
         element.addEventListener("input", () => loadMonzo())
     }
-    
+
     addEventListnerById("a_download_svg", "click", downloadSvg)
     addEventListnerById("a_download_png", "click", downloadPng)
     addEventListnerById("button_play", "click", playSound)

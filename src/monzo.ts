@@ -4,6 +4,7 @@ export class Monzo {
         31, 37, 41, 43, 47, 53, 59, 61, 67,
         71, 73, 79, 83, 89, 97,
     ]
+    static one = new Monzo(new Map())
     factors: Map<number, number>
 
     constructor(factors: Map<number, number>) {
