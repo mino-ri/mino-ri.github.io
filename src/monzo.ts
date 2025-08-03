@@ -51,6 +51,10 @@ export class Monzo {
         return minPrime === Infinity ? 1 : minPrime
     }
 
+    quantizedValue(edo: number) {
+        return edo < 1 ? this.value : Math.pow(2, Math.round(Math.log2(this.value) * edo) / edo)
+    }
+
     reciprocal() {
         const factors = new Map<number, number>()
         for (const [prime, factor] of this.factors) {
@@ -140,36 +144,16 @@ export class Monzo {
         return new Monzo(new Map([[2, factor]]))
     }
 
-    static toOctaveReduced(monzo: Monzo) {
-        let power2 = Monzo.getOctaveFactor(monzo)
-        return power2 === 0 ? monzo : Monzo.multiply(monzo, Monzo.from2Factor(power2))
-    }
-
-    static fromOctaveReduced(monzo: Monzo) {
-        let power2 = Monzo.getOctaveFactor(monzo)
-        return power2 === 0 ? monzo : Monzo.divide(monzo, Monzo.from2Factor(power2))
-    }
-
     static getShasavicOctaveFactor(monzo: Monzo) {
         let power2 = 0
         for (const [prime, factor] of monzo.factors) {
-            if (prime === 3) {
+            if (Math.round(prime) === 3) {
                 power2 += factor
             } else if (prime !== 2) {
                 power2 += factor * 2
             }
         }
         return power2
-    }
-
-    static toShasavic(monzo: Monzo) {
-        let power2 = Monzo.getShasavicOctaveFactor(monzo)
-        return power2 === 0 ? monzo : Monzo.multiply(monzo, Monzo.from2Factor(power2))
-    }
-
-    static fromShasavic(monzo: Monzo) {
-        let power2 = Monzo.getShasavicOctaveFactor(monzo)
-        return power2 === 0 ? monzo : Monzo.divide(monzo, Monzo.from2Factor(power2))
     }
 
     // テキストからMonzoの配列を取得する

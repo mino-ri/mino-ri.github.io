@@ -150,10 +150,11 @@ export class AudioSource {
         return "data:audio/wav;base64," + WaveWriter.fromChunks([WaveHeader.monaural, data]).encodeBase64()
     }
     
-    static createFromMonzos(monzos: Monzo[], baseHz: number, seconds: number): string {
+    static createFromMonzos(monzos: Monzo[], baseHz: number, seconds: number, quantizeEdo: number): string {
         const data = new WaveData(Math.floor(seconds * 44100))
+        const volume = 0.95 / Math.max(monzos.length, 8)
         for (const monzo of monzos) {
-            data.addSaw(baseHz * monzo.value, 0.95 / monzos.length, 0, Math.floor(seconds * 40000))
+            data.addSaw(baseHz * monzo.quantizedValue(quantizeEdo), volume, 0, Math.floor(seconds * 40000))
         }
         return AudioSource.create(data)
     }}
