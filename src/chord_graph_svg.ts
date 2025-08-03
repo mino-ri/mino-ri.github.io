@@ -10,6 +10,7 @@ export type Option = {
     autoSize: boolean,
     isAngleLog: boolean,
     yLengthLimit: boolean,
+    quantizeEdo: number,
 }
 
 export class ColorScheme {
@@ -180,6 +181,11 @@ function getPrimePitchClass(prime: number, isAngleLog: boolean): number {
 }
 
 function getIntervalDelta(prime: number, power: number, option: Option) {
+    if (prime !== 2 && option.quantizeEdo > 1) {
+        const quantized = Math.round(Math.log2(prime) * option.quantizeEdo) / option.quantizeEdo
+        prime = quantized % 1 === 0 ? 2 : Math.pow(2, quantized)
+    }
+
     const pitchClass = getPrimePitchClass(prime, option.isAngleLog)
     const dx = (Math.log2(prime) * power - option.xLengthType.getOctaveFactor(new Monzo(new Map([[prime, power]]))))
         * option.xLengthType.scale
@@ -291,6 +297,10 @@ export class PitchSvgGenerator {
     lineGroup: SVGGElement
     pitchClassGroup: SVGGElement
     colorScheme: ColorScheme
+    minX = -50
+    minY = -50
+    maxX = 50
+    maxY = 50
 
     constructor(previewSvg: SVGSVGElement, grid: SVGGElement, lineGroup: SVGGElement, pitchClassGroup: SVGGElement, colorScheme: ColorScheme) {
         this.previewSvg = previewSvg
@@ -300,6 +310,33 @@ export class PitchSvgGenerator {
         this.colorScheme = colorScheme
     }
     
+    resetSize() {
+        this.minX = -50
+        this.minY = -50
+        this.maxX = 50
+        this.maxY = 50
+    }
+
+    addPitchPoint(pitches: PitchInfo[], option: Option) {
+        let rootNode = true
+        for (const { mute, monzo } of pitches) {
+            const { x, y } = getPitchPoint(monzo, option)
+            this.minX = Math.min(this.minX, Math.round(x - 50))
+            this.minY = Math.min(this.minY, Math.round(y - 50))
+            this.maxX = Math.max(this.maxX, Math.round(x + 50))
+            this.maxY = Math.max(this.maxY, Math.round(y + 50))
+            if (mute) {
+                this.pitchClassGroup.appendChild(createCircle(x, y, 15, this.colorScheme.noteFill, this.colorScheme.gridStroke, "6"))
+            } else if (rootNode) {
+                this.pitchClassGroup.appendChild(createDiamond(x, y, 40, this.colorScheme.noteFill, this.colorScheme.noteStroke, "6"))
+                this.pitchClassGroup.appendChild(createDiamond(x, y, 30, this.colorScheme.noteStroke, this.colorScheme.noteFill, "2"))
+                rootNode = false
+            } else {
+                this.pitchClassGroup.appendChild(createDiamond(x, y, 30, this.colorScheme.noteFill, this.colorScheme.noteStroke, "6"))
+            }
+        }
+    }
+
     addIntervalLine(monzo1: Monzo, monzo2: Monzo, option: Option) {
         const interval = Monzo.divide(monzo2, monzo1)
         if (interval.pitchDistance !== 1) {
@@ -315,6 +352,9 @@ export class PitchSvgGenerator {
         if (interval.isOnly2) {
             const line = createOctaveArc(x1, y1, x2, y2, option.xLengthType.scale, this.colorScheme.gridStroke, "12")
             line.setAttribute("data-prime", interval.minPrime.toString())
+            if (option.xLengthType !== XLengthType.Integer) {
+                this.maxY = Math.max(this.maxY, Math.round(y1 + 100))
+            }
             // オクターブ線は必ず最後に入れる
             this.lineGroup.appendChild(line)
         } else {
@@ -342,38 +382,20 @@ export class PitchSvgGenerator {
     
     createSvg(pitches: PitchInfo[], option: Option) {
         clearChildren(this.grid, this.lineGroup, this.pitchClassGroup)
-        let rootNode = true
-        let minX = -50
-        let minY = -50
-        let maxX = 50
-        let maxY = 150
-        for (const { mute, monzo } of pitches) {
-            const { x, y } = getPitchPoint(monzo, option)
-            minX = Math.min(minX, Math.round(x - 50))
-            minY = Math.min(minY, Math.round(y - 50))
-            maxX = Math.max(maxX, Math.round(x + 50))
-            maxY = Math.max(maxY, Math.round(y + 150))
-            if (mute) {
-                this.pitchClassGroup.appendChild(createCircle(x, y, 15, this.colorScheme.noteFill, this.colorScheme.gridStroke, "6"))
-            } else if (rootNode) {
-                this.pitchClassGroup.appendChild(createDiamond(x, y, 40, this.colorScheme.noteFill, this.colorScheme.noteStroke, "6"))
-                this.pitchClassGroup.appendChild(createDiamond(x, y, 30, this.colorScheme.noteStroke, this.colorScheme.noteFill, "2"))
-                rootNode = false
-            } else {
-                this.pitchClassGroup.appendChild(createDiamond(x, y, 30, this.colorScheme.noteFill, this.colorScheme.noteStroke, "6"))
-            }
-        }
-    
-        if (option.autoSize) {
-            this.previewSvg.setAttribute("viewBox", `${minX + centerX} ${minY + centerY} ${maxX - minX} ${maxY - minY}`)
-        } else {
-            this.previewSvg.setAttribute("viewBox", "0 0 1920 1920")
-        }
+
+        this.resetSize()
+        this.addPitchPoint(pitches, option)
     
         for (let i = 0; i < pitches.length; i++) {
             for (let j = i + 1; j < pitches.length; j++) {
                 this.addIntervalLine(pitches[i]!.monzo, pitches[j]!.monzo, option)
             }
+        }
+    
+        if (option.autoSize) {
+            this.previewSvg.setAttribute("viewBox", `${this.minX + centerX} ${this.minY + centerY} ${this.maxX - this.minX} ${this.maxY - this.minY}`)
+        } else {
+            this.previewSvg.setAttribute("viewBox", "0 0 1920 1920")
         }
     }
 }

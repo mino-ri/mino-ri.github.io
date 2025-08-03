@@ -54,7 +54,7 @@ export function parsePitches(text: string, ignoreOctave: boolean, xLengthType: X
         monzo = xLengthType.toStructual(monzo)
         if (ignoreOctave) {
             monzo.factors.delete(2)
-            originalMonzo = xLengthType.fromStructual(originalMonzo)
+            originalMonzo = xLengthType.fromStructual(monzo)
         }
 
         const sameEntry = monzos.find(m => Monzo.divide(monzo, m.monzo).pitchDistance === 0)

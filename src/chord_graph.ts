@@ -20,6 +20,9 @@ let checkboxAutoSize: HTMLInputElement
 let checkboxAngleLog: HTMLInputElement
 let checkboxLimitYLength: HTMLInputElement
 let checkboxIgnoreOctave: HTMLInputElement
+let checkboxQuantize: HTMLInputElement
+let textEdo: HTMLInputElement
+let editorPreview: HTMLElement
 let selectXLength: HTMLSelectElement
 let previewSvg: SVGSVGElement
 let pitches: PitchInfo[] = []
@@ -76,6 +79,7 @@ function loadMonzo(ignoreSave?: boolean) {
         autoSize: checkboxAutoSize.checked,
         isAngleLog: checkboxAngleLog.checked,
         yLengthLimit: checkboxLimitYLength.checked,
+        quantizeEdo: checkboxQuantize.checked ? Number(textEdo.value) : 0
     })
 
     if (!ignoreSave) {
@@ -121,7 +125,9 @@ function playSound() {
         return
     }
 
-    playingAudio.src = AudioSource.createFromMonzos(pitches.filter((p) => !p.mute).map((p) => p.originalMonzo), 220, 2)
+    const soundPitches = pitches.filter((p) => !p.mute).map((p) => p.originalMonzo)
+    const quantizeEdo = checkboxQuantize.checked ? Number(textEdo.value) : 0
+    playingAudio.src = AudioSource.createFromMonzos(soundPitches, 220, 2, quantizeEdo)
     playingAudio.play()
 }
 
@@ -147,13 +153,14 @@ function saveToHash() {
             (Number(checkboxAngleLog.checked) << 1) |
             (Number(checkboxLimitYLength.checked) << 2)).toString(),
         x: selectXLength.value,
+        e: checkboxQuantize.checked ? textEdo.value : "0"
     }
 
     history.replaceState(null, "", `${location.pathname}#${encodeHash(hashData)}`)
 }
 
 function loadFromHash() {
-    const { c: chord, i, x: xType } = decodeHash(location.hash.replace('#', ''))
+    const { c: chord, i, x: xType, e: edo } = decodeHash(location.hash.replace('#', ''))
     if (chord && chord.length > 0) {
         textArea.value = chord.replace(/_/g, ' ')
     }
@@ -165,6 +172,10 @@ function loadFromHash() {
     }
     if (xType) {
         selectXLength.value = xType
+    }
+    if (edo && Number(edo) >= 2) {
+        checkboxQuantize.checked = true
+        textEdo.value = Number(edo).toString()
     }
 }
 
@@ -190,7 +201,7 @@ function changeColorPalette(select: HTMLSelectElement) {
     document.getElementById("color4")?.setAttribute("value", palette.pitchClass4)
     document.getElementById("color5")?.setAttribute("value", palette.pitchClass5)
 
-    previewSvg.style.background = palette.back
+    editorPreview.style.background = palette.back
     colorScheme.noteStroke = palette.main
     colorScheme.gridStroke = palette.sub
     colorScheme.noteFill = palette.fill
@@ -210,7 +221,10 @@ window.addEventListener("load", () => {
     checkboxAngleLog = document.getElementById("checkbox_angle_log") as HTMLInputElement
     checkboxLimitYLength = document.getElementById("limit_y_length") as HTMLInputElement
     checkboxIgnoreOctave = document.getElementById("checkbox_ignore_octave") as HTMLInputElement
+    checkboxQuantize = document.getElementById("checkbox_quantize") as HTMLInputElement
+    textEdo = document.getElementById("text_edo") as HTMLInputElement
     selectXLength = document.getElementById("selecd_x_length") as HTMLSelectElement
+    editorPreview = document.getElementById("editor_preview") as HTMLElement
     previewSvg = document.getElementById("preview_figure") as unknown as SVGSVGElement
     const grid = previewSvg.getElementById("grid") as SVGGElement
     const lineGroup = previewSvg.getElementById("line_group") as SVGGElement
@@ -225,6 +239,8 @@ window.addEventListener("load", () => {
         checkboxAngleLog,
         checkboxLimitYLength,
         checkboxIgnoreOctave,
+        checkboxQuantize,
+        textEdo,
         selectXLength,
     ]
     for (const element of uiElements) {
@@ -234,7 +250,7 @@ window.addEventListener("load", () => {
     addEventListnerById("a_download_svg", "click", downloadSvg)
     addEventListnerById("a_download_png", "click", downloadPng)
     addEventListnerById("button_play", "click", playSound)
-    addEventListnerById<HTMLInputElement>("color_back", "input", (input) => { previewSvg.style.background = input.value })
+    addEventListnerById<HTMLInputElement>("color_back", "input", (input) => { editorPreview.style.background = input.value })
     addEventListnerById<HTMLInputElement>("color_main", "input", (input) => { colorScheme.noteStroke = input.value; loadMonzo() })
     addEventListnerById<HTMLInputElement>("color_sub", "input", (input) => { colorScheme.gridStroke = input.value; loadMonzo() })
     addEventListnerById<HTMLInputElement>("color_fill", "input", (input) => { colorScheme.noteFill = input.value; loadMonzo() })
