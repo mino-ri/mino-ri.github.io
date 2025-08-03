@@ -30,8 +30,8 @@
   </header>
   <section>
     <article class="editor-container">
-      <div class="editor-preview">
-        <svg id="preview_figure" viewBox="0 0 1920 1920" style="background: #FEFAEE">
+      <div class="editor-preview" id="editor_preview" style="background: #FEFAEE">
+        <svg id="preview_figure" viewBox="0 0 1920 1920">
           <g id="grid"></g>
           <g id="line_group"></g>
           <g id="pitch_class_group"></g>
@@ -68,9 +68,16 @@
               <span data-ls-en="Limit Y-length">Y方向の距離制限</span>
             </label>
           </div>
+          <div class="control-list">
+            <label>
+              <input type="checkbox" id="checkbox_quantize" name="checkbox_quantize" />
+              <span data-ls-en="Quantize to EDO:">次の平均律に量子化する:</span>
+            </label>
+            <input type="number" id="text_edo" name="text_edo" min="1" value="12" style="width: 4rem;" />
+          </div>
           <div>
             <label>
-              <span data-ls-en="X-length">X方向の長さ</span>
+              <span data-ls-en="X-length type:">X方向の長さタイプ:</span>
               <select id="selecd_x_length" name="selecd_x_length">
                 <option value="i" data-ls-en="Integer">整数</option>
                 <option value="o" data-ls-en="Octave reducing">オクターブ縮退</option>
@@ -134,8 +141,7 @@
       </p>
       <h4 data-ls-en="Planned features">実装予定の機能一覧</h4>
       <ul>
-        <li data-ls-en="Pitch formed 2^(a/b)">2^(a/b)型のピッチ</li>
-        <li data-ls-en="Muted note auto-fill"><del>ミュート・ノートの自動補完</del></li>
+        <li data-ls-en="Muted note auto-fill">ミュート・ノートの自動補完</li>
       </ul>
     </article>
   </section>
