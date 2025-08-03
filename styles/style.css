@@ -100,6 +100,11 @@ h4 {
     font-size: 1.5rem;
 }
 
+h5 {
+    color: var(--color-primary);
+    font-size: 1.2rem;
+}
+
 hr {
     margin-top: 0.8rem;
     margin-bottom: 0.8rem;
@@ -433,4 +438,8 @@ table.cell-alt tbody tr:nth-child(even) td:nth-child(even) {
 
 .yellow {
     color: #C3B827;
+}
+
+.gray {
+    color: #A0A0A0;
 }
