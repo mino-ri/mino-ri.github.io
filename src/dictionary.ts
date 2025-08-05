@@ -31,6 +31,7 @@ function satuToSound(satu: string): string {
         .replaceAll("v", "əm")
         .replaceAll("r", "ɾ")
         .replaceAll("x", "ɣ")
+        .replaceAll("h", "x")
 }
 
 const loadDictionary = async () => {
