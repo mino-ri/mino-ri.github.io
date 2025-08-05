@@ -1,4 +1,4 @@
-const sortOrder = ",;'rxhgkqwfbpmzsdtnvjieoua"
+const sortOrder = ",;'rxhgkqzsdtnwfbpmvjieoua"
 
 function compareBySatu(left: string, right: string): number {
     for (let i = 0; ; i++) {
@@ -72,7 +72,7 @@ const loadDictionary = async () => {
         }
         const p = root.querySelector("p")
         if (p) {
-            let title = paramCount === "0" ? `【${wordType}語】 ${explain}<br />` : `【${paramCount}-${wordType}語】 ${explain}<br />`
+            let title = paramCount === "0" ? `【${wordType}語】 ${explain}<br />` : `【${wordType}語-${paramCount}】 ${explain}<br />`
             let body = ""
             if (noun !== "") {
                 body += `【名】${noun}`

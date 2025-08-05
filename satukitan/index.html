@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
   <meta charset="UTF-8" />
   <meta http-equiv="Content-Type" content="text/html" />
@@ -9,8 +10,9 @@
   <meta name="viewport" content="width=device-width">
   <link rel="stylesheet" type="text/css" href="./../styles/satukitan.css" />
   <link rel="stylesheet" type="text/css" href="./../styles/style.css" />
-  <title>論理人工言語 Satu Kitan</title>
+  <title>論理人工言語 サトゥキタン</title>
 </head>
+
 <body>
   <header>
     <a class="back" href="../">back</a>
@@ -21,20 +23,11 @@
     <article>
       <h3>はじめに</h3>
       <p>
-        ここは、論理人工言語 <span class="satu">satu kitav</span> (読み方: Satu Kitan サトゥキタン)の紹介ページです。
+        <span class="satu">satu kitav</span> (読み方: サトゥキタン)
+        は、論理的で厳密性が高い人工言語です。
+        (設定上)特定の国に属しない中立の言語で、意思疎通に齟齬がなく、厳密で、誰もが平等に議論できるように開発されました。
       </p>
-      <p>
-        自由に書いてみよう
-      </p>
-      <div>
-        <input class="satu-switch" type="checkbox" id="satu-switch" />
-        <label for="satu-switch">ラテン文字転写を表示</label>
-        <textarea style="font-size: 24px;">sana sapotav!</textarea>
-      </div>
-
-    </article>
-    <article>
-      <h3>動作環境</h3>
+      <h4>動作環境</h4>
       <p>
         このページは合字のあるフォントを使っています。
         下の枠に<b>同じ文字</b>が表示されている環境でのみ正しく表示できます。
@@ -47,28 +40,54 @@
           </tr>
         </tbody>
       </table>
+      <h4>Hello in <span class="satu">satu kitav</span></h4>
+      <p>
+        サトゥキタンで「こんにちは」は以下のように書きます。
+      </p>
+      <div>
+        <dl class="trans">
+          <dt>sana</dt>
+          <dd>サナ</dd>
+          <dd>日</dd>
+        </dl>
+        <dl class="trans">
+          <dt>sapotav!</dt>
+          <dd>サポタン</dd>
+          <dd>良い</dd>
+        </dl>
+      </div>
+      <p>
+        見たことがない文字で、「good morning」とは逆の語順で書いてありますね。
+        以降もこのように「サトゥキタン表記」「読み方」「意味」のセットで、サトゥキタンの単語や文を表します。<br />
+        このページには、日本語話者向けに サトゥキタンを習得するためのチュートリアルを記載します。
+        より詳細な情報や開発過程の話は、下記のリンクからご覧ください。
+      </p>
+      <h5>詳細・開発ページリンク</h5>
+      <ul class="link-list">
+        <li><a href="./dictionary.html">単語リスト</a></li>
+        <li><a href="./history.html">(設定上の)歴史</a></li>
+        <li><a href="./character.html">文字と発音</a></li>
+        <li><a href="./word_structure.html">造語規則</a></li>
+      </ul>
     </article>
   </section>
   <section>
-    <h2>Satu Kitan の基礎</h2>
+    <h2>文字と発音</h2>
     <article>
-      <h3>文字と記号</h3>
+      <h3>文字と発音</h3>
       <p>
-        Satu Kitan の文字は音素文字であり、<span class="satu">v</span>を除いて2通り以上の読み方を持つ文字は存在しません。
-      </p>
-      <h4>文字表・ラテン文字転写</h4>
-      <p>
-        Satu Kitan を表記する文字は <span class="satu">ritu kitav</span>(Ritu Kitan)または
-        <span class="satu">rituskita</span>(Ritus-kita) と呼ばれ、次の表に黒で示した26文字で構成されます。
-        <br />
-        記号に見える 「<span class="satu">'</span>」「<span class="satu">;</span>」「<span class="satu">,</span>」も文章中で発音されるため、他の記号とは区別して"アルファベット"側に含めます。
-        <br />
-        赤で示した4種類の文字は発音されないため記号として扱われます。
-        <br />
-        青で示した3文字は外来語の発音を表すためだけに使われます(<span class="satu">x</span>は /ɣ/ を表します)。
+        サトゥキタンの<b>文字</b>は、アルファベットと同じように1文字で1つの音を表します。
+        大文字・小文字といった区別はありません。
       </p>
       <div>
         <table class="center nowrap cell-alt" style="width: 100%; max-width: 40rem; table-layout: fixed;">
+          <thead>
+            <tr>
+              <th colspan="5">
+                サトゥキタンの文字一覧
+              </th>
+            </tr>
+          </thead>
           <tbody>
             <tr>
               <td><span class="satu large">a</span><br />a</td>
@@ -85,52 +104,157 @@
               <td><span class="satu large">v</span><br />v</td>
             </tr>
             <tr>
-              <td><span class="satu large">n</span><br />n</td>
-              <td><span class="satu large">t</span><br />t</td>
-              <td><span class="satu large">d</span><br />d</td>
-              <td><span class="satu large">s</span><br />s</td>
-              <td><span class="satu large">'</span><br />'</td>
-            </tr>
-            <tr>
               <td><span class="satu large">m</span><br />m</td>
               <td><span class="satu large">p</span><br />p</td>
               <td><span class="satu large">b</span><br />b</td>
               <td><span class="satu large">f</span><br />f</td>
-              <td><span class="satu large">;</span><br />;</td>
+              <td class="blue"><span class="satu large">w</span><br />w</td>
+            </tr>
+            <tr>
+              <td><span class="satu large">n</span><br />n</td>
+              <td><span class="satu large">t</span><br />t</td>
+              <td><span class="satu large">d</span><br />d</td>
+              <td><span class="satu large">s</span><br />s</td>
+              <td class="blue"><span class="satu large">z</span><br />z</td>
             </tr>
             <tr>
               <td><span class="satu large">q</span><br />q</td>
               <td><span class="satu large">k</span><br />k</td>
               <td><span class="satu large">g</span><br />g</td>
               <td><span class="satu large">h</span><br />h</td>
-              <td><span class="satu large">,</span><br />,</td>
+              <td class="blue"><span class="satu large">x</span><br />x</td>
             </tr>
             <tr>
               <td><span class="satu large">r</span><br />r</td>
-              <td class="red"><span class="satu large">#</span><br />#</td>
-              <td class="red"><span class="satu large">.</span><br />.</td>
-              <td class="red"><span class="satu large">!</span><br />!</td>
-              <td class="red"><span class="satu large">?</span><br />?</td>
-            </tr>
-            <tr>
-              <td class="blue"><span class="satu large">z</span><br />z</td>
-              <td class="blue"><span class="satu large">w</span><br />w</td>
-              <td class="blue"><span class="satu large">x</span><br />x</td>
+              <td></td>
+              <td></td>
               <td></td>
               <td></td>
             </tr>
           </tbody>
         </table>
       </div>
-      <h5>詳細ページ</h5>
-      <ul class="link-list">
-        <li><a href="./character.html">文字と発音</a></li>
-      </ul>
+      <p>
+        これらの文字は <b><span class="satu">ritu kitav</span> (リトゥキタン)</b> と呼ばれます。
+        リトゥキタンが使えない環境では、それぞれの文字の下に書いてあるラテン文字で代用します。
+        <b class="blue">青字</b>は外来語を表すためだけに使い、 サトゥキタン本来のことばを表すのには使いません。
+      </p>
+      <p>
+        このページではサトゥキタンの発音を<b>カタカナ</b>で表記します。
+        基本的にはカタカナ通りに読めば正しいサトゥキタンの発音になりますが、日本語に無い音や、日本語と発音の差が大きいものは例外的に<b>ひらがな</b>で表記します。
+      </p>
+      <table class="sticky nowarp">
+        <caption>読みに注意が必要な文字</caption>
+        <thead>
+          <tr>
+            <th colspan="2">文字</th>
+            <th>発音</th>
+            <th class="wrap">説明</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="satu large">ja</td>
+            <td>ja</td>
+            <td>ヤ</td>
+            <td class="wrap">jは「ヤ行」の音で読みます。</td>
+          </tr>
+          <tr>
+            <td class="satu large">ju</td>
+            <td>ju</td>
+            <td>ユ</td>
+            <td class="wrap">〃</td>
+          </tr>
+          <tr>
+            <td class="satu large">jo</td>
+            <td>jo</td>
+            <td>ヨ</td>
+            <td class="wrap">〃</td>
+          </tr>
+          <tr>
+            <td class="satu large">je</td>
+            <td>je</td>
+            <td>イェ</td>
+            <td class="wrap">〃</td>
+          </tr>
+          <tr>
+            <td class="satu large">v</td>
+            <td>v</td>
+            <td>ン</td>
+            <td class="wrap">
+              日本語の「ン」と同じ音です。
+            </td>
+          </tr>
+          <tr>
+            <td class="satu large">f</td>
+            <td>f</td>
+            <td>ファ～フォ</td>
+            <td class="wrap">
+              日本語の「フ」と同じ子音です。英語のように唇に歯を当てたりはせず、唇をすぼめて発音します。
+            </td>
+          </tr>
+          <tr>
+            <td class="satu large">q</td>
+            <td>q</td>
+            <td>か゚～こ゚</td>
+            <td class="wrap">いわゆる鼻濁音で読みます。</td>
+          </tr>
+          <tr>
+            <td class="satu large">h</td>
+            <td>h</td>
+            <td>は～ほ</td>
+            <td class="wrap">
+              ドイツ語の「gh」と同じ音で、日本語の「ハ行」と異なります。口の奥で摩擦を作って発音します。
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <h4>単語と発音の例</h4>
+      <div>
+        <dl class="trans">
+          <dt>febotav</dt>
+          <dd>フェボタン</dd>
+          <dd>再現された</dd>
+        </dl>
+        <dl class="trans">
+          <dt>baqja</dt>
+          <dd>バき゚ャ</dd>
+          <dd>世界</dd>
+        </dl>
+        <dl class="trans">
+          <dt>hona</dt>
+          <dd>ほナ</dd>
+          <dd>いつ</dd>
+        </dl>
+        <dl class="trans">
+          <dt>podanis</dt>
+          <dd>ポダニs</dd>
+          <dd>愛される</dd>
+        </dl>
+      </div>
+      <p>
+        単語の最後が子音で終わる場合、
+        <span class="satu">podanis</span>
+        (ポダニ<b>s</b>) のようにアルファベットで読み方を書きます。
+        この場合は「ス」と声を出すのではなく、息だけを出して読んでください。
+      </p>
+      <hr />
+      <p>
+        詳細ページ : <a href="./character.html">文字と発音</a>
+      </p>
+    </article>
+  </section>
+  <section>
+    <h2>基本的な文法</h2>
+    <article>
+      <p>
+        <b class="red">このセクションは大幅に書き直される予定です。</b>
+      </p>
     </article>
     <article>
       <h3>単語と文法</h3>
       <p>
-        Satu Kitan の単語は<b>名詞形</b>、<b>動詞形</b>、<b>修飾形</b>、<b>接続形</b>の4種類に活用し、単語の最後に付く文字で判別されます。
+        サトゥキタンの単語は<b>名詞形</b>、<b>動詞形</b>、<b>修飾形</b>、<b>接続形</b>の4種類に活用し、単語の最後に付く文字で判別されます。
       </p>
       <div>
         <dl class="trans">
@@ -227,61 +351,13 @@
       </div>
       <h5>詳細ページ</h5>
       <ul class="link-list">
-        <li><a href="./dictionary.html">単語リスト</a></li>
         <li><a href="./word_structure.html">造語規則</a></li>
       </ul>
-    </article>
-  </section>
-  <section>
-    <h2>Satu Kitan の歴史</h2>
-    <article>
-      <h3>発祥から現代に至るまで</h3>
-      <p>
-        <b>※この節の内容は設定上の歴史であり、すべてフィクションです</b>
-      </p>
-      <h4>文明間の議論のために生まれた言語</h4>
-      <p>
-        紀元前からエジプトとギリシアの間では積極的に交流がありました。
-        両文明はどちらも数学が発達しており、定期的に両文明から数学者・哲学者(当時は厳密な区別はありませんでした)を出し合って交流を行っていましたが、そこには常に言語の壁がありました。
-        当初は交流会ごとに交互に言語を入れ替えることで平等をはかっていましたが、自然言語ゆえに「相手方にない表現」や「翻訳者の力量次第で意味が変わってしまう表現」などの問題がありました。
-      </p>
-      <p>
-        そこで両文明の数学者・哲学者たちを集め、意思疎通に齟齬がなく、厳密で、誰もが平等に議論に参加できる新しい言語を作ることにしました。
-        <br />
-        このようにしてできた世界最古の人工言語が <span class="satu">satu kitav</span> (Satu Kitan)です。
-      </p>
-      <h4>インドとの出会い</h4>
-      <p>
-        5世紀頃になるとインドとの交流が盛んになり、新たにゼロの概念がもたらされます。
-        <br />
-        Satu Kitan はゼロを意味する文字 <span class="satu">v</span> を加える改定を行い、数を表す方法として新たに算用数字も獲得。
-        これによってほぼ現代と同じ言語体系が整いました。<br />
-        なお、算用数字自体が Satu Kitan から発祥したという説も存在します。
-      </p>
-      <h4>公用語としての地位の確立</h4>
-      <p>
-        Satu Kitan は言語の研究が未熟な時期に作られたため品詞が極端に少なく、名詞・動詞・形容詞・接続詞のたった4種類しかありません。
-        しかしそれゆえに言語学に明るくない者でも容易に習得でき、厳密な語彙を持つため、言葉の壁を超えて数学の議論をするために一定の地位を獲得しました。
-      </p>
-      <p>
-        習得が簡単な一方、Satu Kitan には古くから「母語話者がいない」という問題があり、戦争や管理議会の解散などにより何度も絶滅の危機に瀕してきました。
-        しかし母語話者がいないことは「変化が少ない」という利点ととらえることもできます。
-      </p>
-      <p>
-        英語が世界共通語として普及した今でも、数学に関わる団体では公用語として Satu Kitan を採用しているものが数多く存在するのは、Satu Kitan が持つ不変性が公用語に適した性質だからだと言えるでしょう。
-      </p>
-      <h4>日常に残る Satu Kitan</h4>
-      <p>
-        現代の私たちが使っている「!」や「?」といった記号は、Satu Kitan の主張を表す記号 <span class="satu">!</span> と疑問を表す記号 <span class="satu">?</span> に由来を持っており、意外にも我々の身近に Satu Kitan が存在しています。
-      </p>
-      <p>
-        他に面白いところだと、世界で3番目に古い高級プログラミング言語 LISP は Satu Kitan の文法をもとに考案されました。
-        これは Satu Kitan が持つ語彙や文法の厳密性がプログラミングと相性がよいことを示しており、それは同時に Satu Kitan が現代においても厳密な言語であり続けていることを示しています。
-      </p>
     </article>
   </section>
   <footer>
     copyright&copy; 2021-2025 mino-ri All rights reserved.
   </footer>
 </body>
+
 </html>
