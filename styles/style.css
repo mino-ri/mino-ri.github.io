@@ -201,7 +201,7 @@ input[type="button"] {
     padding-inline: 0;
 }
 
-a, input[type="button"] {
+a[href], input[type="button"] {
     display: inline-block;
     padding: 0.25rem;
     border: none;
@@ -211,12 +211,12 @@ a, input[type="button"] {
     text-decoration: none;
 }
 
-a:hover, input[type="button"]:hover {
+a[href]:hover, input[type="button"]:hover {
     background-color: var(--color-primary-light);
     color: var(--color-primary-text);
 }
 
-a:active {
+a[href]:active {
     background-color: var(--color-primary-accent);
     color: var(--color-primary-text);
 }
