@@ -1,0 +1,59 @@
+@charset "UTF-8";
+
+.dictionary {
+    padding: 0.8rem;
+
+    & > details {
+        margin: 0;
+        border-radius: 8px;
+        border-width: 1px;
+        border-style: solid;
+        border-color: var(--color-article-background);
+
+        &:open {
+            border-color: var(--color-table-header-background);
+        }
+
+        & > summary {
+            font-weight: normal;
+            font-size: 1rem;
+            border-bottom: none;
+
+            & > .satu {
+                font-size: 1.2rem;
+                color: #DF4121;
+                font-weight: bold;
+            }
+
+            & > .satu+span {
+                font-size: 0.8rem;
+                color: var(--color-primary);
+            }
+
+            & > .satu+span+span {
+                font-weight: bold;
+                color: var(--color-article-text);
+            }
+        }
+
+        & a {
+            display: inline;
+            background-color: inherit;
+            color: var(--color-table-header-background);
+            padding: 0;
+            scroll-margin-top: 3rem;
+        }
+
+        & > p {
+            margin-top: 0;
+            margin-left: 2rem;
+        }
+    }
+}
+
+dl.trans {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: end;
+    flex-direction: row;
+}
