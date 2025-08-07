@@ -1,4 +1,4 @@
-const sortOrder = ",;'rxhgkqzsdtnwfbpmvjieoua"
+const sortOrder = "#,;'xzwrhsfgdbktpqnmvyieoua"
 
 function compareBySatu(left: string, right: string): number {
     for (let i = 0; ; i++) {
@@ -14,7 +14,7 @@ function compareBySatu(left: string, right: string): number {
 
         const lIndex = sortOrder.indexOf(l)
         const rIndex = sortOrder.indexOf(r)
-        if (l !== r) {
+        if (lIndex !== rIndex) {
             return rIndex - lIndex
         }
     }
@@ -24,10 +24,11 @@ function satuToSound(satu: string): string {
     return satu
         .replaceAll("q", "ŋ")
         .replaceAll("f", "ɸ")
-        .replaceAll("sj", "ʃ")
-        .replaceAll("tj", "tʃ")
-        .replaceAll("dj", "dʒ")
+        .replaceAll("sy", "ʃ")
+        .replaceAll("ty", "tʃ")
+        .replaceAll("dy", "dʒ")
         .replaceAll("si", "ʃi")
+        .replaceAll("y", "j")
         .replaceAll("v", "əm")
         .replaceAll("r", "ɾ")
         .replaceAll("x", "ɣ")
