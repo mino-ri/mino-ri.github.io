@@ -31,7 +31,7 @@ nav {
             height: 100%;
             list-style: none;
 
-            & a {
+            & a[href] {
                 display: inline-block;
                 width: 2rem;
                 height: 2rem;
@@ -79,10 +79,6 @@ nav {
 /* article-container */
 article > .article-container {
     margin: 0;
-
-    & > img {
-        padding: 0.8rem;
-    }
     
     & > div > * {
         margin: 0.8rem;
@@ -92,7 +88,8 @@ article > .article-container {
 @media (max-width: 767px) {
     .article-container > img {
         display: block;
-        max-width: 90vw;
+        width: calc(100% - 2rem);
+        margin: 0.8rem auto 0.8rem;
         object-fit: contain;
     }
 }
@@ -110,6 +107,7 @@ article > .article-container {
             width: 55%;
             max-height: 60vh;
             object-fit: contain;
+            margin: 0.8rem;
         }
     
         & > div {
