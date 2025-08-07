@@ -21,16 +21,6 @@
     --color-table-background-alt: #EEF8F8;
 }
 
-input.satu-switch + * + * {
-    font-family: 'SatukitanSans';
-    font-feature-settings: "liga" 1;
-    -webkit-font-feature-settings: "liga" 1;
-}
-
-input.satu-switch:checked + * + * {
-    font-family: sans-serif;
-}
-
 span.trans {
     display: inline-block;
 }
@@ -39,6 +29,7 @@ div.trans {
     display: flex;
     flex-direction: row;
     justify-content: left;
+    flex-wrap: wrap;
     row-gap: 0.5rem;
     column-gap: 0.5rem;
 }
