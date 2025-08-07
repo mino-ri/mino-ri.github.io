@@ -35,15 +35,19 @@ span.trans {
     display: inline-block;
 }
 
-dl.trans {
+div.trans {
+    display: flex;
+    flex-direction: row;
+    justify-content: left;
+    row-gap: 0.5rem;
+    column-gap: 0.5rem;
+}
+
+div.trans dl, dl.trans {
     display: inline-block;
 }
 
-dl.trans + dl.trans {
-    margin-left: 0.3rem;
-}
-
-dl.trans > dt {
+.trans dt {
     font-family: 'SatukitanSans';
     font-feature-settings: "liga" 1;
     -webkit-font-feature-settings: "liga" 1;
@@ -54,12 +58,12 @@ dl.trans > dt {
     font-size: 1.5rem;
 }
 
-dl.trans > dt + dd {
+.trans dt + dd {
     display: block;
     color: var(--color-primary);
     font-size: 0.8rem;
 }
 
-dl.trans > dt + dd + dd {
+.trans dt + dd + dd {
     display: block;
 }
