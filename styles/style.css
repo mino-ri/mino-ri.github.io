@@ -201,6 +201,10 @@ input[type="button"] {
     padding-inline: 0;
 }
 
+a[id] {
+    scroll-margin-top: 3rem;
+}
+
 a[href], input[type="button"] {
     display: inline-block;
     padding: 0.25rem;
