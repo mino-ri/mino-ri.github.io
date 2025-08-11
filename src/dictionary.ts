@@ -1,3 +1,5 @@
+import { loadLanguages } from "./language_switcher_core.js"
+
 const sortOrder = "#,;'xzwrhsfgdbktpqnmvyieoua"
 
 function compareBySatu(left: string, right: string): number {
@@ -35,6 +37,81 @@ function satuToSound(satu: string): string {
         .replaceAll("h", "x")
 }
 
+type Translation = {
+    ja: string
+    en: string
+}
+
+const wordTypes: Map<string, Translation> = new Map([
+    ["名称", { ja: "名称語", en: "Name" }],
+    ["過程", { ja: "過程語", en: "Process" }],
+    ["結果", { ja: "結果語", en: "Result" }],
+    ["機能", { ja: "機能語", en: "Function" }],
+    ["補助", { ja: "補助語", en: "Complementizer" }],
+])
+
+type PartOfSpeech = {
+    noun: Translation
+    verb: Translation
+    mod: Translation
+    conj: Translation
+}
+
+const partOfSpeeches: PartOfSpeech = {
+    noun: { ja: "名", en: "Noun" },
+    verb: { ja: "動", en: "Verb" },
+    mod: { ja: "飾", en: "Mod" },
+    conj: { ja: "接", en: "Conj" },
+}
+
+function buildWord({ wordType, paramCount, explain, noun, verb, modif, conj, language }: {
+    wordType: string,
+    paramCount: string,
+    explain: string,
+    noun: string,
+    verb: string,
+    modif: string,
+    conj: string,
+    language: keyof Translation
+}): string {
+    const wordTypeText = wordTypes.get(wordType)?.[language] ?? ""
+    const wordTitle = paramCount === "0" ? `【${wordTypeText}】 ${explain}<br />` : `【${wordTypeText}-${paramCount}】 ${explain}<br />`
+    let body = ""
+    if (noun !== "") {
+        body += `【${partOfSpeeches.noun[language]}】${noun}`
+    }
+
+    if (verb !== "") {
+        if (body !== "") {
+            body += " "
+        }
+        let verbTitle = partOfSpeeches.verb[language]
+        if (modif === "●") {
+            verbTitle += `|${partOfSpeeches.mod[language]}`
+        }
+        if (conj === "●") {
+            verbTitle += `|${partOfSpeeches.conj[language]}`
+        }
+        body += `【${verbTitle}】${verb}`
+    }
+
+    if (modif !== "" && modif !== "●") {
+        if (body !== "") {
+            body += " "
+        }
+        const modifTitle = (verb === "" && conj === "●") ? `${partOfSpeeches.mod[language]}|${partOfSpeeches.conj[language]}` : partOfSpeeches.mod[language]
+        body += `【${modifTitle}】${modif}`
+    }
+
+    if (conj !== "" && conj !== "●") {
+        if (body !== "") {
+            body += " "
+        }
+        body += `【${partOfSpeeches.conj[language]}】${conj}`
+    }
+    return wordTitle + body
+}
+
 const loadDictionary = async () => {
     const template = document.getElementById("template_word")
     if (!(template instanceof HTMLTemplateElement)) {
@@ -48,20 +125,27 @@ const loadDictionary = async () => {
     const url = "./dictionary.csv"
     const response = await fetch(url)
     const text = await response.text()
-    const words = text.split("\n").map((s) => s.split(","))
+    const words = text.split("\n").map((s) => s.split("\t"))
     words.sort((a, b) => compareBySatu(a[0] ?? "", b[0] ?? ""))
 
-    const pattern = /\{(.+?)\}/g
+    const pattern = /\{(([a-z]+?)[sfv]?)\}/g
     for (const word of words) {
         const satu = word[0] ?? ""
         const wordType = word[1] ?? ""
         const paramCount = word[2] ?? ""
         const title = word[3] ?? ""
-        const explain = (word[4] ?? "").replaceAll(pattern, `<a href='#$1' class='satu'>$1</a>`)
+        const explain = (word[4] ?? "").replaceAll(pattern, `<a href='#$2' class='satu'>$1</a>`)
         const noun = word[5] ?? ""
         const verb = word[6] ?? ""
         const modif = word[7] ?? ""
         const conj = word[8] ?? ""
+
+        const titleEn = word[9] ?? ""
+        const explainEn = (word[10] ?? "").replaceAll(pattern, `<a href='#$2' class='satu'>$1</a>`)
+        const nounEn = word[11] ?? ""
+        const verbEn = word[12] ?? ""
+        const modifEn = word[13] ?? ""
+        const conjEn = word[14] ?? ""
 
         const root = template.content.cloneNode(true) as ParentNode
         const summary = root.querySelector("summary")
@@ -69,53 +153,25 @@ const loadDictionary = async () => {
             summary.querySelector("a")?.setAttribute("id", satu)
             summary.querySelector(".satu")!.textContent = satu
             summary.querySelector(".dict-sound")!.textContent = `/${satuToSound(satu)}/`
-            summary.querySelector(".dict-mean")!.textContent = title
+            const mean = summary.querySelector(".dict-mean")
+            if (mean) {
+                mean.textContent = title
+                mean.setAttribute("data-ls-en", titleEn)
+            }
         }
         const p = root.querySelector("p")
         if (p) {
-            let title = paramCount === "0" ? `【${wordType}語】 ${explain}<br />` : `【${wordType}語-${paramCount}】 ${explain}<br />`
-            let body = ""
-            if (noun !== "") {
-                body += `【名】${noun}`
-            }
-
-            if (verb !== "") {
-                if (body !== "") {
-                    body += " "
-                }
-                let verbTitle = "動"
-                if (modif === "●") {
-                    verbTitle += "|飾"
-                }
-                if (conj === "●") {
-                    verbTitle += "|接"
-                }
-                body += `【${verbTitle}】${verb}`
-            }
-
-            if (modif !== "" && modif !== "●") {
-                if (body !== "") {
-                    body += " "
-                }
-                const modifTitle = (verb === "" && conj === "●") ? "飾|接" : "飾"
-                body += `【${modifTitle}】${modif}`
-            }
-
-            if (conj !== "" && conj !== "●") {
-                if (body !== "") {
-                    body += " "
-                }
-                body += `【接】${conj}`
-            }
-
-            p.innerHTML = title + body
+            p.innerHTML = buildWord({ wordType, paramCount, explain, noun, verb, modif, conj, language: "ja" })
+            p.setAttribute("data-ls-html-en", buildWord({ wordType, paramCount, explain: explainEn, noun: nounEn, verb: verbEn, modif: modifEn, conj: conjEn, language: "en" }))
         }
 
         parent.appendChild(root)
     }
+
+    loadLanguages()
 }
 
-window.addEventListener("load", loadDictionary)
+window.addEventListener("DOMContentLoaded", loadDictionary)
 window.addEventListener("hashchange", (ev) => {
     console.log("HashChanged")
     const hash = location.hash.replace("#", "")
