@@ -11,27 +11,44 @@
   <link rel="stylesheet" type="text/css" href="./../styles/satukitan.css" />
   <link rel="stylesheet" type="text/css" href="./../styles/style.css" />
   <link rel="stylesheet" type="text/css" href="./../styles/dictionary.css" />
-  <script src="./../scripts/dictionary.js"></script>
+  <script type="module" src="./../scripts/dictionary.js"></script>
   <title>サトゥキタン - 単語リスト</title>
 </head>
 
 <body>
   <header>
-    <a class="back" href="./">back</a>
-    <h1><span class="satu">satu kitav</span> - 単語リスト</h1>
+    <a class="back" href="./" data-ls-href-en="./en/">back</a>
+    <h1><span class="satu">satu kitav</span> - <span data-ls-en="Word list">単語リスト</span></h1>
+    <nav class="language-switcher">
+      <label>
+        <input type="radio" name="language" value="ja" checked />
+        JP
+      </label>
+      <label>
+        <input type="radio" name="language" value="en" />
+        EN
+      </label>
+    </nav>
   </header>
   <section>
-    <h2>単語リスト</h2>
+    <h2 data-ls-en="Word list">単語リスト</h2>
+    <article>
+      <h3 data-ls-en="References">参照</h3>
+      <ul class="link-list">
+        <li><a href="./#word" data-ls-href-en="./en/#word" data-ls-en="Words &amp; Parts of Speech">単語と品詞</a></li>
+        <li><a href="./#word_category" data-ls-href-en="./en/#word_category" data-ls-en="Word Categories">単語の分類</a></li>
+      </ul>
+    </article>
     <article class="dictionary">
       <template id="template_word">
         <details>
           <summary>
-            <a id="satu"></a>
+            <a></a>
             <span class="satu"></span>
             <span class="dict-sound"></span>
-            <span class="dict-mean"></span>
+            <span class="dict-mean" data-ls-en=""></span>
           </summary>
-          <p></p>
+          <p data-ls-html-en=""></p>
         </details>
       </template>
     </article>
