@@ -310,7 +310,7 @@ table.cell-alt tbody tr:nth-child(even) td:nth-child(even) {
     justify-content: right;
     margin-left: auto;
 
-    & > label {
+    & > label, & > a {
         display: flex;
         justify-content: center;
         align-items: center;
@@ -320,15 +320,20 @@ table.cell-alt tbody tr:nth-child(even) td:nth-child(even) {
         border: 1px solid var(--color-primary-dark);
         background-color: var(--color-primary);
         color: white;
-
-        &:has(input:checked) {
-            background-color: var(--color-primary-light);
-        }
+        border-radius: 0;
 
         & > input[type="radio"] {
             appearance: none;
             display: none;
         }
+    }
+
+    & > a[href='#'] {
+        background-color: var(--color-primary-light);
+    }
+
+    & > label:has(input:checked) {
+        background-color: var(--color-primary-light);
     }
 }
 
