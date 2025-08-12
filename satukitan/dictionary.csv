@@ -1,9 +1,9 @@
-dada	機能	1	とても	程度が大きいこと。	壮大なこと	すごい、程度が大きい	とても		very; grand	Great degree.			very; grand	
-fefe	機能	1	少し、ちょっと	程度が小さいこと。	ちっぽけであること	程度が小さい	少し、ちょっと		sligthy	Small degree.			sligthy	
-pi	機能	1	ほしい、〜してほしい	欲求。欲される。動詞に接尾辞としてつけることで英語の「want to〜」と同様に機能する。	欲求	欲される	●		want	Desire; suffix on verbs indicating “want to ~.”			●	
-pipi	機能	1	命令	命令。～しなければならない。動詞に接尾辞としてつけることで命令文を作る。	命令	～しろ、～しなければならない	●		imperative; must	Command; suffix on verbs indicating obligation.			●	
-kya	機能	1	〜しようとする	〜しようとする。行動の意思。	予定	〜しようとする	●		intend to	Attempt; intention to act; Intention suffix.	intention	intend to	●	
-sana	名称	0	(暦の)日	(暦の)日。【熟語】 {sana} {sapotav} (こんにちは / さようなら)	(暦の)日		(暦の)日の		day	Day. Idiom: {sana} {sapotav} (hello / good bye)	day		of day	
+dada	機能	1	とても	程度が大きいこと。	壮大なこと	すごい、程度が大きい	とても		very; grand	Great degree.	grandeur	be grand	very; grand	
+fefe	機能	1	少し、ちょっと	程度が小さいこと。	ちっぽけであること	程度が小さい	少し、ちょっと		sligthy	Small degree.	dwarfism	be slight	slightly	
+poni	機能	1	推奨、どうぞ〜してください	許可、ゆるい推奨。どうぞ〜して下さい。動詞に接尾辞としてつけることで命令文を作る。	提案	どうぞ〜してください	●		suggest; please	suggestion; mild recommendation; can become verb taking whole sentence as object.	suggest	please; be suggested	●	
+pi	機能	1	～であるべき、〜するべき	～であるべき。動詞に接尾辞としてつけることで命令文を作る。	推奨	～してほしい、～であるべき	●		recommend; should	Should;recommendation; suffix on verbs indicating obligation.	recommendation	should	●	
+pipi	機能	1	命令	命令。～しなければならない。動詞に接尾辞としてつけることで命令文を作る。	命令	～しろ、～しなければならない	●		imperative; must	Imperative; must; suffix on verbs indicating obligation.	Imperative	command	●	
+sana	名称	0	(暦の)日	(暦の)日。【熟語】 {sana} {sapotav} (こんにちは / さようなら)	(暦の)日		(暦の)日の		day	Day. Idiom: {sana} {sapotav} (hello / goodbye)	day		of day	
 duna	名称	0	昼	昼。	昼		昼の		noon	Daytime.	noon		of noon	
 funa	名称	0	夜	夜。	夜		夜の		night	Nighttime.	night		of night	
 runa	名称	0	(暦の)月	(暦の)月。	(暦の)月		(暦の)月の		month	Month.	month		of month	
@@ -16,6 +16,7 @@ ti	機能	1	終わり	終わり。接尾辞として完了形を表す。	ゴー
 ki	機能	1	始まり	始まり。接尾辞として「〜し始める」ことを表す。	スタート	始まる	●		begin; start	Beginning; suffix indicating 'begin to .'	start	begin; start	●	
 ta	機能	1	〜した	接尾辞として過去形「〜した」を表す。	過去の行い	〜した	●		did	Past tense suffix.	did-ness	did	●	
 ka	機能	1	〜するだろう	接尾辞として未来形を表す。	未来の予想	〜するだろう、〜する予定	●		will	Future tense suffix.	will-ness	will	●	
+kya	機能	1	〜しようとする	〜しようとする。行動の意思。	予定	〜しようとする	●		intend to ～	Attempt; intention to act; Intention suffix.	intention	intend to	●	
 so	機能	1	〜している	接尾辞として現在進行形「～している」を表す。	していること	〜している	●		be ～ing	Present progressive suffix (“is doing”).	doing	be ～ing	●	
 raka	過程	1	数える	数や個数を数えること。	カウント	数えられる	●		be counted	Counting numbers or quantities.	to count	be counted	●	
 rata	結果	1	数	数や個数が数えられた状態。	数	数えられた	●		counted; number	State of counted numbers or quantities.	number	conted	●	
@@ -23,30 +24,31 @@ riku	過程	1	書く	(単に文字として)書かれること。	書くこと	(
 ritu	結果	1	文字	(単に文字として)書かれた状態。	文字	(単に文字として)書かれた	●		have been written; letter	State of being written (letters).	letter	have been written	●	
 saku	過程	1	話す	言われる、話される、会話。意味をもった音を口から出すこと。	発話、発言	話される	●		be spoken	Speaking; producing meaningful sounds.	to speak	be spoken	●	
 satu	結果	1	言葉	言葉。(記録として)言われた状態。	言語、言葉	話された	●		word; language	Word(s); recorded speech.	word; language	have been spoken	●	
-rv	名称	0	0	0個の。ない。	0		0の、0個の、ない		0; empty	0. Empty.			of 0	
-ra	名称	0	1	1個の。ただひとつの。単に。	1		1の、1個の、ただひとつの		1; unique	1. Unique.			of 1	
-ru	名称	0	2	2	2		2の、2個の		2	2			of 2	
-ro	名称	0	3	3	3		3の、3個の		3	3			of 3	
-re	名称	0	4	4	4		4の、4個の		4	4			of 4	
-ri	名称	0	5	5	5		5の、5個の		5	5			of 5	
-rya	名称	0	6	6	6		6の、6個の		6	6			of 6	
-ryu	名称	0	7	7	7		7の、7個の		7	7			of 7	
-ryo	名称	0	8	8	8		8の、8個の		8	8			of 8	
-rye	名称	0	9	9	9		9の、9個の		9	9			of 9	
-#ta	名称	0	10	10	10		10の、10個の		10	10			of 10	
-#sa	名称	0	100	100	100		100の、100個の		100	100			of 100	
-#na	名称	0	1000	1000	1000		1000の、1000個の		1000	1000			of 1000	
+rv	名称	0	0	0個の。ない。	0		0の、0個の、ない		0; empty	0. Empty.	0		of 0	
+ra	名称	0	1	1個の。ただひとつの。単に。	1		1の、1個の、ただひとつの		1; unique	1. Unique.	1		of 1	
+ru	名称	0	2	2	2		2の、2個の		2	2	2		of 2	
+ro	名称	0	3	3	3		3の、3個の		3	3	3		of 3	
+re	名称	0	4	4	4		4の、4個の		4	4	4		of 4	
+ri	名称	0	5	5	5		5の、5個の		5	5	5		of 5	
+rya	名称	0	6	6	6		6の、6個の		6	6	6		of 6	
+ryu	名称	0	7	7	7		7の、7個の		7	7	7		of 7	
+ryo	名称	0	8	8	8		8の、8個の		8	8	8		of 8	
+rye	名称	0	9	9	9		9の、9個の		9	9	9		of 9	
+#ta	名称	0	10	10	10		10の、10個の		10	10	10		of 10	
+#sa	名称	0	100	100	100		100の、100個の		100	100	100		of 100	
+#na	名称	0	1000	1000	1000		1000の、1000個の		1000	1000	1000		of 1000	
 nana	名称	0	時間	時間	時間		時間の		time	Time.	time		of time	
+na	補助	1	～の時刻に	～に。補助目的語として日付や時刻を示す。			～に		at; in	At; in; marks a supplementary object indicating a date or time.			at; in	
 a	名称	0	私	私	私		私の		I	I.	I; me		my	
 u	名称	0	あなた	あなた	あなた		あなたの		you	You.	you		your	
 o	名称	0	あれ、それ	彼、彼女、それ。自分でも相手でもない第三のもの。	あれ、あの人		あの、あの人の		that; it; he; she	Third person pronoun (“he”, “she”, “it”).	that; it; he; she		its; his; her	
 e	名称	0	何か	何か。ある条件を満たす物を言いたいとき、 {e} に修飾語をつけて表す。	何か		何かの		something	Something; used with modifier plus {e} to indicate an object meeting conditions.	something		of something	
 hapa	名称	0	誰	誰。誰の。質問したい部分の単語をこれに置き換える。	誰		誰の		who	Who; interrogative pronoun for persons.	who		whose	
 do	名称	0	これ、この	これ。この。自分が会話に出したものに対して代名詞としても使う。	これ		この		this; the	This; demonstrative pronoun for speaker's referent.	this; the		of this; of the	
-doso	機能	可変	このように	このように。こう。こうする。	こうすること	こうする	このように		in this way	Thus; in this way; to do so.	to do this	do this	in this way	
+doso	機能	0+	このように	このように。こう。こうする。	こうすること	こうする	このように		in this way	Thus; in this way; to do so.	to do this	do this	in this way	
 fo	名称	0	それ、その	それ。その。相手が会話に出したものに対して代名詞としても使う。	それ		その		it; the	It; demonstrative pronoun for listener's referent.	it; the		of it	
-foso	機能	可変	そのように	そのように。そう。そうする。	そうすること	そうする	そのように		in that way	Thus; in that way; to do so.	to do it	do it	in that way	
-oso	機能	0	あのように	あのように。ああ。ああする。	ああすること	ああする	あのように		in that way	Thus (distant); in that way (distant); to do so (distant).	to do that	do that	in that way	
+foso	機能	0+	そのように	そのように。そう。そうする。	そうすること	そうする	そのように		in that way	Thus; in that way; to do so.	to do it	do it	in that way	
+oso	機能	0+	あのように	あのように。ああ。ああする。	ああすること	ああする	あのように		in that way	Thus (distant); in that way (distant); to do so (distant).	to do that	do that	in that way	
 ho	名称	0	どれ、どの	どれ。どの。目的語を修飾するか置き換えて、選択肢の中から一つを選ばせる疑問文を作る。	どれ		どの		which	Which one; interrogative pronoun modifying or replacing an object to form a question selecting from options.	which		which	
 he	名称	0	～するか	～するか。～か。文全体を目的語にとり、「はい」か「いいえ」で答えられる疑問文を作る。	～するかどうか		～するか		whether	Whether; forms yes/no questions taking the whole sentence as the object.	whether		whether	
 hoso	名称	0	どのように	どのように。何をする。動詞を修飾し、その手順や方法を問う疑問文を作る。	手順、方法		どのように		how	How; modifies verbs to ask about method or procedure.	procedure		how	
@@ -65,7 +67,7 @@ oba	名称	0	あそこ	あそこ。自分にも相手にも属さないものに
 da	機能	1	主な	主な。	主要	主要である	主な〜		main	Main.	main	be main	main	
 fe	機能	1	他の	他の。	他	他である	他の〜		other	Other.	other	be other	other	
 ge	機能	1	できる	～できる。可能性。	可能	〜できる	●		can	Can; possibility.	possible	can	●	
-sapoka	過程	1	改善する	改善する。良くする。	改善	改善される	●		be improved	Improve; make better.	improvement		●	
+sapoka	過程	1	改善する	改善する。良くする。	改善	改善される	●		be improved	Improve; make better.	improvement	be improved	●	
 sapota	結果	1	良い	良い。品質が高い。	良さ	良い	●		good	Good; high quality.	goodness	good	●	
 fupokye	過程	1	改悪する	改悪する。悪くする。	改悪	改悪される	●		make worse	Worsen; make worse.	to make worse	make worse	●	
 fupotye	結果	1	悪い	悪い。品質が低い。	悪さ	悪い	●		bad	Bad; low quality.	badness	bad	●	
@@ -98,10 +100,10 @@ dirata	結果	1	長い、高い(一次元)	(一次元的な量が)高い、大�
 firakye	過程	1	縮む、下りる(一次元)	(一次元的な量が)縮む、低くなる、小さくなる、下る、下りる。	縮小	縮む、下りる	●		shrink	(One-dimensional quantity) to shrink; become lower, smaller, descend, go down.	reduction	shrink	●	
 firatye	結果	1	短い、低い(一次元)	(一次元的な量が)低い、小さい。	低さ	低い	●		short; low	(One-dimensional quantity) low; small.	lowness	short; low	●	
 diruka	過程	1	拡大(二次元〜)	(平面・空間的な量が)広くなる、拡大する。	拡大	広くなる	●		be expanded	(Area or spatial quantity) to widen; expand.	expansion	be expanded	●	
-diruta	結果	1	広い(二次元〜)	(平面・空間的な量が)広い、大きい。	広さ	広い	●		wide; large	(Area or spatial quantity) wide; large.		big	●	
-firukye	過程	1	縮小(二次元〜)	(平面・空間的な量が)狭くなる、縮小する。	縮小	狭くなる	●		be reduce	(Area or spatial quantity) to narrow; shrink.		be reduce	●	
-firutye	結果	1	狭い(二次元〜)	(平面・空間的な量が)狭い、小さい。	狭さ	狭い	●		small	(Area or spatial quantity) narrow; small.		small	●	
-bino	機能	2	次に	次に。隣に。〜よりも。[1]と[2]が比較でき、時間的・空間的・概念的に並んでいて、[1]が優位である状態を表す。	次、隣	[1] 次いで [2]、[1] の隣に [2] がある		●	next; than	Next to; beside; more than. Indicates [1] and [2] are compared and aligned temporally, spatially, or conceptually, with [1] superior.	next			●
+diruta	結果	1	広い(二次元〜)	(平面・空間的な量が)広い、大きい。	広さ	広い	●		wide; large	(Area or spatial quantity) wide; large.	bigness	big	●	
+firukye	過程	1	縮小(二次元〜)	(平面・空間的な量が)狭くなる、縮小する。	縮小	狭くなる	●		be reduce	(Area or spatial quantity) to narrow; shrink.	reduction	be reduce	●	
+firutye	結果	1	狭い(二次元〜)	(平面・空間的な量が)狭い、小さい。	狭さ	狭い	●		small	(Area or spatial quantity) narrow; small.	smallness	small	●	
+bino	機能	2	次に	次に。隣に。〜よりも。[1]と[2]が比較でき、時間的・空間的・概念的に並んでいて、[1]が優位である状態を表す。	次、隣	[1] 次いで [2]、[1] の隣に [2] がある		●	next; than	Next to; beside; more than. Indicates [1] and [2] are compared and aligned temporally, spatially, or conceptually, with [1] superior.	next	next; than		●
 rika	過程	2	加算	[1]に[2]を加えて、別のものを作ること。	加算	[1]に[2]を加える		加えて、さらに	add; plus	Add [2] to [1] to create something else.	addition	add; plus		●
 rita	結果	2	和	[1]に[2]を加えて、別のものが作られた状態。	和	[1]に[2]を加えたもの		●	sum	Result of adding [2] to [1]; something else created.	sum	added		●
 makye	過程	2	減算	[1]から[2]を取り除くこと。	減算	[1]から[2]を引く、取り除く		●	subtract	Remove [2] from [1].	subtraction	subtract		●
@@ -132,14 +134,13 @@ gipuku	過程	1～2	理解される	[1] が理解される。[1] が [2] と理�
 giputu	結果	1～2	理解された	[1] が理解された。[1] が [2] と理解された。物事の詳細や性質が分かっている状態を表す。	既知	理解された	●	●	be understood	[1] is understood; [1] is understood as [2]; state of knowing details or nature.	understood-ness	be understood	●	●
 gi	機能	1	学ぶ、学問	継続的に学ばれること。また、学問 (例: {ratasgi} 数学)。学ばれるものこそが主体という考え方から、学問を意味する語の {gi} は後ろにつける。	学問	学ばれる	学ばれる、〜学		learn	Continuously learned; academic discipline (e.g., {ratasgi} mathematics). The suffix {gi} denotes an academic subject.	academics	be learned	●	
 ratasgi	名称	0	数学	[合成語] {rata} + {gi}。数学。	数学		数学の		mathematics	[Compound] {rata} + {gi}; mathematics.	mathematics		mathematical	
-pegi	機能	1～2	教える	[1] が ([2] に)教えられる。	教え、授業	教えられる	●		be taught	[1] is taught (to [2]).	teaching	be taught	●	●
-ripegi	機能	1	説明	説明される	説明	説明される	●		be explained	Explained.	explanation	be explained		
+pegi	機能	1～2	教える	[1] が ([2] に)教えられる。	教え、授業	教えられる	●	●	be taught	[1] is taught (to [2]).	teaching	be taught	●	●
+ripegi	機能	1	説明	説明される	説明	説明される	●		be explained	Explained.	explanation	be explained	●	
 nokya	機能	2	なぜなら	なぜなら。[1] の理由が [2] であることの説明。	理由付け	[1] なぜなら [2]		●	because	Because; explains that reason for [1] is [2].	reasoning	because		●
 noma	機能	2	しかし	しかし。[1] から意外性を持って [2] が導かれること。	逆接	[1] しかし [2]		●	but; however	However; [2] is derived unexpectedly from [1].	however-ness	but; however		●
 noni	機能	2	だから	だから。[1] から順当に [2] が導かれること。	順接	[1] だから [2]		●	so; therefore	Therefore; [2] is logically derived from [1].	therefore-ness	therefore		●
-poni	機能	1	どうぞ〜してください	許可、ゆるい推奨。どうぞ〜して下さい。文全体を目的語とする動詞になれる。	推奨	どうぞ〜してください	●		please	Permission; mild recommendation; can become verb taking whole sentence as object.	recommendation	please	●	
-peka	過程	2	名付け	名付けられること。	命名	[1]が[2]と名付けられる		●	be named	Named.	naming	be named		●
-peta	結果	2	名前	名前を持っている状態。	名前	[1]は[2]と呼ばれる (名前を持つ)		●	name	Having a name.	name	be called		●
+peka	過程	2	名付け	名付けられること。[1]が[2]と名付けられる。[1]は[2]であると定義する。	命名	名付けられる		●	be named	Named; [1] is given the name [2]; [1] is defined as [2].	naming	be named		●
+peta	結果	2	名前	名前を持っている状態。[1]は[2]という名前を持つ。[1]は[2]と呼ばれている。	名前	呼ばれている、名前を持つ		●	name	Having a name; [1] has the name [2]; [1] is referred to as [2].	name	be called		●
 podani	機能	1	愛される	愛情。愛される。	愛情	愛される	●		be loved	Affection; being loved.	affection	be loved	●	
 poda	機能	1	好かれる	好意。好かれる。	好意	好かれる	●		be liked	Favor; being liked.	favor	be liked	●	
 podasma	機能	1	嫌われる	[合成語] {pada} + {ma}。反感。嫌われる。	反感	嫌われる	●		be hated	[Compound] {poda} + {ma}; Dislike; being hated.	dislike	be hated	●	
@@ -156,19 +157,19 @@ masu	名称	0	後ろ	後ろ。	後ろ		後ろの		back	Back.	back		back; of back
 fusu	名称	0	下	下。	下		下の		down	Down.	down		down; of down	
 sasu	名称	0	上	上。	上		上の		up	Up.	up		up; of up	
 suni	補助	1	〜のために	〜のために。			〜のために		for	For (the sake of).			for	
-faba	機能	1	動く	[1] が動く。(補助目的語を伴って)〜に行く、〜から出る。	移動	動く	●		move	[1] moves. (With indirect object) go to ~, leave from ~.	movement	move	●	
-fagoki	過程	2	変わる	[1]から[2]に変わる。変化の過程を表す。	変化	[1]から[2]に変わる	●		change	Change from [1] to [2]; process of change.	change	change	●	
-fagoti	結果	2	変わった	[1]から[2]に変わる。変化した後の状態を表す。	変化後の状態	[1]から[2]に変わった状態	●		change	Change from [1] to [2]; resulting state after change.	change	change	●	
+faba	機能	1	動く	[1] が動く。物理的・概念的な位置が移動すること。(補助目的語を伴って)〜に行く、〜から出る。	移動	動く	●		move	[1] moves; [1] changes physical or conceptual location; (With indirect object) go to ~, leave from ~.	movement	move	●	
+fagoki	過程	2	変わる	[1]から[2]に変わる。変化の過程を表す。	変化	[1]から[2]に変わる	●		be changed	Change from [1] to [2]; process of change.	change	change	●	
+fagoti	結果	2	変わった	[1]から[2]に変わる。変化した後の状態を表す。	変化後の状態	[1]から[2]に変わった状態	●		have been changed	Change from [1] to [2]; resulting state after change.	change	change	●	
 pyani	機能	1	生きている	生きていること。命があること。	命	生きている	●		live	Living; having life.	life	live	●	
 pyanisma	機能	1	死んでいる	[合成語] {pyani} + {ma}。命がないこと。	死んだ状態	死んでいる	●		dead	[Compound] {pyani} + {ma}; not alive; lifeless.	death	dead	●	
 pyaniski	機能	1	生まれる	[合成語] {pyani} + {ki}。生まれる。(主題を伴って) 産む。命があるものにしか使わない。	出産、誕生	生まれる	●		born	[Compound] {pyani} + {ki}; to be born; (with topic) to give birth. Used only for living things.	birth	born	●	
 pyanisti	機能	1	死ぬ、殺す	[合成語] {pyani} + {ti}。 死ぬ。(主題を伴って)殺す。	死	死ぬ	●		die	[Compound] {pyani} + {ti}; to die; (with topic) to kill.	dying	die	●	
 du	機能	1	すべて	全て。	全て	全てである	全ての		all	All; everything.	all	be all	all	
 bu	機能	1	それぞれ	～ごとに。それぞれ。各〜。	それぞれ	それぞれである	それぞれの		every; each	Per ~; each; every ~.	every; each	every; each	●	
-boki	過程	2	所属する、手に入れる	[1]が[2]を手に入れる。[2]が[1]の中に入る。	入手	手に入れる、中に入る		●	obtain; get	[1] obtains [2]; [2] enters [1].	obtain	get; enter		●
-boti	結果	2	所属している、持っている	[2]が[1]に所属する。[1]が[2]を持っている。[2]が[1]の中にいる。	所属	所属する、持っている、中にいる		●	have	[2] belongs to [1]; [1] has [2]; [2] is inside [1].	affiliation	belong to; have; be inside		●
-diboka	過程	1	満たされる	充填。[1] が ([2]で) 満たされる。	充填	満たされる	●		be filled	Filled; being filled [1] (with [2]).	filling	be filling	●	●
-dibota	結果	1	満杯	満杯。基準となる容量が満たされていること。[1] が ([2] で) 満たされている。	満タン	満タンである	●		full	[1] is full (of [2]); capacity is filled to standard.	full	be full	●	●
+boki	過程	2	所属する、手に入れる	[1]が[2]を手に入れる。[2]が[1]の中に入る。物理的・概念的に[1]の外にあった[2]が、[1]の中に移動すること。(主題を伴って)[1]に[2]を与える。	入手	手に入れる、中に入る		●	obtain; get; enter	[1] obtains [2]; [2] enters [1]. [2], previously outside [1] physically or conceptually, moves inside [1]. With a subject, “to give [2] to [1].”	obtain	get; enter		●
+boti	結果	2	所属している、持っている	[2]が[1]に所属する。[1]が[2]を持っている。[2]が[1]の中にいる。物理的・概念的に[1]の中に[2]が存在すること。	所属	所属する、持っている、中にいる		●	have	[2] belongs to [1]; [1] has [2]; [2] is inside [1] physically or conceptually.	affiliation	belong to; have; be inside		●
+diboka	過程	1	満たされる	充填。[1] が ([2]で) 満たされる。	充填	満たされる	●	●	be filled	Filled; being filled [1] (with [2]).	filling	be filling	●	●
+dibota	結果	1	満杯	満杯。基準となる容量が満たされていること。[1] が ([2] で) 満たされている。	満タン	満タンである	●	●	full	[1] is full (of [2]); capacity is filled to standard.	full	be full	●	●
 fibokye	過程	1	減らされる	消費、中身が減る。	消費	減らされる	●		be consumed	Consumed; contents decrease.	consumption	be consumed	●	
 fibotye	結果	1	空っぽ	空っぽ。容量があるものに対して、そこに何もないこと。	空っぽ	空っぽである	●		empty	Empty; nothing inside a container with capacity.	empty	be empty	●	
 kipeki	過程	1	創作される	作られる。創作。人の意思によって作り出されること。	創作	作られる	●		create	Created; made by human will.	creation	be created	●	
@@ -189,7 +190,7 @@ runita	結果	1	並べられた	(特定の順序はなく)並べられた状態�
 fanika	過程	1	順序付け、ソート	順序付けられる。ソートされる。特定のルールに従って整列されること。	ソート	ソートされる、整列される	●		be sorted	Ordered; sorted; arranged according to specific rules.	sort	be sorted	●	
 fanita	結果	1	ソートされた	順序付けられた。ソートされた。特定のルールに従って整列された状態。	数列	ソートされた、整列された	●		be sorted	Ordered state; sorted; arranged according to specific rules.	sequence	be sorted	●	
 sipu	機能	1〜2	見える	[1] が見える。[1] が [2] のように見える。	見た目	見える	●	●	be seen; visual	[1] is seen; [1] appears as [2].	visual	be seen	●	●
-sipusgoski	機能	1	可視化	[合成語] {sipu} + {go} +  {ki}。可視化	可視化	可視化される	●		visualize	[Compound] {sipu} + {go} + {ki}; visualization.			●	
+sipusgoski	機能	1	可視化	[合成語] {sipu} + {go} +  {ki}。可視化	可視化	可視化される	●		visualize	[Compound] {sipu} + {go} + {ki}; visualization.	visualize	be visualized	●	
 nepu	機能	1〜2	音、聞こえる	[1] が聞こえる。[1] が [2]のように聞こえる(音を出す)。	音	聞こえる	●	●	be heard	[1] is heard; [1] sounds like [2].	sound	be heard; sound	●	●
 nepusgi	名称	0	音楽	[合成語] {nepu} + {gi}。音楽。	音楽		音楽の		music	[Compound] {nepu} + {gi}; music.	music		of music	
 nosu	機能	2	比べる	[1] と [2] を比べる。	比較	比べる		●	compare	Compare [1] and [2].	compasison	compare		●
@@ -198,8 +199,8 @@ detu	名称	0	道具、機械	道具、～機 (具体的な物としての道具
 fedaku	過程	1	再現される	再現される過程や再現手順。	再現すること	再現される	●		be reproduced	Process of reproduction or reenactment.	reproducing	be reproduced	●	
 fedatu	結果	1	再現された	再現された状態。	再現	再現された	●		be reproduced	Reproduced state.	reproduction	be reproduced	●	
 ponisa	機能	0	喜び	笑う。喜ぶ。うれしい。	喜び	喜ぶ、嬉しい	●		happy	Laugh; rejoice; be happy.	happiness	be happy	●	
-sya	機能	1	第一目的語の省略	動詞の接尾辞としてのみ使う。動詞の第一目的語を省略することを表し、主題を伴う場合は主題が第一目的語に充当される。	第一目的語の省略	第一目的語を省略する			omit the first object	Verb suffix only; indicates omission of verb’s first object; when with topic, topic fills first object.	omision the first object	omit the first object		
-syu	機能	1	第二目的語の省略	動詞の接尾辞としてのみ使う。動詞の第二目的語を省略することを表し、主題を伴う場合は主題が第二目的語に充当される。	第二目的語の省略	第二目的語を省略する			omit the second object	Verb suffix only; indicates omission of verb’s second object; when with topic, topic fills second object.	omision the first object	omit the second object		
+sya	機能	1	第一目的語の省略	動詞の接尾辞としてのみ使う。動詞の第一目的語を省略することを表し、主題を伴う場合は主題が第一目的語に充当される。	第一目的語の省略		第一目的語を省略する		omit the first object	Verb suffix only; indicates omission of verb’s first object; when with topic, topic fills first object.	omision the first object		omit the first object	
+syu	機能	1	第二目的語の省略	動詞の接尾辞としてのみ使う。動詞の第二目的語を省略することを表し、主題を伴う場合は主題が第二目的語に充当される。	第二目的語の省略		第二目的語を省略する		omit the second object	Verb suffix only; indicates omission of verb’s second object; when with topic, topic fills second object.	omision the first object		omit the second object	
 ku	補助	1	～によって	～によって。主題にかわって、動作の主を表す。			～によって		by	By; indicates agent of action instead of topic.			by	
-poga	機能	1	感謝	感謝される。【熟語】{pogas} {u} (ありがとう)	感謝	感謝される	●		thank	Being thanked. 【Idiom】 {pogas} {u} (thank you).	thank	be thanked	●	
+poga	機能	1	感謝	感謝される。【熟語】{pogas} {u} (ありがとう)	感謝	感謝される	●		thank	Being thanked. 【Idiom】 {pogas} {u} (〝thank you〟).	thank	be thanked	●	
 pyuso	名称	0	動物	動物。合成語として様々な動物を表す。	動物		動物の		animal	Animal; used in compounds to denote various animals.	animal		of animal	
