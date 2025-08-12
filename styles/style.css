@@ -275,6 +275,12 @@ label {
     display: inline-block;
 }
 
+dfn {
+    font-style: normal;
+    font-weight: bold;
+    color: #DF4121;
+}
+
 /* テーブル: sticky */
 table.sticky > thead {
     position: -webkit-sticky;
