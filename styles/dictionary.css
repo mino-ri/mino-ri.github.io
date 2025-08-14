@@ -19,18 +19,18 @@
             font-size: 1rem;
             border-bottom: none;
 
-            & > .satu {
+            & > :lang(kt) {
                 font-size: 1.2rem;
                 color: #DF4121;
                 font-weight: bold;
             }
 
-            & > .satu+span {
+            & > :lang(kt)+span {
                 font-size: 0.8rem;
                 color: var(--color-primary);
             }
 
-            & > .satu+span+span {
+            & > :lang(kt)+span+span {
                 font-weight: bold;
                 color: var(--color-article-text);
             }
