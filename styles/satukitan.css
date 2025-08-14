@@ -27,6 +27,19 @@
     -webkit-font-feature-settings: "liga" 1;
 }
 
+body > nav {
+    background-color: var(--color-primary-dark);
+    padding: 1px;
+
+    & a[href] {
+        background-color: var(--color-primary-dark);
+    }
+}
+
+.link-list.footer {
+    justify-content: center;
+}
+
 span.trans {
     display: inline-block;
 }

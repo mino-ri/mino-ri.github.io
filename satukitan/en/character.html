@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="en">
 
 <head>
   <meta charset="UTF-8" />
@@ -10,24 +10,526 @@
   <meta name="viewport" content="width=device-width">
   <link rel="stylesheet" type="text/css" href="./../../styles/satukitan.css" />
   <link rel="stylesheet" type="text/css" href="./../../styles/style.css" />
-  <title>Satu Kitan - Words and Pronunciation</title>
+  <title>Satu Kitan - Characters and Pronunciation</title>
 </head>
 
 <body>
   <header>
     <a class="back" href="./">back</a>
-    <h1><span lang="kt">satu kitav</span> - Words and Pronunciation</h1>
+    <h1><span lang="kt">satu kitav</span> - Characters and Pronunciation</h1>
     <nav class="language-switcher">
       <a href="../character.html">JP</a>
       <a href="#">EN</a>
     </nav>
   </header>
+  <nav>
+    <ul class="link-list">
+      <li><a href="./">← Satu Kitan Home</a></li>
+      <li><a href="./word.html">Words and Their Classification →</a></li>
+    </ul>
+  </nav>
   <section>
+    <h2>Characters</h2>
     <article>
-      <p>This page has not been translated yet.</p>
-      <p><a href="../character.html">View in Japanese</a></p>
+      <h3>Characters and Transcription</h3>
+      <p>
+        Satu Kitan is written in its own script called <span lang="kt">ritu kitav</span> (Ritu Kitan), or Kitan
+        characters.
+        However, to make Ritu Kitan easier to handle on computers, each character is mapped to a Latin letter, and it is
+        acceptable to write using these Latin letters.
+        This representation using Latin letters is called <dfn>transcription</dfn>.<br />
+        Technically, the Ritu Kitan notation on this page is written internally in transcription, and Ritu Kitan is
+        displayed using a dedicated font.
+        Therefore, if you copy a word as text, you will get the transcription in Latin letters.
+      </p>
+      <h4>Letters</h4>
+      <p>
+        The letters used to write words in Ritu Kitan are the 26 shown below.
+        There are 23 letters for Satu Kitan and 3 additional ones for foreign words.<br />
+        Ritu kitav is a phonemic script, so each character does not have meaning by itself, but there are loose common
+        images associated with the words they are used in.
+      </p>
+      <table class="sticky center nowarp">
+        <thead>
+          <tr>
+            <th>Letter</th>
+            <th>Name</th>
+            <th>Trs.<br />IPA</th>
+            <th>Tend to Meaning</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td lang="kt" class="large">a</td>
+            <td class="nowarp"><span lang="kt">a</span><br />a</td>
+            <td class="nowarp">a<br />/a/</td>
+            <td class="left wrap">1<br />main, unique</td>
+          </tr>
+          <tr>
+            <td lang="kt" class="large">u</td>
+            <td class="nowarp"><span lang="kt">u</span><br />u</td>
+            <td class="nowarp">u<br />/u/</td>
+            <td class="left wrap">2<br />contrast</td>
+          </tr>
+          <tr>
+            <td lang="kt" class="large">o</td>
+            <td class="nowarp"><span lang="kt">o</span><br />o</td>
+            <td class="nowarp">o<br />/o/</td>
+            <td class="left wrap">3<br />indirect</td>
+          </tr>
+          <tr>
+            <td lang="kt" class="large">e</td>
+            <td class="nowarp"><span lang="kt">e</span><br />e</td>
+            <td class="nowarp">e<br />/e/</td>
+            <td class="left wrap">4<br />complement</td>
+          </tr>
+          <tr>
+            <td lang="kt" class="large">i</td>
+            <td class="nowarp"><span lang="kt">i</span><br />i</td>
+            <td class="nowarp">i<br />/i/</td>
+            <td class="left wrap">5<br />continue, many</td>
+          </tr>
+          <tr>
+            <td lang="kt" class="large">ya</td>
+            <td class="nowarp"><span lang="kt">ya</span><br />ya</td>
+            <td class="nowarp">ya<br />/ja/</td>
+            <td class="left wrap">6<br />main</td>
+          </tr>
+          <tr>
+            <td lang="kt" class="large">yu</td>
+            <td class="nowarp"><span lang="kt">yu</span><br />yu</td>
+            <td class="nowarp">yu<br />/ju/</td>
+            <td class="left wrap">7<br />contrast</td>
+          </tr>
+          <tr>
+            <td lang="kt" class="large">yo</td>
+            <td class="nowarp"><span lang="kt">yo</span><br />yo</td>
+            <td class="nowarp">yo<br />/jo/</td>
+            <td class="left wrap">8<br />indirect</td>
+          </tr>
+          <tr>
+            <td lang="kt" class="large">ye</td>
+            <td class="nowarp"><span lang="kt">ye</span><br />ye</td>
+            <td class="nowarp">ye<br />/je/</td>
+            <td class="left wrap">9<br />complement</td>
+          </tr>
+          <tr>
+            <td lang="kt" class="large">v</td>
+            <td class="nowarp"><span lang="kt">em</span><br />em</td>
+            <td class="red nowarp">v<br />/n/<span class="small">*1</span></td>
+            <td class="left wrap">0<br />empty</td>
+          </tr>
+          <tr>
+            <td lang="kt" class="large">m</td>
+            <td class="nowarp"><span lang="kt">ma</span><br />ma</td>
+            <td class="nowarp">m<br />/m/</td>
+            <td class="left wrap">negative<br />reverse</td>
+          </tr>
+          <tr>
+            <td lang="kt" class="large">p</td>
+            <td class="nowarp"><span lang="kt">pa</span><br />pa</td>
+            <td class="nowarp">p<br />/p/</td>
+            <td class="left wrap">living thing<br />feeling</td>
+          </tr>
+          <tr>
+            <td lang="kt" class="large">b</td>
+            <td class="nowarp"><span lang="kt">ba</span><br />ba</td>
+            <td class="nowarp">b<br />/b/</td>
+            <td class="left wrap">place<br />space</td>
+          </tr>
+          <tr>
+            <td lang="kt" class="large">f</td>
+            <td class="nowarp"><span lang="kt">fa</span><br />Fa</td>
+            <td class="nowarp">f<br />/ɸ/</td>
+            <td class="left wrap">minor<br />lower</td>
+          </tr>
+          <tr>
+            <td lang="kt" class="large">n</td>
+            <td class="nowarp"><span lang="kt">na</span><br />na</td>
+            <td class="nowarp">n<br />/n/</td>
+            <td class="left wrap">time<br />knowledge</td>
+          </tr>
+          <tr>
+            <td lang="kt" class="large">t</td>
+            <td class="nowarp"><span lang="kt">ta</span><br />ta</td>
+            <td class="nowarp">t<br />/t/</td>
+            <td class="left wrap">result<br />end</td>
+          </tr>
+          <tr>
+            <td lang="kt" class="large">d</td>
+            <td class="nowarp"><span lang="kt">da</span><br />da</td>
+            <td class="nowarp">d<br />/d/</td>
+            <td class="left wrap">major<br />higher</td>
+          </tr>
+          <tr>
+            <td lang="kt" class="large">s</td>
+            <td class="nowarp"><span lang="kt">sa</span><br />sa</td>
+            <td class="nowarp">s<br />/s/</td>
+            <td class="left wrap">operation<br />action</td>
+          </tr>
+          <tr>
+            <td lang="kt" class="large">q</td>
+            <td class="nowarp"><span lang="kt">qa</span><br />nga</td>
+            <td class="red nowarp">q<br />/ŋ/</td>
+            <td class="left wrap">sky<br />holy</td>
+          </tr>
+          <tr>
+            <td lang="kt" class="large">k</td>
+            <td class="nowarp"><span lang="kt">ka</span><br />ka</td>
+            <td class="nowarp">k<br />/k/</td>
+            <td class="left wrap">process<br />begin</td>
+          </tr>
+          <tr>
+            <td lang="kt" class="large">g</td>
+            <td class="nowarp"><span lang="kt">ga</span><br />ga</td>
+            <td class="nowarp">g<br />/g/</td>
+            <td class="left wrap">positive<br />possible</td>
+          </tr>
+          <tr>
+            <td lang="kt" class="large">h</td>
+            <td class="nowarp"><span lang="kt">ha</span><br />Ha</td>
+            <td class="nowarp">h<br />/x/</td>
+            <td class="left wrap">question</td>
+          </tr>
+          <tr>
+            <td lang="kt" class="large">r</td>
+            <td class="nowarp"><span lang="kt">ra</span><br />Ra</td>
+            <td class="nowarp">r<br />/ɾ/</td>
+            <td class="left wrap">number<br />calculate</td>
+          </tr>
+          <tr>
+            <td lang="kt" class="large blue">z</td>
+            <td class="blue nowarp"><span lang="kt">za</span><br />za</td>
+            <td class="blue nowarp">z<br />/z/</td>
+            <td class="left wrap blue">for foreign words</td>
+          </tr>
+          <tr>
+            <td lang="kt" class="large blue">x</td>
+            <td class="blue nowarp"><span lang="kt">xa</span><br />Ga</td>
+            <td class="red nowarp">x<br />/ɣ/</td>
+            <td class="left wrap blue">for foreign words</td>
+          </tr>
+          <tr>
+            <td lang="kt" class="large blue">w</td>
+            <td class="blue nowarp"><span lang="kt">wa</span><br />wa</td>
+            <td class="red nowarp">w<br />/w/<span class="small">*2</span></td>
+            <td class="left wrap blue">for foreign words</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        *1 See Basic Pronunciation section<br />
+        *2 Also pronunces <code>/v/</code> or <code>/β/</code>.
+      </p>
+      <h4>Digits</h4>
+      <p>
+        Satu Kitan uses the decimal system and is written using the modern Arabic numerals commonly used today.
+      </p>
+      <div>
+        <table class="center nowrap cell-alt" style="width: 100%; max-width: 40rem; table-layout: fixed;">
+          <thead>
+            <tr>
+              <th colspan="5">
+                Digits in Satu Kitan
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td lang="kt" class="large">0</td>
+              <td lang="kt" class="large">1</td>
+              <td lang="kt" class="large">2</td>
+              <td lang="kt" class="large">3</td>
+              <td lang="kt" class="large">4</td>
+            </tr>
+            <tr>
+              <td lang="kt" class="large">5</td>
+              <td lang="kt" class="large">6</td>
+              <td lang="kt" class="large">7</td>
+              <td lang="kt" class="large">8</td>
+              <td lang="kt" class="large">9</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <h4>Punctuation</h4>
+      <p>
+        Punctuation marks also use Satu Kitan-specific characters. However, three of these marks are <b>pronounced</b>,
+        so they are distinguished and called <dfn>symbol-like letter</dfn>.
+      </p>
+      <table class="sticky center nowarp">
+        <thead>
+          <tr>
+            <th class="nowrap">Character</th>
+            <th class="nowrap">Name</th>
+            <th class="nowrap">Trs.<br />IPA</th>
+            <th>Meaning</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td lang="kt" class="large">'</td>
+            <td class="nowrap"><span lang="kt">ete</span><br />ete</td>
+            <td>'<br />/t/</td>
+            <td class="left wrap">
+              By enclosing a sentence with " <span lang="kt" class="red">'</span> " and " <span lang="kt"
+                class="red">,</span> ", a <b>modifier clause</b> is formed.
+              Modifier clauses are explained on the <a href="./syntax.html">Syntax</a>.
+            </td>
+          </tr>
+          <tr>
+            <td lang="kt" class="large">,</td>
+            <td class="nowrap"><span lang="kt">ete</span><br />eke</td>
+            <td>,<br />/k/</td>
+            <td class="left wrap">Same as above</td>
+          </tr>
+          <tr>
+            <td lang="kt" class="large">;</td>
+            <td class="nowrap"><span lang="kt">epe</span><br />epe</td>
+            <td>;<br />/p/</td>
+            <td class="left wrap">
+              Used to form <b>nested clauses</b>. Nested clauses are explained on the <a
+                href="./syntax.html">Syntax</a>.
+            </td>
+          </tr>
+          <tr>
+            <td lang="kt" class="large">#</td>
+            <td class="nowrap"><span lang="kt">ere</span><br />eRe</td>
+            <td>#</td>
+            <td class="left wrap">
+              Used to indicate that a string that could be mistaken for a word or number is a number.
+            </td>
+          </tr>
+          <tr>
+            <td lang="kt" class="large">.</td>
+            <td class="nowrap"><span lang="kt">teme</span><br />teme</td>
+            <td>.</td>
+            <td class="left wrap">Placed at the end of a sentence, it functions like a period.</td>
+          </tr>
+          <tr>
+            <td lang="kt" class="large">!</td>
+            <td class="nowrap"><span lang="kt">ateme</span><br />ateme</td>
+            <td>!</td>
+            <td class="left wrap">Placed at the end of a sentence, it expresses assertion or exclamation.</td>
+          </tr>
+          <tr>
+            <td lang="kt" class="large">?</td>
+            <td class="nowrap"><span lang="kt">hateme</span><br />Hateme</td>
+            <td>?</td>
+            <td class="left wrap">Placed at the end of a sentence, it expresses a question or inquiry.</td>
+          </tr>
+        </tbody>
+      </table>
     </article>
   </section>
+  <section>
+    <h2>Pronunciation</h2>
+    <article>
+      <h3>Basic Pronunciation</h3>
+      <p>
+        In this page, Satu Kitan pronunciation is shown using <b>lowercase</b>.
+        In general, reading as written in lowercase will give the correct Satu Kitan pronunciation, but for sounds not
+        found in English or those with large differences, <b>UPPERCASE</b> is used as an exception.
+      </p>
+      <p>
+        Note that words are pronounced exactly as they are written (also lowercase).
+        Each letter (or letter combination) always has the same sound, so you can read it straight from the spelling
+        without silent letters or irregular rules.
+      </p>
+      <table class="sticky nowarp">
+        <caption>Characters with Special Pronunciation Notes</caption>
+        <thead>
+          <tr>
+            <th colspan="2">Character</th>
+            <th>Pronunciation</th>
+            <th>IPA</th>
+            <th class="wrap">Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td lang="kt" class="large">v</td>
+            <td>v</td>
+            <td>n, m, ng</td>
+            <td class="wrap">/n/<br />[ɴ],[n],[m],[ŋ]</td>
+            <td class="wrap">
+              Same sound as the Japanese "ン" (n).
+              the sound "<span lang="kt">v</span>" is a nasal that changes its place of articulation depending on the
+              following consonant, so you might pronounce it like “m,” “n,” “ng,” or just as a nasalized vowel.
+            </td>
+          </tr>
+          <tr>
+            <td lang="kt" class="large">f</td>
+            <td>f</td>
+            <td>F</td>
+            <td>/φ/</td>
+            <td class="wrap">
+              It is similar to the Enghish "f". But unlike English, do not touch your teeth to your lips; instead, round
+              your
+              lips to pronounce.
+            </td>
+          </tr>
+          <tr>
+            <td lang="kt" class="large">q</td>
+            <td>q</td>
+            <td>ng</td>
+            <td>/ŋ/</td>
+            <td class="wrap">Pronounced as a nasalized "g". (e.g. si<b>ng</b>ing)</td>
+          </tr>
+          <tr>
+            <td lang="kt" class="large">h</td>
+            <td>h</td>
+            <td>H</td>
+            <td>/x/</td>
+            <td class="wrap">
+              The same sound as German "ch", different from the English "h" row. Pronounced with friction at the back of
+              the mouth.
+            </td>
+          </tr>
+          <tr>
+            <td lang="kt" class="large">r</td>
+            <td>r</td>
+            <td>R</td>
+            <td>/ɾ/</td>
+            <td class="wrap">
+              Same sound as the Japanese "ラ行" (usually written "r").
+              It is similar to the Enghish "r" or "l".
+              But the "<span lang="kt">r</span>" sounds are a quick tongue tap against the ridge behind your upper
+              teeth, unlike the English “r” or “l.”
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        Also, in Satu Kitan, letters in a word basically appear as "consonant + vowel" sets.
+        However, there are the following exceptions.
+      </p>
+      <ul>
+        <li>There are words <b>without a consonant at the beginning</b></li>
+        <li>Words are conjugated by <b>adding <span lang="kt">s</span>, <span lang="kt">v</span> or <span
+              lang="kt">f</span> to the end</b></li>
+        <li>In compound words, <b><span lang="kt">s</span> is inserted</b> between word parts</li>
+        <li><b>Symbol-like letters</b> are always pronounced as consonants without vowels
+        </li>
+      </ul>
+    </article>
+    <article>
+      <h3>Special Pronunciation</h3>
+      <h4>Pronunciation of <span lang="kt">v</span></h4>
+      <p>
+        <span lang="kt">v</span> is a special character that is treated as both a vowel and a consonant.<br />
+        In most cases, this character appears at the end of a word as a consonant to conjugate the word into a modifier
+        form.
+        At this time, it is pronounced as any of <code>[ɴ]</code>, <code>[n]</code>, <code>[m]</code>, <code>[ŋ]</code>
+        that is easiest to say.
+        At the end of a sentence, it is generally pronounced as <code>[m]</code>.
+      </p>
+      <p>
+        In a very few words ending with "consonant + <span lang="kt">v</span>", it is treated as a vowel, and a schwa
+        <code>/ə/</code> is inserted before the consonant pronunciation of <span lang="kt">v</span>.<br />
+        Example: <span lang="kt">rv</span> <code>/rəm/</code> (zero)<br />
+        When these words are conjugated into modifier form, the ending becomes <span lang="kt">vv</span>, and in this
+        case, the first <span lang="kt">v</span> is pronounced <code>/əm/</code> (not <code>/ən/</code> or
+        <code>/əŋ/</code>).<br />
+        Example: <span lang="kt">rvv</span> <code>/rəməm/</code> (of zero)<br />
+      </p>
+      <h4>Sound Change</h4>
+      <p>
+        To make pronunciation easier, when one of the vowels
+        <span lang="kt">ya</span> <code>/ja/</code>,
+        <span lang="kt">yu</span> <code>/ju/</code>,
+        <span lang="kt">yo</span> <code>/jo/</code>, or
+        <span　lang="kt">ye</span> <code>/je/</code>
+        follows certain consonants, it is common to change the pronunciation as follows.
+        However, these do not affect the meaning or distinction of the word,
+        so the original pronunciation is also accepted.
+      </p>
+      <p>
+        The following table shows only the case where the vowel is <span lang="kt">ya</span>, but the other three vowels
+        follow the same rules.
+      </p>
+      <table class="sticky center nowarp">
+        <thead>
+          <tr>
+            <th>Letters</th>
+            <th>Change Rule</th>
+            <th>Original</th>
+            <th>Changed</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td lang="kt" class="large">tya</td>
+            <td><code>[tj]</code> → <code>[tʃ]</code></td>
+            <td><code>[tja]</code><br />tya</td>
+            <td><code>[tʃa]</code><br />cha</td>
+          </tr>
+          <tr>
+            <td lang="kt" class="large">dya</td>
+            <td><code>[dj]</code> → <code>[dʒ]</code></td>
+            <td><code>[dja]</code><br />dya</td>
+            <td><code>[dʒa]</code><br />ja</td>
+          </tr>
+          <tr>
+            <td lang="kt" class="large">sya</td>
+            <td><code>[sj]</code> → <code>[ʃ]</code></td>
+            <td><code>[sja]</code><br />sya</td>
+            <td><code>[ʃa]</code><br />sha</td>
+          </tr>
+        </tbody>
+      </table>
+    </article>
+    <article>
+      <h3>Accents</h3>
+      <p>
+        Syllables with an accent are pronounced higher and longer (pitch + length accent).
+        Accents are placed according to the following rules.
+      </p>
+      <ul>
+        <li>
+          All verbs have an accent on the <b>last</b> syllable.
+          Example: <span lang="kt">petas</span> (petás)
+        </li>
+        <li>
+          In compound words, a weak accent (pitch accent only) is placed on the last syllable of the first part of the
+          word.
+          Example: <span lang="kt">sipusgoski</span> (sipúsgoski)
+        </li>
+      </ul>
+      <p>Nouns, modifiers, and conjunctions do not have accents.</p>
+    </article>
+    <article>
+      <h3>Examples of Words and Pronunciation</h3>
+      <div class="trans">
+        <dl>
+          <dt lang="kt">fupotyev</dt>
+          <dd>Fupochen</dd>
+          <dd>bad</dd>
+        </dl>
+        <dl>
+          <dt lang="kt">baqya</dt>
+          <dd>bangya</dd>
+          <dd>world</dd>
+        </dl>
+        <dl>
+          <dt lang="kt">hona</dt>
+          <dd>Hona</dd>
+          <dd>when</dd>
+        </dl>
+        <dl>
+          <dt lang="kt">sapokas</dt>
+          <dd>sapokás</dd>
+          <dd>be improved</dd>
+        </dl>
+      </div>
+    </article>
+  </section>
+  <nav>
+    <ul class="link-list footer">
+      <li><a href="./">← Satu Kitan Home</a></li>
+      <li><a href="./word.html">Words and Their Classification →</a></li>
+    </ul>
+  </nav>
   <footer>copyright&copy; 2025 mino-ri All rights reserved.</footer>
 </body>
 
