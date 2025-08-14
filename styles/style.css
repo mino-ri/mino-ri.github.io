@@ -455,6 +455,10 @@ table.cell-alt tbody tr:nth-child(even) td:nth-child(even) {
     color: #339564;
 }
 
+.orange {
+    color: #E39D11;
+}
+
 .yellow {
     color: #C3B827;
 }

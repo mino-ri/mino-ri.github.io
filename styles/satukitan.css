@@ -21,27 +21,28 @@
     --color-table-background-alt: #EEF8F8;
 }
 
+*:lang(kt) {
+    font-family: 'SatukitanSans';
+    font-feature-settings: "liga" 1;
+    -webkit-font-feature-settings: "liga" 1;
+}
+
 span.trans {
     display: inline-block;
 }
 
-div.trans {
+div.trans, .structure {
     display: flex;
     flex-direction: row;
     justify-content: left;
     flex-wrap: wrap;
+    align-items: center;
     row-gap: 0.5rem;
     column-gap: 0.5rem;
 }
 
 div.trans dl, dl.trans {
     display: inline-block;
-}
-
-*:lang(kt) {
-    font-family: 'SatukitanSans';
-    font-feature-settings: "liga" 1;
-    -webkit-font-feature-settings: "liga" 1;
 }
 
 .trans dt {
@@ -61,26 +62,70 @@ div.trans dl, dl.trans {
     display: block;
 }
 
+.verb, .noun, .modifier, .conjunction, .clause {
+    border-radius: 0.25rem;
+    border-style: solid;
+    border-width: 2px;
+    padding: 0.25rem;
+}
+
 .verb {
-    border: #DF4121 1px solid;
-    border-radius: 0.1rem;
-    padding: 0.1rem;
+    border-color: #DF4121;
+    background-color: #ffe9e4;
 }
 
 .noun {
-    border: #217BDF 1px solid;
-    border-radius: 0.1rem;
-    padding: 0.1rem;
+    border-color: #217BDF;
+    background-color: #e7f2ff;
 }
 
 .modifier {
-    border: #339564 1px solid;
-    border-radius: 0.1rem;
-    padding: 0.1rem;
+    border-color: #339564;
+    background-color: #e3f1ea;
 }
 
 .conjunction {
-    border: #E39D11 1px solid;
-    border-radius: 0.1rem;
-    padding: 0.1rem;
+    border-color: #E39D11;
+    background-color: #fff7e7;
+}
+
+.clause {
+    border-color: #808080;
+    background-color: #F0F0F0;
+}
+
+dl.verb, dl.noun, dl.modifier, dl.conjunction, dl.clause {
+    display: inline-block;
+    padding: 0rem;
+}
+
+dl.verb > dt, dl.noun > dt, dl.modifier > dt, dl.conjunction > dt, dl.clause > dt {
+    display: block;
+    padding: 0.1rem 0.25rem;
+    font-size: 0.8rem;
+    color: #FFFFFF;
+}
+
+dl.verb > dt {
+    background-color: #DF4121;
+}
+
+dl.noun > dt {
+    background-color: #217BDF;
+}
+
+dl.modifier > dt {
+    background-color: #339564;
+}
+
+dl.conjunction > dt {
+    background-color: #E39D11;
+}
+
+dl.clause > dt {
+    background-color: #808080;
+}
+
+dl.verb > dd, dl.noun > dd, dl.modifier > dd, dl.conjunction > dd, dl.clause > dd {
+    padding: 0.25rem;
 }
