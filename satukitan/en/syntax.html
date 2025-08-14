@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Type" content="text/html" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="author" content="mino-ri" />
+  <meta name="copyright" content="copyright(C) 2025 mino-ri All rights reserved." />
+  <meta name="viewport" content="width=device-width">
+  <link rel="stylesheet" type="text/css" href="./../../styles/satukitan.css" />
+  <link rel="stylesheet" type="text/css" href="./../../styles/style.css" />
+  <title>Satu Kitan - Syntax</title>
+</head>
+
+<body>
+  <header>
+    <a class="back" href="./">back</a>
+    <h1><span lang="kt">satu kitav</span> - Syntax</h1>
+    <nav class="language-switcher">
+      <a href="../syntax.html">JP</a>
+      <a href="#">EN</a>
+    </nav>
+  </header>
+  <section>
+    <h2>Basic Syntax</h2>
+    <article>
+      <h3>Strictness of Syntax</h3>
+      <p>
+        <dfn>Syntax</dfn> is a set of rules that determine how words should be arranged correctly in a sentence.
+        The syntax of Satu Kitan is <b>strictly defined</b>.
+        Therefore, for any Satu Kitan sentence, it is clear whether it is syntactically correct, and can be interpreted
+        <b>only
+          one</b> "sentence structure" from it.<br />
+        Here, "sentence structure" refers to the <b>relationships between words</b> in the sentence, such as "which noun
+        a modifier refers to" or "which verb a noun is the object of," and does not necessarily correspond directly to
+        the meaning of the sentence.
+      </p>
+      <!-- 日本語用の「頭が赤い魚を食べる猫」を省略 -->
+    </article>
+    <article>
+      <h3>Sentences</h3>
+      <p>
+        A sentence in Satu Kitan has either the structure of a <b>noun sentence</b> or a <b>verb sentence</b>.
+        The syntax of Satu Kitan does not define meaning, but only <b>how words are assembled</b>.
+        For sentence structures including meaning, see the <b>grammar</b> page.
+      </p>
+    </article>
+    <article>
+      <h3>Noun Sentences</h3>
+      <div class="structure">
+        <dl class="clause">
+          <dt>Noun Sentence</dt>
+          <dd class="structure">
+            <dl class="noun">
+              <dt>topic</dt>
+              <dd><b>noun</b></dd>
+            </dl>
+            <div class="modifier"><b>modifier</b></div>
+            <div class="modifier"><b>modifier</b></div>
+            <div>…</div>
+            <div lang="kt" class="large">.</div>
+          </dd>
+        </dl>
+      </div>
+      <p>
+        A <dfn>noun sentence</dfn> is a sentence centered on a noun.
+        It begins with a noun as the <dfn>topic</dfn>, followed by multiple modifiers.
+        Even a single noun without any modifiers can be considered a noun sentence.
+      </p>
+      <h4>Examples of Noun Sentences</h4>
+      <div class="trans">
+        <div class="trans clause">
+          <div class="noun">
+            <dl>
+              <dt lang="kt">hanyu</dt>
+              <dd>Hanyu</dd>
+              <dd>problem</dd>
+            </dl>
+          </div>
+          <div class="modifier">
+            <dl>
+              <dt lang="kt">fugev</dt>
+              <dd>Fugen</dd>
+              <dd>difficult</dd>
+            </dl>
+          </div>
+          <div class="modifier">
+            <dl>
+              <dt lang="kt">ditav</dt>
+              <dd>ditan</dd>
+              <dd>many</dd>
+            </dl>
+          </div>
+          <dl>
+            <dt lang="kt">.</dt>
+            <dd>&ensp;</dd>
+            <dd>&ensp;</dd>
+          </dl>
+        </div>
+      </div>
+      <p> = Many difficult problems.</p>
+    </article>
+    <article>
+      <h3>Verb Sentences</h3>
+      <div class="structure">
+        <dl class="clause">
+          <dt>Verb sentence</dt>
+          <dd class="structure">
+            <dl class="verb">
+              <dt>predicate</dt>
+              <dd class="structure">
+                <div class="verb"><b>verb</b></div>
+                <div class="modifier"><b>modifier</b></div>
+                <div>…</div>
+              </dd>
+            </dl>
+            <dl class="noun">
+              <dt>object 1</dt>
+              <dd><b>noun</b></dd>
+            </dl>
+            <dl class="noun">
+              <dt>object 2</dt>
+              <dd><b>noun</b></dd>
+            </dl>
+            <div>…</div>
+            <div lang="kt" class="large">.</div>
+          </dd>
+        </dl>
+      </div>
+      <p>
+        A <dfn>verb sentence</dfn> is a sentence centered on a verb.
+        It begins with a verb as the predicate, followed by one or more objects.
+        The verb can also be modified by one or more modifiers.
+      </p>
+      <h4>Examples of Verb Sentence</h4>
+      <div class="trans">
+        <div class="trans clause">
+          <div class="trans verb">
+            <dl>
+              <dt lang="kt"><span class="red">petas</span></dt>
+              <dd>pe<b>ta</b>s</dd>
+              <dd>be called</dd>
+            </dl>
+          </div>
+          <div class="noun">
+            <dl>
+              <dt lang="kt"><span class="blue">a</span></dt>
+              <dd>a</dd>
+              <dd>I</dd>
+            </dl>
+          </div>
+          <div class="noun">
+            <dl>
+              <dt lang="kt"><span class="blue">minori</span></dt>
+              <dd>minoRi</dd>
+              <dd>Minori</dd>
+            </dl>
+          </div>
+          <dl>
+            <dt lang="kt">.</dt>
+            <dd>&ensp;</dd>
+            <dd>&ensp;</dd>
+          </dl>
+        </div>
+      </div>
+      <p>= I am called Minori.</p>
+      <div class="trans">
+        <div class="trans clause">
+          <div class="trans verb">
+            <div class="verb">
+              <dl>
+                <dt lang="kt"><span class="red">fuges</span></dt>
+                <dd>Fu<b>ge</b>s</dd>
+                <dd>difficult</dd>
+              </dl>
+            </div>
+            <div class="modifier">
+              <dl>
+                <dt lang="kt"><span class="green">dadav</span></dt>
+                <dd>dadan</dd>
+                <dd>very</dd>
+              </dl>
+            </div>
+          </div>
+          <div class="noun">
+            <dl>
+              <dt lang="kt"><span class="blue">kipeki</span></dt>
+              <dd>kipeki</dd>
+              <dd>creation</dd>
+            </dl>
+          </div>
+          <dl>
+            <dt lang="kt">.</dt>
+            <dd>&ensp;</dd>
+            <dd>&ensp;</dd>
+          </dl>
+        </div>
+      </div>
+      <p> = Creation is very difficult.</p>
+    </article>
+    <article>
+      <h3>Verb Sentences with Conjunctions</h3>
+      <div class="structure">
+        <dl class="clause">
+          <dt>Verb Sentence</dt>
+          <dd class="structure">
+            <dl class="noun">
+              <dt>object 1</dt>
+              <dd><b>noun or sentence</b></dd>
+            </dl>
+            <dl class="conjunction">
+              <dt>predicate</dt>
+              <dd class="structure">
+                <b>conjunction</b>
+              </dd>
+            </dl>
+            <dl class="noun">
+              <dt>object 2</dt>
+              <dd><b>noun or sentence</b></dd>
+            </dl>
+            <div lang="kt" class="large">.</div>
+          </dd>
+        </dl>
+      </div>
+      <p>
+        Since conjunctions have the same meaning as verbs, you can replace the verb in a verb sentence with a
+        conjunction.
+        However, there are the following syntactic differences:
+      </p>
+      <ul>
+        <li>There must be <b>exactly two</b> objects</li>
+        <li>The conjunction is placed between the two objects</li>
+        <li>The conjunction cannot be modified by modifiers</li>
+        <li>Not only nouns, but <b>entire sentences</b> can be objects</li>
+      </ul>
+      <h4>Examples of Verb Sentences with Conjunctions</h4>
+      <div class="trans">
+        <div class="trans clause">
+
+          <div class="trans noun">
+            <div class="verb">
+              <dl>
+                <dt lang="kt"><span class="red">podanis</span></dt>
+                <dd>poda<b>ni</b>s</dd>
+                <dd>be loved</dd>
+              </dl>
+            </div>
+            <div class="noun">
+              <dl>
+                <dt lang="kt"><span class="blue">kipeki</span></dt>
+                <dd>kipeki</dd>
+                <dd>creation</dd>
+              </dl>
+            </div>
+          </div>
+          <div class="conjunction">
+            <dl>
+              <dt lang="kt"><span class="orange">nomaf</span></dt>
+              <dd>nomaF</dd>
+              <dd>but</dd>
+            </dl>
+          </div>
+          <div class="trans noun">
+            <div class="trans verb">
+              <div class="verb">
+                <dl>
+                  <dt lang="kt"><span class="red">fuges</span></dt>
+                  <dd>Fu<b>ge</b>s</dd>
+                  <dd>difficult</dd>
+                </dl>
+              </div>
+              <div class="modifier">
+                <dl>
+                  <dt lang="kt"><span class="green">dadav</span></dt>
+                  <dd>dadan</dd>
+                  <dd>very</dd>
+                </dl>
+              </div>
+            </div>
+            <div class="noun">
+              <dl>
+                <dt lang="kt"><span class="blue">do</span></dt>
+                <dd>do</dd>
+                <dd>this</dd>
+              </dl>
+            </div>
+          </div>
+          <dl>
+            <dt lang="kt">.</dt>
+            <dd>&ensp;</dd>
+            <dd>&ensp;</dd>
+          </dl>
+        </div>
+      </div>
+      <p> = Creation is loved, but it is very difficult.</p>
+    </article>
+  </section>
+  <section>
+    <h2>Advanced Syntax</h2>
+    <article>
+      <h3>Noun Phrases</h3>
+      <div class="structure">
+        <dl class="noun">
+          <dt>Noun Phrase</dt>
+          <dd class="structure">
+            <dl class="noun">
+              <dt>topic</dt>
+              <dd><b>noun</b></dd>
+            </dl>
+            <div class="modifier"><b>modifier</b></div>
+            <div class="modifier"><b>modifier</b></div>
+            <div>…</div>
+          </dd>
+        </dl>
+      </div>
+      <p>
+        The object in a verb sentence can be changed to a noun modified by modifiers, just like in a noun sentence.
+        This is called a <dfn>noun phrase</dfn>.
+      </p>
+      <h4>Example of Sentences with Noun Phrases</h4>
+      <div class="trans">
+        <div class="trans clause">
+          <div class="trans verb">
+            <dl>
+              <dt lang="kt"><span class="red">giputus</span></dt>
+              <dd>gipu<b>tu</b>s</dd>
+              <dd>be understood</dd>
+            </dl>
+          </div>
+          <div class="trans noun">
+            <div class="noun">
+              <dl>
+                <dt lang="kt"><span class="blue">hanyu</span></dt>
+                <dd>Hanyu</dd>
+                <dd>problem</dd>
+              </dl>
+            </div>
+            <div class="modifier">
+              <dl>
+                <dt lang="kt"><span class="green">fov</span></dt>
+                <dd>Fon</dd>
+                <dd>that</dd>
+              </dl>
+            </div>
+          </div>
+          <dl>
+            <dt lang="kt">.</dt>
+            <dd>&ensp;</dd>
+            <dd>&ensp;</dd>
+          </dl>
+        </div>
+      </div>
+      <p>= <b class="blue">That problem</b> is understood.</p>
+    </article>
+    <article>
+      <h3>Nested Clauses</h3>
+      <div class="structure">
+        <dl class="noun">
+          <dt>Nested Clause</dt>
+          <dd class="structure">
+            <dl class="verb">
+              <dt>predicate</dt>
+              <dd class="structure">
+                <div class="verb"><b>verb</b></div>
+                <div class="modifier"><b>modifier</b></div>
+                <div>…</div>
+              </dd>
+            </dl>
+            <dl class="noun">
+              <dt>object 1</dt>
+              <dd><b>noun</b></dd>
+            </dl>
+            <dl class="noun">
+              <dt>object 2</dt>
+              <dd><b>noun</b></dd>
+            </dl>
+            <div>…</div>
+            <div lang="kt" class="large">;</div>
+          </dd>
+        </dl>
+      </div>
+      <p>
+        By replacing the end of a verb sentence with <span lang="kt">;</span> (pronounced "p") instead of <span
+          lang="kt">.</span>, the entire verb sentence can be treated like a noun.
+        This is called a <dfn>nested clause</dfn>.
+        If there are multiple candidate verbs to pair with <span lang="kt">;</span>, the nested clause extends from the
+        rightmost verb to <span lang="kt">;</span>.
+      </p>
+      <h4>Examples of Sentences with Nested Clauses</h4>
+      <div class="trans">
+        <div class="trans clause">
+          <div class="trans verb">
+            <dl>
+              <dt lang="kt"><span class="red">gitus</span></dt>
+              <dd>gi<b>tu</b>s</dd>
+              <dd>be known</dd>
+            </dl>
+          </div>
+          <div class="trans noun">
+            <div class="verb">
+              <dl>
+                <dt lang="kt"><span class="red">petas</span></dt>
+                <dd>petas</dd>
+                <dd>be called</dd>
+              </dl>
+            </div>
+            <div class="noun">
+              <dl>
+                <dt lang="kt"><span class="blue">a</span></dt>
+                <dd>a</dd>
+                <dd>I</dd>
+              </dl>
+            </div>
+            <div class="noun">
+              <dl>
+                <dt lang="kt"><span class="blue">minori</span></dt>
+                <dd>minoRi</dd>
+                <dd>Minori</dd>
+              </dl>
+            </div>
+            <dl>
+              <dt lang="kt">;</dt>
+              <dd>p</dd>
+              <dd>&ensp;</dd>
+            </dl>
+          </div>
+          <dl>
+            <dt lang="kt">.</dt>
+            <dd>&ensp;</dd>
+            <dd>&ensp;</dd>
+          </dl>
+        </div>
+      </div>
+      <p> = It is known <b class="blue">that I am called Minori</b>.</p>
+    </article>
+    <article>
+      <h3>Modifier Clauses</h3>
+      <div class="structure">
+        <dl class="modifier">
+          <dt>Modifier Clause</dt>
+          <dd class="structure">
+            <div lang="kt" class="large">'</div>
+            <dl class="verb">
+              <dt>predicate</dt>
+              <dd class="structure">
+                <div class="verb"><b>verb</b></div>
+                <div class="modifier"><b>modifier</b></div>
+                <div>…</div>
+              </dd>
+            </dl>
+            <dl class="noun">
+              <dt>object 1</dt>
+              <dd><b>noun</b></dd>
+            </dl>
+            <dl class="noun">
+              <dt>object2</dt>
+              <dd><b>noun</b></dd>
+            </dl>
+            <div>…</div>
+            <div lang="kt" class="large">,</div>
+          </dd>
+        </dl>
+      </div>
+      <div class="structure">
+        <dl class="modifier">
+          <dt>Modifier Clause</dt>
+          <dd class="structure">
+            <div lang="kt" class="large">'</div>
+            <dl class="noun">
+              <dt>topic</dt>
+              <dd><b>noun</b></dd>
+            </dl>
+            <div class="modifier"><b>modifier</b></div>
+            <div class="modifier"><b>modifier</b></div>
+            <div>…</div>
+            <div lang="kt" class="large">,</div>
+          </dd>
+        </dl>
+      </div>
+      <p>
+        By enclosing a noun sentence or verb sentence with <b lang="kt" class="red">'</b> ... <b lang="kt"
+          class="red">,</b> , you can create a <dfn>modifier clause</dfn>.
+        Modifier clauses can be treated like modifiers in other sentences.<br />
+        In particular, a sentence in which the only modifier of a noun sentence is replaced by a modifier clause is
+        called a <dfn>topic sentence</dfn>.
+      </p>
+      <h4>Examples of Sentences with Modifier Clauses</h4>
+      <div class="trans">
+        <div class="trans clause">
+          <div class="trans verb">
+            <dl>
+              <dt lang="kt"><span class="red">petas</span></dt>
+              <dd>pe<b>ta</b>s</dd>
+              <dd>be called</dd>
+            </dl>
+          </div>
+          <div class="trans noun">
+            <div class="trans noun">
+              <dl>
+                <dt lang="kt"><span class="blue">a</span></dt>
+                <dd>a</dd>
+                <dd>I</dd>
+              </dl>
+            </div>
+            <div class="trans modifier">
+              <dl>
+                <dt lang="kt">'</dt>
+                <dd>t</dd>
+                <dd>&ensp;</dd>
+              </dl>
+              <div class="verb">
+                <dl>
+                  <dt lang="kt"><span class="red">giputus</span></dt>
+                  <dd>gipu<b>tu</b>s</dd>
+                  <dd>be understood</dd>
+                </dl>
+              </div>
+              <div class="trans noun">
+                <div class="noun">
+                  <dl>
+                    <dt lang="kt"><span class="blue">hanyu</span></dt>
+                    <dd>Hanyu</dd>
+                    <dd>problem</dd>
+                  </dl>
+                </div>
+                <div class="modifier">
+                  <dl>
+                    <dt lang="kt"><span class="green">fov</span></dt>
+                    <dd>Fon</dd>
+                    <dd>that</dd>
+                  </dl>
+                </div>
+              </div>
+              <dl>
+                <dt lang="kt">,</dt>
+                <dd>k</dd>
+                <dd>&ensp;</dd>
+              </dl>
+            </div>
+          </div>
+          <div class="noun">
+            <dl>
+              <dt lang="kt"><span class="blue">minori</span></dt>
+              <dd>minoRi</dd>
+              <dd>Minori</dd>
+            </dl>
+          </div>
+          <dl>
+            <dt lang="kt">.</dt>
+            <dd>&ensp;</dd>
+            <dd>&ensp;</dd>
+          </dl>
+        </div>
+      </div>
+      <p> = I, <b class="blue">who understand that problem</b>, is called Minori.</p>
+      <div class="trans">
+        <div class="trans clause">
+          <div class="trans noun">
+            <dl>
+              <dt lang="kt"><span class="blue">a</span></dt>
+              <dd>a</dd>
+              <dd>I</dd>
+            </dl>
+          </div>
+          <div class="trans modifier">
+            <dl>
+              <dt lang="kt">'</dt>
+              <dd>t</dd>
+              <dd>&ensp;</dd>
+            </dl>
+            <div class="verb">
+              <dl>
+                <dt lang="kt"><span class="red">giputus</span></dt>
+                <dd>gipu<b>tu</b>s</dd>
+                <dd>be understood</dd>
+              </dl>
+            </div>
+            <div class="trans noun">
+              <div class="noun">
+                <dl>
+                  <dt lang="kt"><span class="blue">hanyu</span></dt>
+                  <dd>Hanyu</dd>
+                  <dd>problem</dd>
+                </dl>
+              </div>
+              <div class="modifier">
+                <dl>
+                  <dt lang="kt"><span class="green">fov</span></dt>
+                  <dd>Fon</dd>
+                  <dd>that</dd>
+                </dl>
+              </div>
+            </div>
+            <dl>
+              <dt lang="kt">,</dt>
+              <dd>k</dd>
+              <dd>&ensp;</dd>
+            </dl>
+          </div>
+          <dl>
+            <dt lang="kt">.</dt>
+            <dd>&ensp;</dd>
+            <dd>&ensp;</dd>
+          </dl>
+        </div>
+      </div>
+      <p> = I <b class="blue">understand that problem</b>.</p>
+    </article>
+  </section>
+  <footer>copyright&copy; 2025 mino-ri All rights reserved.</footer>
+</body>
+
+</html>
