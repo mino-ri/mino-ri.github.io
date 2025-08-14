@@ -134,14 +134,14 @@ const loadDictionary = async () => {
         const wordType = word[1] ?? ""
         const paramCount = word[2] ?? ""
         const title = word[3] ?? ""
-        const explain = (word[4] ?? "").replaceAll(pattern, `<a href='#$2' class='satu'>$1</a>`)
+        const explain = (word[4] ?? "").replaceAll(pattern, `<a href='#$2' lang='kt'>$1</a>`)
         const noun = word[5] ?? ""
         const verb = word[6] ?? ""
         const modif = word[7] ?? ""
         const conj = word[8] ?? ""
 
         const titleEn = word[9] ?? ""
-        const explainEn = (word[10] ?? "").replaceAll(pattern, `<a href='#$2' class='satu'>$1</a>`)
+        const explainEn = (word[10] ?? "").replaceAll(pattern, `<a href='#$2' lang='kt'>$1</a>`)
         const nounEn = word[11] ?? ""
         const verbEn = word[12] ?? ""
         const modifEn = word[13] ?? ""
@@ -151,7 +151,7 @@ const loadDictionary = async () => {
         const summary = root.querySelector("summary")
         if (summary) {
             summary.querySelector("a")?.setAttribute("id", satu)
-            summary.querySelector(".satu")!.textContent = satu
+            summary.querySelector(":lang(kt)")!.textContent = satu
             summary.querySelector(".dict-sound")!.textContent = `/${satuToSound(satu)}/`
             const mean = summary.querySelector(".dict-mean")
             if (mean) {

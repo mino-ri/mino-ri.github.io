@@ -38,11 +38,13 @@ div.trans dl, dl.trans {
     display: inline-block;
 }
 
-.trans dt {
+*:lang(kt) {
     font-family: 'SatukitanSans';
     font-feature-settings: "liga" 1;
     -webkit-font-feature-settings: "liga" 1;
+}
 
+.trans dt {
     border-bottom: solid 1px var(--color-primary);
     display: block;
     color: #000000;
@@ -57,4 +59,28 @@ div.trans dl, dl.trans {
 
 .trans dt + dd + dd {
     display: block;
+}
+
+.verb {
+    border: #DF4121 1px solid;
+    border-radius: 0.1rem;
+    padding: 0.1rem;
+}
+
+.noun {
+    border: #217BDF 1px solid;
+    border-radius: 0.1rem;
+    padding: 0.1rem;
+}
+
+.modifier {
+    border: #339564 1px solid;
+    border-radius: 0.1rem;
+    padding: 0.1rem;
+}
+
+.conjunction {
+    border: #E39D11 1px solid;
+    border-radius: 0.1rem;
+    padding: 0.1rem;
 }
