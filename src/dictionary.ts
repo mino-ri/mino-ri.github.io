@@ -46,8 +46,10 @@ const wordTypes: Map<string, Translation> = new Map([
     ["名称", { ja: "名称語", en: "Name" }],
     ["過程", { ja: "過程語", en: "Process" }],
     ["結果", { ja: "結果語", en: "Result" }],
+    ["状態", { ja: "状態語", en: "State" }],
     ["機能", { ja: "機能語", en: "Function" }],
     ["補助", { ja: "補助語", en: "Complement" }],
+    ["合成", { ja: "合成語", en: "Compound" }],
 ])
 
 type PartOfSpeech = {
