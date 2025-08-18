@@ -142,3 +142,15 @@ dl.clause > dt {
 dl.verb > dd, dl.noun > dd, dl.modifier > dd, dl.conjunction > dd, dl.clause > dd {
     padding: 0.25rem;
 }
+
+table.tense-aspect td {
+    vertical-align: top;
+    padding-top: 0.3rem;
+    padding-bottom: 0.3rem;
+    text-wrap: wrap;
+}
+
+table.tense-aspect td > div {
+    width: 45vw;
+    max-width: 20rem;
+}

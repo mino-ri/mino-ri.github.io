@@ -25,7 +25,7 @@ kya	状態	1	〜しようとする	〜しようとする。行動の意思。	�
 poni	状態	1	推奨、どうぞ〜してください	許可、ゆるい推奨。どうぞ〜して下さい。動詞に接尾辞としてつけることで命令文を作る。	提案	どうぞ〜してください	●		suggest; please	suggestion; mild recommendation; can become verb taking whole sentence as object.	suggest	please; be suggested	●	
 pi	状態	1	～であるべき、〜するべき	～であるべき。動詞に接尾辞としてつけることで命令文を作る。	推奨	～してほしい、～であるべき	●		recommend; should	Should;recommendation; suffix on verbs indicating obligation.	recommendation	should	●	
 pipi	状態	1	命令	命令。～しなければならない。動詞に接尾辞としてつけることで命令文を作る。	命令	～しろ、～しなければならない	●		imperative; must	Imperative; must; suffix on verbs indicating obligation.	Imperative	command	●	
-ni	状態	1	いつも、日常的に	いつも[1]している、日常的に[1]している。接尾辞として習慣相を表す。	習慣	いつも、日常的に	●		haubit	Always do[1]; habitual aspect suffix.	haubit	regularly; habitually	●	
+ni	状態	1	いつも、日常的に	いつも[1]している、日常的に[1]している。接尾辞として習慣を表す。	習慣	いつも、日常的に	●		haubit	Always do[1]; habitual suffix.	haubit	regularly; habitually	●	
 ge	状態	1	できる	～できる。可能性。	可能	〜できる	●		can	Can; possibility.	possible	can	●	
 du	状態	1	すべて	全て。	全て	全てである	全ての		all	All; everything.	all	be all	all	
 bu	状態	1	それぞれ	～ごとに。それぞれ。各〜。	それぞれ	それぞれである	それぞれの		every; each	Per ~; each; every ~.	every; each	every; each	●	
