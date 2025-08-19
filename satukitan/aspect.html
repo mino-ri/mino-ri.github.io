@@ -11,12 +11,6 @@
   <link rel="stylesheet" type="text/css" href="./../styles/satukitan.css" />
   <link rel="stylesheet" type="text/css" href="./../styles/style.css" />
   <title>サトゥキタン - 時制と相</title>
-  <style>
-    math {
-      font-size: 1.4rem;
-      text-align: left;
-    }
-  </style>
 </head>
 
 <body>
@@ -30,7 +24,7 @@
   </header>
   <nav>
     <ul class="link-list">
-      <li><a href="./verb.html">← 動詞文</a></li>
+      <li><a href="./verb.html">← 動詞文と接続詞文</a></li>
     </ul>
   </nav>
   <section>
@@ -169,9 +163,7 @@
           <dd>学ばれる(未来)</dd>
         </dl>
       </div>
-      <p>
-        上記の日本語訳は、日本語の単語と正確に対応するものではないことに注意してください。
-      </p>
+      <p>上記の翻訳は、日本語の単語と正確に対応するものではないことに注意してください。</p>
       <h4>相</h4>
       <p>
         サトゥキタンの相は<dfn>完結相(perfective aspect)</dfn>、<dfn>完了相(perfect aspect)</dfn>、<dfn>継続相(continuous
@@ -225,9 +217,27 @@
         </table>
       </div>
       <p>
-        状態語の中には、接尾辞として使うと単語の<b>意味種を変える</b>機能を持つものがあり、これは結果的に相にも影響します。
+        単語の中には、接尾辞として使うと単語の<b>意味種を変える</b>機能を持つものがあり、これは結果的に相にも影響します。
         たとえば状態語「<span lang="kt">ni</span> (ニ) / いつも～している」を接尾辞としてつけた合成語は、(元の意味種が何であれ)状態語になります。
       </p>
+      <div class="trans">
+        <dl>
+          <dt lang="kt">gissos</dt>
+          <dd>ギッソs</dd>
+          <dd>学ばれている(進行)</dd>
+        </dl>
+        <dl>
+          <dt lang="kt">giskis</dt>
+          <dd>ギsキs</dd>
+          <dd>学ばれ始める(開始)</dd>
+        </dl>
+        <dl>
+          <dt lang="kt">gisnis</dt>
+          <dd>ギsニs</dd>
+          <dd>学ばれている(習慣)</dd>
+        </dl>
+      </div>
+      <p>上記の翻訳は、日本語の単語と正確に対応するものではないことに注意してください。</p>
     </article>
     <article>
       <h3>時制と相の意味付け</h3>
@@ -250,12 +260,12 @@
             <mo>[</mo>
             <msub>
               <mi>E</mi>
-              <mi>start</mi>
+              <mtext>start</mtext>
             </msub>
             <mo>,</mo>
             <msub>
               <mi>E</mi>
-              <mi>end</mi>
+              <mtext>end</mtext>
             </msub>
             <mo>]</mo>
           </math>
@@ -268,12 +278,12 @@
             <mo>[</mo>
             <msub>
               <mi>M</mi>
-              <mi>start</mi>
+              <mtext>start</mtext>
             </msub>
             <mo>,</mo>
             <msub>
               <mi>M</mi>
-              <mi>end</mi>
+              <mtext>end</mtext>
             </msub>
             <mo>]</mo>
           </math>
@@ -296,12 +306,15 @@
           <math class="red">
             <msub>
               <mi>M</mi>
-              <mi>end</mi>
+              <mtext>end</mtext>
             </msub>
             <mo>&lt;</mo>
             <mi>S</mi>
           </math>
-          <p>単語が言及する時間的範囲は、その全体が過去にあります。</p>
+          <p>
+            単語が言及する時間的範囲は、その全体が過去にあります。<br />
+            イメージ: 昨日みかんを<b><u>食べた</u></b>
+          </p>
         </div>
       </div>
       <h5>現在時制 (接尾辞なし)</h5>
@@ -317,19 +330,20 @@
           <math class="red">
             <msub>
               <mi>M</mi>
-              <mi>start</mi>
+              <mtext>start</mtext>
             </msub>
             <mo>≦</mo>
             <mi>S</mi>
             <mo>≦</mo>
             <msub>
               <mi>M</mi>
-              <mi>end</mi>
+              <mtext>end</mtext>
             </msub>
           </math>
           <p>
             単語が言及する時間的範囲は、現在をまたいで未来と過去に広がっています。
-            通常、これは現在または近い未来に終わる出来事か、未来永劫続く出来事に対して使われます。
+            通常、これは現在または近い未来に終わる出来事か、未来永劫続く出来事(状態や性質)に対して使われます。<br />
+            イメージ: 私は数学を<b><u>学んでいる</u></b>
           </p>
         </div>
       </div>
@@ -348,10 +362,13 @@
             <mo>&lt;</mo>
             <msub>
               <mi>M</mi>
-              <mi>start</mi>
+              <mtext>start</mtext>
             </msub>
           </math>
-          <p>単語が言及する時間的範囲は、その全体が未来にあります。</p>
+          <p>
+            単語が言及する時間的範囲は、その全体が未来にあります。<br />
+            イメージ: 明日は京都に<b><u>行く</u></b>
+          </p>
         </div>
       </div>
       <h4>相</h4>
@@ -405,10 +422,13 @@
             <mo>[</mo>
             <msub>
               <mi>E</mi>
-              <mi>start</mi>
+              <mtext>start</mtext>
             </msub>
             <mo>,</mo>
-            <mn>∞</mn>
+            <mrow>
+              <mo>+</mo>
+              <mn>∞</mn>
+            </mrow>
             <mo>]</mo>
           </math>
           <p>
@@ -446,9 +466,15 @@
             <mi>E</mi>
             <mo>=</mo>
             <mo>[</mo>
-            <mn>-∞</mn>
+            <mrow>
+              <mo>-</mo>
+              <mn>∞</mn>
+            </mrow>
             <mo>,</mo>
-            <mn>∞</mn>
+            <mrow>
+              <mo>+</mo>
+              <mn>∞</mn>
+            </mrow>
             <mo>]</mo>
           </math>
           <p>
@@ -470,22 +496,22 @@
           <math class="red">
             <msub>
               <mi>E</mi>
-              <mi>start</mi>
+              <mtext>start</mtext>
             </msub>
             <mo>&lt;</mo>
             <msub>
               <mi>M</mi>
-              <mi>start</mi>
+              <mtext>start</mtext>
             </msub>
             <mo>,</mo>
             <msub>
               <mi>M</mi>
-              <mi>end</mi>
+              <mtext>end</mtext>
             </msub>
             <mo>&lt;</mo>
             <msub>
               <mi>E</mi>
-              <mi>end</mi>
+              <mtext>end</mtext>
             </msub>
           </math>
           <p>
@@ -508,22 +534,22 @@
           <math class="red">
             <msub>
               <mi>E</mi>
-              <mi>start</mi>
+              <mtext>start</mtext>
             </msub>
             <mo>&lt;</mo>
             <msub>
               <mi>M</mi>
-              <mi>start</mi>
+              <mtext>start</mtext>
             </msub>
             <mo>,</mo>
             <msub>
               <mi>M</mi>
-              <mi>end</mi>
+              <mtext>end</mtext>
             </msub>
             <mo>=</mo>
             <msub>
               <mi>E</mi>
-              <mi>end</mi>
+              <mtext>end</mtext>
             </msub>
           </math>
           <p>
@@ -546,22 +572,22 @@
           <math class="red">
             <msub>
               <mi>E</mi>
-              <mi>start</mi>
+              <mtext>start</mtext>
             </msub>
             <mo>=</mo>
             <msub>
               <mi>M</mi>
-              <mi>start</mi>
+              <mtext>start</mtext>
             </msub>
             <mo>,</mo>
             <msub>
               <mi>M</mi>
-              <mi>end</mi>
+              <mtext>end</mtext>
             </msub>
             <mo>&lt;</mo>
             <msub>
               <mi>E</mi>
-              <mi>end</mi>
+              <mtext>end</mtext>
             </msub>
           </math>
           <p>
@@ -575,9 +601,13 @@
       <p>
         普遍的な性質を表す<b>継続相</b>と、過去の出来事を表す<b>過去時制</b>を組み合わせて使う場合、暗黙的に出来事の終わりに言及しています。
         そのため「当時は普遍的だったが今は違う」といったニュアンスを持ちますが、<b>いつもそうであるとは限りません</b>。
-        例えば日本語でも、「日本人は昔から米を<b><u>食べていた</u></b>」 と言う場合と 「日本人は昔は貝を<b><u>食べていた</u></b>」
+        例えば日本語でも、「この家は昔から<b><u>赤かった</u></b>」 と言う場合と 「この家は昔は<b><u>赤かった</u></b>」
         と言う場合で、動詞の活用は同じですが、後者のみが「今は違う」というニュアンスを持ちます。<br />
-        完了相も同じように、過去時制と組み合わせることで「今は違う」というニュアンスを持つことがあります。
+        完了相も同じように、過去時制と組み合わせることで「今は違う」というニュアンスを持つことがあります。<br />
+        ただし、これは<b>ニュアンス</b>であって厳密な定義ではないため、論証においてはこのニュアンスに基づいた発言・判断は控えるべきです。
+        出来事の終わりを示すには、
+        <a href="#complement">時刻に言及する補助語</a>
+        を使います。<br />
       </p>
     </article>
     <article>
@@ -588,13 +618,63 @@
         と習慣に言及する場合 (日本人は米を<b><u>食べる</u></b>)
         で動詞の活用が変わりませんが、サトゥキタンでは後者に接尾辞
         <span lang="kt">ni</span> をつけて区別します。<br />
-        習慣は「習慣相」として相に組み込まれる場合もありますが、サトゥキタンでは「いつも～している<b>性質</b>」という継続相として扱います。
+        習慣は「習慣相」として相に組み込まれる場合もありますが、サトゥキタンでは「いつも～している<b>性質</b>」という継続相として扱います。<br />
+      </p>
+      <p>
+        同じように単語を状態語に変える接尾辞には以下のような例があります。
+      </p>
+      <ul>
+        <li><span lang="kt">ge</span>(ゲ) / ～できる</li>
+        <li><span lang="kt">pi</span>(ピ) / ～であるべき</li>
+        <li><span lang="kt">pipi</span>(ピピ) / ～でなければならない</li>
+        <li><span lang="kt">poni</span>(ポニ) / どうぞ～してください</li>
+      </ul>
+    </article>
+    <article>
+      <h3><a id="complement"></a>時刻に言及する補助語</h3>
+      <p>
+        補助語・補助目的語を使うことで、単語が<b>言及する</b>範囲
+        <math>
+          <mi>M</mi>
+        </math>
+        を明確にすることができます。
+        これらの補助目的語は相が本来表す「未来永劫続く」ような性質よりも優先されるため、
+        「この家は<b><u>明日までは</u></b>赤い」
+        のように、継続相を使いつつも終わりのある出来事を表すことができます。
+      </p>
+      <h4><span lang="kt">nav</span>(ナン) / ～の時刻に</h4>
+      <p>
+        時刻を表す名詞を修飾して補助目的語を作り、単語が言及する範囲
+        <math>
+          <mi>M</mi>
+        </math>
+        に<b>含まれている</b>時間的位置を示します。
+      </p>
+      <h4><span lang="kt">tev</span>(テン) / ～まで</h4>
+      <p>
+        時刻を表す名詞を修飾して補助目的語を作り、単語が言及する範囲
+        <math>
+          <mi>M</mi>
+        </math>
+        が<b>終わる</b>時間的位置を示します。
+        ただし <span lang="kt">tev</span> は概念的・空間的な終点を表すこともあるため、紛らわしい場合は
+        <span lang="kt">nastev</span> (ナsテン)を使って時刻であることを明確にします。
+      </p>
+      <h4><span lang="kt">kev</span>(ケン) / ～から</h4>
+      <p>
+        時刻を表す名詞を修飾して補助目的語を作り、単語が言及する範囲
+        <math>
+          <mi>M</mi>
+        </math>
+        が<b>始まる</b>時間的位置を示します。
+        ただし <span lang="kt">kev</span> は概念的・空間的な始点を表すこともあるため、紛らわしい場合は
+        <span lang="kt">naskev</span> (ナsケン)を使って時刻であることを明確にします。
       </p>
     </article>
   </section>
   <nav>
     <ul class="link-list footer">
-      <li><a href="./verb.html">← 動詞文</a></li>
+      <li><a href="./verb.html">← 動詞文と接続詞文</a></li>
     </ul>
   </nav>
   <footer>copyright&copy; 2025 mino-ri All rights reserved.</footer>
