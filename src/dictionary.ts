@@ -66,7 +66,7 @@ const partOfSpeeches: PartOfSpeech = {
     conj: { ja: "接", en: "Conj" },
 }
 
-function buildWord({ wordType, paramCount, explain, noun, verb, modif, conj, language }: {
+function buildWord({ wordType, paramCount, explain, noun, verb, modif, conj, antonym, language }: {
     wordType: string,
     paramCount: string,
     explain: string,
@@ -74,6 +74,7 @@ function buildWord({ wordType, paramCount, explain, noun, verb, modif, conj, lan
     verb: string,
     modif: string,
     conj: string,
+    antonym: string,
     language: keyof Translation
 }): string {
     const wordTypeText = wordTypes.get(wordType)?.[language] ?? ""
@@ -111,7 +112,32 @@ function buildWord({ wordType, paramCount, explain, noun, verb, modif, conj, lan
         }
         body += `【${partOfSpeeches.conj[language]}】${conj}`
     }
+
+    if (antonym !== "") {
+        body += `<br />↔ <a href='#${antonym}' lang='kt'>${antonym}</a>`
+    }
+
     return wordTitle + body
+}
+
+function openSelectedWord() {
+    const hash = location.hash.replace("#", "")
+    if (hash === "") {
+        return
+    }
+
+    const detail = document.querySelector(`details:has(a#${hash})`)
+    if (detail) {
+        detail.setAttribute("open", "open")
+    }
+
+    const target = document.getElementById(hash)
+    if (target) {
+        target.scrollIntoView({
+            block: "start",
+            behavior: "smooth",
+        })
+    }
 }
 
 const loadDictionary = async () => {
@@ -148,6 +174,7 @@ const loadDictionary = async () => {
         const verbEn = word[12] ?? ""
         const modifEn = word[13] ?? ""
         const conjEn = word[14] ?? ""
+        const antonym = word[15] ?? ""
 
         const root = template.content.cloneNode(true) as ParentNode
         const summary = root.querySelector("summary")
@@ -163,32 +190,19 @@ const loadDictionary = async () => {
         }
         const p = root.querySelector("p")
         if (p) {
-            p.innerHTML = buildWord({ wordType, paramCount, explain, noun, verb, modif, conj, language: "ja" })
-            p.setAttribute("data-ls-html-en", buildWord({ wordType, paramCount, explain: explainEn, noun: nounEn, verb: verbEn, modif: modifEn, conj: conjEn, language: "en" }))
+            p.innerHTML = buildWord({ wordType, paramCount, explain, noun, verb, modif, conj, antonym, language: "ja" })
+            p.setAttribute("data-ls-html-en", buildWord({ wordType, paramCount, explain: explainEn, noun: nounEn, verb: verbEn, modif: modifEn, conj: conjEn, antonym, language: "en" }))
         }
 
         parent.appendChild(root)
     }
 
     loadLanguages()
+    openSelectedWord()
 }
 
 window.addEventListener("DOMContentLoaded", loadDictionary)
 window.addEventListener("hashchange", (ev) => {
-    console.log("HashChanged")
-    const hash = location.hash.replace("#", "")
-    const detail = document.querySelector(`details:has(a#${hash})`)
-    if (detail) {
-        detail.setAttribute("open", "open")
-    }
-
-    const target = document.getElementById(hash)
-    if (target) {
-        target.scrollIntoView({
-            block: "start",
-            behavior: "smooth",
-        })
-    }
-
+    openSelectedWord()
     ev.preventDefault()
 })
