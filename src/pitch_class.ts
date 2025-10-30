@@ -10,6 +10,8 @@ let textArea: HTMLTextAreaElement
 let checkboxQuantize: HTMLInputElement
 let checkboxShowStep: HTMLInputElement
 let textEdo: HTMLInputElement
+let checkboxLimitInterval: HTMLInputElement
+let textPrime: HTMLInputElement
 let previewSvg: SVGSVGElement
 let pitchClassSvgGenerator: PitchClassSvgGenerator
 let colorControl: ColorControl
@@ -91,6 +93,7 @@ function loadMonzo() {
     pitchClassSvgGenerator.generate(pitches, {
         quantizeEdo: checkboxQuantize.checked ? Number(textEdo.value) : 0,
         showSteps: checkboxShowStep.checked,
+        autoCompleteLimitInterval: checkboxLimitInterval.checked ? Number(textPrime.value) : 0,
     })
 }
 
@@ -98,7 +101,9 @@ window.addEventListener("load", () => {
     textArea = document.getElementById("textarea_editor") as HTMLTextAreaElement
     checkboxQuantize = document.getElementById("checkbox_quantize") as HTMLInputElement
     checkboxShowStep = document.getElementById("checkbox_show_step") as HTMLInputElement
+    checkboxLimitInterval = document.getElementById("checkbox_limit_interval") as HTMLInputElement
     textEdo = document.getElementById("text_edo") as HTMLInputElement
+    textPrime = document.getElementById("text_prime") as HTMLInputElement
     previewSvg = document.getElementById("preview_figure") as unknown as SVGSVGElement
     const editorPreview = document.getElementById("editor_preview") as HTMLElement
     const lineGroup = previewSvg.getElementById("line_group") as SVGGElement
@@ -118,7 +123,9 @@ window.addEventListener("load", () => {
         textArea,
         checkboxQuantize,
         checkboxShowStep,
+        checkboxLimitInterval,
         textEdo,
+        textPrime,
     ]
     for (const element of uiElements) {
         element.addEventListener("input", () => loadMonzo())
