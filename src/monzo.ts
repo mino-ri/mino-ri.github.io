@@ -78,12 +78,21 @@ export class Monzo {
             return this.pitch
         }
         
+        return this.quantizedStepCount(edo) / edo
+    }
+
+    quantizedStepCount(edo: number) {
+        if (edo < 1) {
+            return 0
+        }
+        
         let result = 0
         for (const [prime, factor] of this.factors) {
             result += Math.round(Math.log2(prime) * edo) * factor
         }
-        return result / edo
+        return result
     }
+
 
     quantizedPitchClass(edo: number) {
         if (edo < 1) {

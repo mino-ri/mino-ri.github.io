@@ -8,6 +8,7 @@ const baseSize = 800
 export type Option = {
     quantizeEdo: number,
     showSteps: boolean,
+    autoCompleteLimitInterval: number,
 }
 
 function getPitchPoint(monzo: Monzo, option: Option) {
@@ -19,6 +20,8 @@ function getPitchPoint(monzo: Monzo, option: Option) {
 }
 
 export class PitchClassSvgGenerator {
+    static #primes = [3, 5, 7, 11, 13, 17, 19, 23, 29, 31]
+
     previewSvg: SVGSVGElement
     lineGroup: SVGGElement
     gridGroup: SVGGElement
@@ -63,14 +66,29 @@ export class PitchClassSvgGenerator {
             }
         }
 
+        let autoCompleteSteps: { step: number, color: string }[] = []
+        if (option.quantizeEdo > 0 && option.autoCompleteLimitInterval > 0) {
+            autoCompleteSteps = PitchClassSvgGenerator.#primes
+                .filter(p => p <= option.autoCompleteLimitInterval)
+                .map(p => ({
+                    step: Math.round(Math.log2(p) * option.quantizeEdo) % option.quantizeEdo,
+                    color: this.colorScheme.getPitchClassColor(Math.pow(2, Math.log2(p) % 1) - 1),
+                }))
+        }
+
         for (let i = 0; i < pitches.length; i++) {
             for (let j = i + 1; j < pitches.length; j++) {
                 const interval = Monzo.divide(pitches[j]!.monzo, pitches[i]!.monzo)
-                if (interval.pitchDistance !== 1) {
+
+                const completedInterval = autoCompleteSteps.find(s =>
+                    s.step === interval.quantizedStepCount(option.quantizeEdo) % option.quantizeEdo)
+                if (!completedInterval && interval.pitchDistance !== 1) {
                     continue
                 }
-                const intervalClass = Math.pow(2, Math.abs(interval.pitch) % 1) - 1
-                const color = this.colorScheme.getPitchClassColor(intervalClass)
+
+                const color =
+                    completedInterval?.color ??
+                    (this.colorScheme.getPitchClassColor(Math.pow(2, Math.abs(interval.pitch) % 1) - 1))
                 const { x: x1, y: y1 } = getPitchPoint(pitches[i]!.monzo, option)
                 const { x: x2, y: y2 } = getPitchPoint(pitches[j]!.monzo, option)
                 this.lineGroup.appendChild(createLine(x1, y1, x2, y2, color, "48"))

@@ -50,16 +50,23 @@
           <summary data-ls-en="Options">オプション</summary>
           <div class="control-list">
             <label>
+              <input type="checkbox" id="checkbox_quantize" name="checkbox_quantize" />
+              <span data-ls-en="Quantize to EDO:">次の平均律に量子化:</span>
+            </label>
+            <input type="number" id="text_edo" name="text_edo" min="1" value="12" style="width: 4rem;" />
+          </div>
+          <div class="control-list">
+            <label>
               <input type="checkbox" id="checkbox_show_step" name="checkbox_show_step" />
               <span data-ls-en="Show EDO steps">平均律のステップを表示</span>
             </label>
           </div>
           <div class="control-list">
             <label>
-              <input type="checkbox" id="checkbox_quantize" name="checkbox_quantize" />
-              <span data-ls-en="Quantize to EDO:">次の平均律に量子化する:</span>
+              <input type="checkbox" id="checkbox_limit_interval" name="checkbox_limit_interval" />
+              <span data-ls-en="Auto complete intervals in prime limit:">次の素数限界の音程を補完:</span>
             </label>
-            <input type="number" id="text_edo" name="text_edo" min="1" value="12" style="width: 4rem;" />
+            <input type="number" id="text_prime" name="text_prime" min="3" max="31" value="5" style="width: 4rem;" />
           </div>
         </details>
         <details>
@@ -69,6 +76,7 @@
               <option value="0">P`rismatic fut`URE</option>
               <option value="1">Tone Palette</option>
               <option value="2" data-ls-en="Alt-Shasavic">代替シャサフ式</option>
+              <option value="3">Commatricks</option>
             </select>
           </div>
           <div class="control-list">
