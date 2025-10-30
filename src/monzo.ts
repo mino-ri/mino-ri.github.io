@@ -38,7 +38,8 @@ export class Monzo {
     }
 
     get pitchClass() {
-        return this.pitch % 1
+        const pitch = this.pitch
+        return pitch - Math.floor(pitch)
     }
 
     get minPrime() {
@@ -52,8 +53,48 @@ export class Monzo {
         return minPrime === Infinity ? 1 : minPrime
     }
 
+    get maxPrime() {
+        let maxPrime = 1
+        for (const [prime, factor] of this.factors) {
+            if (factor !== 0 && prime > maxPrime) {
+                maxPrime = prime
+            }
+        }
+
+        return maxPrime
+    }
+
+    toPitchClassMonzo() {
+        const power = Math.floor(Math.log2(this.value))
+        return Monzo.divide(this, Monzo.from2Factor(power))
+    }
+
     quantizedValue(edo: number) {
-        return edo < 1 ? this.value : Math.pow(2, Math.round(Math.log2(this.value) * edo) / edo)
+        return edo < 1 ? this.value : Math.pow(2, this.quantizedPitch(edo))
+    }
+
+    quantizedPitch(edo: number) {
+        if (edo < 1) {
+            return this.pitch
+        }
+        
+        let result = 0
+        for (const [prime, factor] of this.factors) {
+            result += Math.round(Math.log2(prime) * edo) * factor
+        }
+        return result / edo
+    }
+
+    quantizedPitchClass(edo: number) {
+        if (edo < 1) {
+            return this.pitchClass
+        }
+        
+        let result = 0
+        for (const [prime, factor] of this.factors) {
+            result += Math.round(Math.log2(prime) * edo) * factor
+        }
+        return ((result % edo + edo) % edo) / edo
     }
 
     reciprocal() {
