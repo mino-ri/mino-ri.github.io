@@ -1,19 +1,8 @@
 import { PitchInfo, XLengthType, interpolateMutedNote, parsePitches } from "./pitch.js"
-import { ColorScheme, PitchSvgGenerator } from "./chord_graph_svg.js"
+import { ColorScheme } from "./svg_generator.js"
+import { PitchSvgGenerator } from "./chord_graph_svg.js"
 import { AudioSource } from "./sound.js"
-
-type ColorPalette = {
-    back: string
-    main: string
-    sub: string
-    fill: string
-    pitchClass0: string
-    pitchClass1: string
-    pitchClass2: string
-    pitchClass3: string
-    pitchClass4: string
-    pitchClass5: string
-}
+import { ColorControl } from "./color_palette.js"
 
 let textArea: HTMLTextAreaElement
 let checkboxAutoSize: HTMLInputElement
@@ -23,52 +12,12 @@ let checkboxIgnoreOctave: HTMLInputElement
 let checkboxQuantize: HTMLInputElement
 let checkboxInterpolateMuted: HTMLInputElement
 let textEdo: HTMLInputElement
-let editorPreview: HTMLElement
 let selectXLength: HTMLSelectElement
 let previewSvg: SVGSVGElement
 let pitches: PitchInfo[] = []
-let colorScheme: ColorScheme
 let svgGenerator: PitchSvgGenerator
 let playingAudio: HTMLAudioElement | null = null
-
-const colorPalettes: ColorPalette[] = [
-    {
-        back: "#FEFAEE",
-        main: "#2B2F75",
-        sub: "#FDC6FE",
-        fill: "#FFFFFF",
-        pitchClass0: "#30D8D4",
-        pitchClass1: "#25938E",
-        pitchClass2: "#E39D11",
-        pitchClass3: "#F24E75",
-        pitchClass4: "#9664F0",
-        pitchClass5: "#39A2E9",
-    },
-    {
-        back: "#F4F4F6",
-        main: "#4C5156",
-        sub: "#AAAAAA",
-        fill: "#FFFFFF",
-        pitchClass0: "#11EDE8",
-        pitchClass1: "#339564",
-        pitchClass2: "#C3B827",
-        pitchClass3: "#DF4121",
-        pitchClass4: "#C838C8",
-        pitchClass5: "#217BDF",
-    },
-    {
-        back: "#676681",
-        main: "#FFFFFF",
-        sub: "#AAAAAA",
-        fill: "#676681",
-        pitchClass0: "#8CF2F6",
-        pitchClass1: "#96CC6A",
-        pitchClass2: "#ECD551",
-        pitchClass3: "#F08676",
-        pitchClass4: "#EB71C6",
-        pitchClass5: "#C779FF",
-    },
-]
+let colorControl: ColorControl
 
 function loadMonzo(ignoreSave?: boolean) {
     const text = textArea.value
@@ -191,37 +140,6 @@ function addEventListnerById<T extends HTMLElement>(id: string, eventName: strin
     target.addEventListener(eventName, () => listner(target))
 }
 
-function changeColorPalette(select: HTMLSelectElement) {
-    const palette = colorPalettes[Number(select.value)]
-    if (!palette) {
-        return
-    }
-
-    document.getElementById("color_back")?.setAttribute("value", palette.back)
-    document.getElementById("color_main")?.setAttribute("value", palette.main)
-    document.getElementById("color_sub")?.setAttribute("value", palette.sub)
-    document.getElementById("color_fill")?.setAttribute("value", palette.fill)
-    document.getElementById("color0")?.setAttribute("value", palette.pitchClass0)
-    document.getElementById("color1")?.setAttribute("value", palette.pitchClass1)
-    document.getElementById("color2")?.setAttribute("value", palette.pitchClass2)
-    document.getElementById("color3")?.setAttribute("value", palette.pitchClass3)
-    document.getElementById("color4")?.setAttribute("value", palette.pitchClass4)
-    document.getElementById("color5")?.setAttribute("value", palette.pitchClass5)
-
-    editorPreview.style.background = palette.back
-    colorScheme.noteStroke = palette.main
-    colorScheme.gridStroke = palette.sub
-    colorScheme.noteFill = palette.fill
-    colorScheme.setPitchClassColor(0, palette.pitchClass0)
-    colorScheme.setPitchClassColor(1, palette.pitchClass1)
-    colorScheme.setPitchClassColor(2, palette.pitchClass2)
-    colorScheme.setPitchClassColor(3, palette.pitchClass3)
-    colorScheme.setPitchClassColor(4, palette.pitchClass4)
-    colorScheme.setPitchClassColor(5, palette.pitchClass5)
-
-    loadMonzo()
-}
-
 window.addEventListener("load", () => {
     textArea = document.getElementById("textarea_editor") as HTMLTextAreaElement
     checkboxAutoSize = document.getElementById("checkbox_auto_size") as HTMLInputElement
@@ -232,14 +150,14 @@ window.addEventListener("load", () => {
     checkboxInterpolateMuted = document.getElementById("checkbox_interpolate_muted") as HTMLInputElement
     textEdo = document.getElementById("text_edo") as HTMLInputElement
     selectXLength = document.getElementById("selecd_x_length") as HTMLSelectElement
-    editorPreview = document.getElementById("editor_preview") as HTMLElement
+    const editorPreview = document.getElementById("editor_preview") as HTMLElement
     previewSvg = document.getElementById("preview_figure") as unknown as SVGSVGElement
     const grid = previewSvg.getElementById("grid") as SVGGElement
     const lineGroup = previewSvg.getElementById("line_group") as SVGGElement
     const pitchClassGroup = previewSvg.getElementById("pitch_class_group") as SVGGElement
 
-    colorScheme = new ColorScheme()
-    svgGenerator = new PitchSvgGenerator(previewSvg, grid, lineGroup, pitchClassGroup, colorScheme)
+    colorControl = new ColorControl(editorPreview, new ColorScheme(), () => loadMonzo())
+    svgGenerator = new PitchSvgGenerator(previewSvg, grid, lineGroup, pitchClassGroup, colorControl.colorScheme)
 
     const uiElements: HTMLElement[] = [
         textArea,
@@ -259,17 +177,6 @@ window.addEventListener("load", () => {
     addEventListnerById("a_download_svg", "click", downloadSvg)
     addEventListnerById("a_download_png", "click", downloadPng)
     addEventListnerById("button_play", "click", playSound)
-    addEventListnerById<HTMLInputElement>("color_back", "input", (input) => { editorPreview.style.background = input.value })
-    addEventListnerById<HTMLInputElement>("color_main", "input", (input) => { colorScheme.noteStroke = input.value; loadMonzo() })
-    addEventListnerById<HTMLInputElement>("color_sub", "input", (input) => { colorScheme.gridStroke = input.value; loadMonzo() })
-    addEventListnerById<HTMLInputElement>("color_fill", "input", (input) => { colorScheme.noteFill = input.value; loadMonzo() })
-    addEventListnerById<HTMLInputElement>("color0", "input", (input) => { colorScheme.setPitchClassColor(0, input.value); loadMonzo() })
-    addEventListnerById<HTMLInputElement>("color1", "input", (input) => { colorScheme.setPitchClassColor(1, input.value); loadMonzo() })
-    addEventListnerById<HTMLInputElement>("color2", "input", (input) => { colorScheme.setPitchClassColor(2, input.value); loadMonzo() })
-    addEventListnerById<HTMLInputElement>("color3", "input", (input) => { colorScheme.setPitchClassColor(3, input.value); loadMonzo() })
-    addEventListnerById<HTMLInputElement>("color4", "input", (input) => { colorScheme.setPitchClassColor(4, input.value); loadMonzo() })
-    addEventListnerById<HTMLInputElement>("color5", "input", (input) => { colorScheme.setPitchClassColor(5, input.value); loadMonzo() })
-    addEventListnerById<HTMLSelectElement>("select_color_palette", "input", changeColorPalette)
 
     loadFromHash()
     loadMonzo(true)

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Type" content="text/html" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="author" content="mino-ri" />
+  <meta name="copyright" content="copyright(C) 2025 mino-ri All rights reserved." />
+  <meta name="viewport" content="width=device-width">
+  <link rel="stylesheet" type="text/css" href="./../styles/color_standard.css" />
+  <link rel="stylesheet" type="text/css" href="./../styles/style.css" />
+  <script type="module" src="./../scripts/pitch_class.js"></script>
+  <script type="module" src="./../scripts/language_switcher.js"></script>
+  <title>ピッチクラス図</title>
+</head>
+<body>
+  <header>
+    <a class="back" href="../">back</a>
+    <h1 data-ls-en="Pitch Class Figure">ピッチクラス図</h1>
+    <nav class="language-switcher">
+      <label>
+        <input type="radio" name="language" value="ja" checked />
+        JP
+      </label>
+      <label>
+        <input type="radio" name="language" value="en" />
+        EN
+      </label>
+    </nav>
+  </header>
+  <section>
+    <article class="editor-container">
+      <div class="editor-preview" id="editor_preview" style="background: #FEFAEE">
+        <svg id="preview_figure" viewBox="0 0 1920 1920">
+          <g id="line_group"></g>
+          <g id="grid"></g>
+          <g id="pitch_class_group"></g>
+        </svg>
+      </div>
+      <div class="editor-control">
+        <div>
+          <textarea id="textarea_editor" name="textarea_editor" rows="2">1 x5 3 15</textarea>
+        </div>
+        <ul class="link-list">
+          <li><input id="button_play" type="button" value="再生" data-ls-value-en="Play" /></li>
+          <li><a id="a_download_svg" href="#" download="chordGraph.svg" data-ls-en="Download SVG">SVGダウンロード</a></li>
+          <li><a id="a_download_png" href="#" data-ls-en="Download PNG">PNGダウンロード</a></li>
+        </ul>
+        <details>
+          <summary data-ls-en="Options">オプション</summary>
+          <div class="control-list">
+            <label>
+              <input type="checkbox" id="checkbox_show_step" name="checkbox_show_step" />
+              <span data-ls-en="Show EDO steps">平均律のステップを表示</span>
+            </label>
+          </div>
+          <div class="control-list">
+            <label>
+              <input type="checkbox" id="checkbox_quantize" name="checkbox_quantize" />
+              <span data-ls-en="Quantize to EDO:">次の平均律に量子化する:</span>
+            </label>
+            <input type="number" id="text_edo" name="text_edo" min="1" value="12" style="width: 4rem;" />
+          </div>
+        </details>
+        <details>
+          <summary data-ls-en="Color Scheme">配色</summary>
+          <div>
+            <select id="select_color_palette" name="select_color_palette">
+              <option value="0">P`rismatic fut`URE</option>
+              <option value="1">Tone Palette</option>
+              <option value="2" data-ls-en="Alt-Shasavic">代替シャサフ式</option>
+            </select>
+          </div>
+          <div class="control-list">
+            <label>
+              <div data-ls-en="BG">背景</div>
+              <input type="color" id="color_back" value="#FEFAEE" />
+            </label>
+            <label>
+              <div data-ls-en="Main">メイン</div>
+              <input type="color" id="color_main" value="#2B2F75" />
+            </label>
+            <label>
+              <div data-ls-en="Sub">サブ</div>
+              <input type="color" id="color_sub" value="#FDC6FE" />
+            </label>
+            <label>
+              <div data-ls-en="Fill">塗りつぶし</div>
+              <input type="color" id="color_fill" value="#FFFFFF" />
+            </label>
+          </div>
+          <div>
+            <div data-ls-en="Pitch Class">ピッチクラス</div>
+            <div class="control-list">
+              <input type="color" id="color0" value="#11EDE8" />
+              <input type="color" id="color1" value="#25938E" />
+              <input type="color" id="color2" value="#E39D11" />
+              <input type="color" id="color3" value="#F24E75" />
+              <input type="color" id="color4" value="#9664F0" />
+              <input type="color" id="color5" value="#39A2E9" />
+            </div>
+          </div>
+        </details>
+      </div>
+    </article>
+  </section>
+  <footer>
+    copyright&copy; 2025 mino-ri All rights reserved.
+  </footer>
+</body>
+</html>

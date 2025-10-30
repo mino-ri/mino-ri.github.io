@@ -157,7 +157,21 @@ export class AudioSource {
             data.addSaw(baseHz * monzo.quantizedValue(quantizeEdo), volume, 0, Math.floor(seconds * 40000))
         }
         return AudioSource.create(data)
-    }}
+    }
+
+    static createFromMonzoSerial(monzos: Monzo[], baseHz: number, seconds: number, quantizeEdo: number): string {
+        const data = new WaveData(Math.floor(seconds * 44100 * monzos.length))
+        const volume = 0.9
+        let index = 0
+        for (const monzo of monzos) {
+            data.addSaw(baseHz * monzo.quantizedValue(quantizeEdo), volume,
+                Math.floor(index * seconds * 44100),
+                Math.floor(seconds * 40000))
+            index++
+        }
+        return AudioSource.create(data)
+    }
+}
 
 export class Sound {
     constructor() {}
