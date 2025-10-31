@@ -80,8 +80,11 @@ export class PitchClassSvgGenerator {
             for (let j = i + 1; j < pitches.length; j++) {
                 const interval = Monzo.divide(pitches[j]!.monzo, pitches[i]!.monzo)
 
+                const intervalSteps = option.quantizeEdo > 0
+                    ? Math.abs(interval.quantizedStepCount(option.quantizeEdo) % option.quantizeEdo)
+                    : 0
                 const completedInterval = autoCompleteSteps.find(s =>
-                    s.step === interval.quantizedStepCount(option.quantizeEdo) % option.quantizeEdo)
+                    s.step === intervalSteps || s.step === (option.quantizeEdo - intervalSteps))
                 if (!completedInterval && interval.pitchDistance !== 1) {
                     continue
                 }
