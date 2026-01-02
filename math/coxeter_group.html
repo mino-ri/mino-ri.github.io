@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Type" content="text/html" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="author" content="mino-ri" />
+  <meta name="copyright" content="copyright(C) 2025 mino-ri All rights reserved." />
+  <meta name="viewport" content="width=device-width">
+  <link rel="stylesheet" type="text/css" href="./../styles/color_standard.css" />
+  <link rel="stylesheet" type="text/css" href="./../styles/style.css" />
+  <script type="module" src="./../scripts/coxeter.js"></script>
+  <script type="module" src="./../scripts/language_switcher.js"></script>
+  <title>コクセター群</title>
+</head>
+
+<body>
+  <header>
+    <a class="back" href="../">back</a>
+    <h1 data-ls-en="Coxeter Group">コクセター群</h1>
+    <nav class="language-switcher">
+      <label>
+        <input type="radio" name="language" value="ja" checked />
+        JP
+      </label>
+      <label>
+        <input type="radio" name="language" value="en" />
+        EN
+      </label>
+    </nav>
+  </header>
+  <section>
+    <article class="editor-container">
+      <div class="editor-preview" id="editor_preview">
+        <svg id="preview_figure" viewBox="0 0 1920 1920">
+          <g id="line_group"></g>
+          <g id="element_group"></g>
+        </svg>
+      </div>
+      <div class="editor-control">
+        <div>
+          <textarea id="textarea_editor" name="textarea_editor" rows="1" placeholder="3 2 2">3 2 2</textarea>
+        </div>
+        <ul class="link-list">
+          <li><input id="button_log" type="button" value="描画" data-ls-value-en="render" /></li>
+        </ul>
+      </div>
+    </article>
+  </section>
+  <footer>
+    copyright&copy; 2025 mino-ri All rights reserved.
+  </footer>
+</body>
+
+</html>
