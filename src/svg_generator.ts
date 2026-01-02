@@ -1,5 +1,5 @@
-export const centerX = 960
-export const centerY = 960
+export let centerX = 960
+export let centerY = 960
 
 type HslValue = { h: number, s: number, l: number }
 
@@ -164,6 +164,11 @@ export function clearChildren(...elements: Element[]) {
             element.removeChild(element.firstChild);
         }
     }
+}
+
+export function setCenter(x: number, y: number) {
+    centerX = x
+    centerY = y
 }
 
 export function createPath(d: string, fill: string, stroke: string, strokeWidth: string) {

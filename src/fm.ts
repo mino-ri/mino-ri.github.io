@@ -260,7 +260,7 @@ function playSound(): void {
     const modulatorHz = BASE_HZ * modulatorFreq
 
     // 真のFM合成: y(t) = sin(2π * carrierHz * t + beta * sin(2π * modulatorHz * t))
-    const volume = 0.9
+    const volume = 0.75
     const fadeSamples = Math.floor(sampleRate * 0.05) // 50msのフェード
 
     for (let i = 0; i < totalSamples; i++) {
