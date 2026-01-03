@@ -35,7 +35,9 @@
       <div class="editor-preview" id="editor_preview">
         <svg id="preview_figure" viewBox="0 0 1920 1920">
           <g id="line_group"></g>
+          <rect id="fade_rect" x="0" y="0" width="1920" height="1920" fill="#FFFFFF" fill-opacity="0" />
           <g id="element_group"></g>
+          <text id="order_text" x="0" y="0" fill="#000000" dominant-baseline="hanging"></text>
         </svg>
       </div>
       <div class="editor-control">
@@ -43,7 +45,8 @@
           <textarea id="textarea_editor" name="textarea_editor" rows="1" placeholder="3 2 2">3 2 2</textarea>
         </div>
         <ul class="link-list">
-          <li><input id="button_log" type="button" value="描画" data-ls-value-en="render" /></li>
+          <li><input id="button_render" type="button" value="描画" data-ls-value-en="render" /></li>
+          <li><input id="button_subgroup" type="button" value="部分群を生成" data-ls-value-en="create subgroup" /></li>
         </ul>
       </div>
     </article>
