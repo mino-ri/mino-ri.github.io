@@ -2,6 +2,95 @@ import { clearChildren, createCircle, createLine, setCenter } from "./svg_genera
 
 const generatorColors = ["#DF4121", "#339564", "#217BDF", "#C3B827"]
 
+type Vector2 = [x: number, y: number]
+type Vector = number[]
+const directionMap = new Map<number, Vector2[]>([[2, [[1, 0], [0, 1]]]])
+const positionCenter = 200
+
+class Vectors {
+    static dot(a: Vector, b: Vector): number {
+        let result = 0
+        const length = Math.min(a.length, b.length)
+        for (let i = 0; i < length; i++) {
+            result += a[i]! * b[i]!
+        }
+        return result
+    }
+
+    static mul(a: Vector, s: number): Vector {
+        const result = new Array<number>(a.length)
+        for (let i = 0; i < a.length; i++) {
+            result[i] = a[i]! * s
+        }
+        return result
+    }
+
+    static add(a: Vector, b: Vector): Vector {
+        const length = Math.min(a.length, b.length)
+        const result = new Array<number>(length)
+        for (let i = 0; i < length; i++) {
+            result[i] = a[i]! + b[i]!
+        }
+        return result
+    }
+
+    static sub(a: Vector, b: Vector): Vector {
+        const length = Math.min(a.length, b.length)
+        const result = new Array<number>(length)
+        for (let i = 0; i < length; i++) {
+            result[i] = a[i]! - b[i]!
+        }
+        return result
+    }
+
+    static project(v: Vector): { x: number; y: number; z: number } {
+        const dimension = v.length
+        switch (dimension) {
+            case 0:
+                return { x: 0, y: 0, z: 1 }
+            case 1:
+                return { x: v[0]! * 150, y: 0, z: 1 }
+            case 2:
+                return { x: v[0]! * 150, y: v[1]! * -150, z: 1 }
+        }
+
+        let directions = directionMap.get(dimension)
+        if (!directions) {
+            directions = new Array<Vector2>(dimension)
+            for (let i = 0; i < dimension; i++) {
+                const theta = Math.PI * 2 * (dimension - i - 1) / dimension
+                directions[i] = [Math.sin(theta) * 150, -Math.cos(theta) * 150]
+            }
+
+            directionMap.set(dimension, directions)
+        }
+
+        let result = {x: 0, y: 0, z: 0}
+        for (let i = 0; i < dimension; i++) {
+            const a = v[i]!
+            const [dx, dy] = directions[i]!
+            result.x += a * dx
+            result.y += a * dy
+            result.z += a
+        }
+
+        // 遠近感調整
+        result.z = (result.z / dimension + 2) / 2
+        result.x = result.x * result.z
+        result.y = result.y * result.z
+        return result
+    }
+}
+
+class Mirror {
+    constructor(public normal: Vector) { }
+
+    reflection(v: Vector): Vector {
+        const r = -2 * Vectors.dot(v, this.normal)
+        return Vectors.add(v, Vectors.mul(this.normal, r))
+    }
+}
+
 class Representation {
     static beginCodePoint = 97 // 'a'
 
@@ -120,9 +209,12 @@ export class CoxeterMatrix {
     }
 }
 
+const dummyPosition: Vector = []
+
 // コクセター群の要素
 export class CoxeterGroupElement {
     #periodValue: number | undefined
+    position: Vector
 
     constructor(
         // 群の中で一意なインデックス
@@ -135,6 +227,7 @@ export class CoxeterGroupElement {
         public neighbors: CoxeterGroupElement[]
     ) {
         this.#periodValue = undefined
+        this.position = dummyPosition
     }
 
     mul(other: CoxeterGroupElement): CoxeterGroupElement {
@@ -155,6 +248,25 @@ export class CoxeterGroupElement {
         }
 
         return target
+    }
+
+    calcPosition(origin: Vector, mirrors: Mirror[]) {
+        this.position = origin
+        if (this.rank === 0) {
+            return
+        }
+
+        for (let i = this.representation.length - 1; i >= 0; i--) {
+            const code = this.representation.charCodeAt(i)
+            if (Number.isNaN(code)) {
+                break
+            }
+
+            const mirror = mirrors[code - Representation.beginCodePoint]!
+            this.position = mirror.reflection(this.position)
+        }
+
+        console.log(`${this.representation}: ${this.position}`)
     }
 
     toString(): string {
@@ -223,6 +335,10 @@ export class SubgroupElement {
     get period(): number {
         return this.source.period
     }
+
+    get position(): Vector {
+        return this.source.position
+    }
 }
 
 // コクセター群
@@ -230,6 +346,8 @@ export class CoxeterGroup {
     ranks: CoxeterGroupElement[][]
     matrix: CoxeterMatrix
     order: number
+    hasPosition: boolean
+    isLimitOver: boolean
 
     constructor(matrix: CoxeterMatrix) {
         const exchanges = matrix.getExchanges()
@@ -238,6 +356,7 @@ export class CoxeterGroup {
         this.matrix = matrix
         let order = 1
         let index = 1
+        let isLimitOver = false
         const maxOrder = matrix.dimension >= 4 ? 14401 : 121
         const maxIncrRank = matrix.dimension >= 4 ? 31 : 13
 
@@ -286,6 +405,7 @@ export class CoxeterGroup {
             order += targetElements.length
             if (order >= maxOrder || nextRank >= maxIncrRank && targetElements.length >= this.ranks[this.ranks.length - 2]!.length) {
                 // [3 3 5] でも rank31 以降でランクあたりの要素数が減り始めるので、それ以上の要素数が予想される場合は打ち切り
+                isLimitOver = true
                 break
             }
             if (targetElements.length == 1 && targetElements[0]!.neighbors.every(e => !!e)) {
@@ -296,6 +416,8 @@ export class CoxeterGroup {
         // 列挙中に "1" が伝搬するのを防ぐため、最後に名前を入れ替え
         identity.representation = "1"
         this.order = order
+        this.isLimitOver = isLimitOver
+        this.hasPosition = !isLimitOver && CoxeterGroup.#setPositions(this.ranks, this.matrix)
     }
 
     static #follow(beginElement: CoxeterGroupElement, route: number[], routeIndex?: number): CoxeterGroupElement | null {
@@ -309,6 +431,73 @@ export class CoxeterGroup {
         }
 
         return current
+    }
+
+    static #setPositions(elements: CoxeterGroupElement[][], matrix: CoxeterMatrix): boolean {
+        switch (matrix.dimension) {
+            case 2:
+                return CoxeterGroup.#setPositions2(elements, matrix)
+
+                case 3:
+                return CoxeterGroup.#setPositions3(elements, matrix)
+            default:
+                return false
+        }
+    }
+
+    static #setPositions2(elements: CoxeterGroupElement[][], matrix: CoxeterMatrix): boolean {
+        if (matrix.dimension !== 2) {
+            return false
+        }
+        
+        const theta = Math.PI / matrix.get(0, 1) * 0.5
+        const cosP = Math.cos(theta)
+        const sinP = Math.sin(theta)
+        const origin: Vector = [0, 1]
+        const mirrors = [
+            new Mirror([cosP, sinP]),
+            new Mirror([cosP, -sinP]),
+        ]
+
+        for (const rank of elements) {
+            for (const element of rank) {
+                element.calcPosition(origin, mirrors)
+            }
+        }
+
+        return true
+    }
+
+    static #setPositions3(elements: CoxeterGroupElement[][], matrix: CoxeterMatrix): boolean {
+        if (matrix.dimension !== 3) {
+            return false
+        }
+
+        const cosP = Math.cos(Math.PI / matrix.get(0, 1))
+        const cosQ = Math.cos(Math.PI / matrix.get(1, 2))
+        const cos2P = cosP * cosP
+        const cos2Q = cosQ * cosQ
+        const zs = 1 - cos2P - cos2Q
+        if (zs <= 0.0001) {
+            return false
+        }
+
+        const z = Math.sqrt(zs)
+        const mirrors = [
+            new Mirror([1, 0, 0]),
+            new Mirror([-cosP, -cosQ, z]),
+            new Mirror([0, 1, 0]),
+        ]
+        let origin = [z, z, 1 + cosP + cosQ]
+        origin = Vectors.mul(origin, 1 / Math.sqrt(Vectors.dot(origin, origin)))
+
+        for (const rank of elements) {
+            for (const element of rank) {
+                element.calcPosition(origin, mirrors)
+            }
+        }
+
+        return true
     }
 
     static parse(text: string): CoxeterGroup {
@@ -384,6 +573,14 @@ export class CoxeterSubgroup {
         // 列挙中に "1" が伝搬するのを防ぐため、最後に名前を入れ替え
         identity.representation = "1"
     }
+
+    get hasPosition(): boolean {
+        return this.parent.hasPosition
+    }
+
+    get isLimitOver(): boolean {
+        return this.parent.isLimitOver
+    }
 }
 
 export interface IRenderableGroupElement {
@@ -391,12 +588,15 @@ export interface IRenderableGroupElement {
     readonly index: number
     readonly period: number
     readonly neighbors: IRenderableGroupElement[]
+    readonly position: Vector
     mul(other: IRenderableGroupElement): IRenderableGroupElement
 }
 
 export interface IRenderableGroup {
-    ranks: IRenderableGroupElement[][]
+    readonly ranks: IRenderableGroupElement[][]
     readonly order: number
+    readonly hasPosition: boolean
+    readonly isLimitOver: boolean
 }
 
 let coxeterGroup: IRenderableGroup | null = null
@@ -422,83 +622,98 @@ class CoxeterGroupRenderer {
         const padding = 30
 
         // 各要素の座標を計算
-        const positions = new Map<IRenderableGroupElement, { x: number; y: number }>()
-        let maxWidth = 0
-        for (let rankIndex = 0; rankIndex < coxeterGroup.ranks.length; rankIndex++) {
-            const rankElements = coxeterGroup.ranks[rankIndex]!
-            const rankWidth = (rankElements.length - 1) * horizontalSpacing
-            maxWidth = Math.max(maxWidth, rankWidth)
-            const startX = -rankWidth / 2
-            const y = rankIndex * verticalSpacing
+        const positions = new Map<IRenderableGroupElement, { x: number; y: number; z: number }>()
+        let viewWidth = 0
+        let viewHeight = 0
 
-            for (let i = 0; i < rankElements.length; i++) {
-                positions.set(rankElements[i]!, { x: startX + i * horizontalSpacing, y })
+        if (coxeterGroup.hasPosition) {
+            viewWidth = positionCenter * 2
+            viewHeight = positionCenter * 2
+            setCenter(positionCenter, positionCenter)
+
+            for (const rank of coxeterGroup.ranks) {
+                for (const element of rank) {
+                    positions.set(element, Vectors.project(element.position))
+                }
             }
+        } else {
+            let maxWidth = 0
+            for (let rankIndex = 0; rankIndex < coxeterGroup.ranks.length; rankIndex++) {
+                const rankElements = coxeterGroup.ranks[rankIndex]!
+                const rankWidth = (rankElements.length - 1) * horizontalSpacing
+                maxWidth = Math.max(maxWidth, rankWidth)
+                const startX = -rankWidth / 2
+                const y = rankIndex * verticalSpacing
+    
+                for (let i = 0; i < rankElements.length; i++) {
+                    positions.set(rankElements[i]!, { x: startX + i * horizontalSpacing, y, z: 1 })
+                }
+            }
+    
+            // viewBoxのサイズを決定
+            viewWidth = maxWidth + padding * 2 + circleRadius * 2
+            viewHeight = (coxeterGroup.ranks.length - 1) * verticalSpacing + padding * 2 + circleRadius * 2
+            setCenter(viewWidth / 2, padding + circleRadius)
         }
 
-        // viewBoxのサイズを決定
-        const viewWidth = maxWidth + padding * 2 + circleRadius * 2
-        const viewHeight = (coxeterGroup.ranks.length - 1) * verticalSpacing + padding * 2 + circleRadius * 2
-
-        setCenter(viewWidth / 2, padding + circleRadius)
         clearChildren(this.lineGroup, this.elementGroup)
         // 既に線を描画したインデックス (min * 65536 + max)
         // (オブジェクトは参照比較されてしまうため、数値に変換する)
         const renderedIndexSet = new Set<number>()
+        const allElements = coxeterGroup.ranks.flat()
+        allElements.sort((e1, e2) => e1.index - e2.index)
 
         // 線を描画
-        for (const rankElements of coxeterGroup.ranks) {
-            for (const element of rankElements) {
-                const fromPos = positions.get(element)!
-                for (let i = 0; i < element.neighbors.length; i++) {
-                    const neighbor = element.neighbors[i]
-                    if (!neighbor) {
-                        continue
-                    }
-                    const lineIndex = element.index > neighbor.index
-                        ? element.index + neighbor.index * 65536
-                        : element.index * 65536 + neighbor.index
-                    if (renderedIndexSet.has(lineIndex)) {
-                        continue
-                    }
-                    renderedIndexSet.add(lineIndex)
-                    const toPos = positions.get(neighbor)!
-                    const color = generatorColors[i % generatorColors.length] ?? "#000000"
-                    const line = createLine(fromPos.x, fromPos.y, toPos.x, toPos.y, color, "4")
-                    this.lineGroup.appendChild(line)
+        for (const element of allElements) {
+            const fromPos = positions.get(element)!
+            for (let i = 0; i < element.neighbors.length; i++) {
+                const neighbor = element.neighbors[i]
+                if (!neighbor) {
+                    continue
                 }
+                const lineIndex = element.index > neighbor.index
+                    ? element.index + neighbor.index * 65536
+                    : element.index * 65536 + neighbor.index
+                if (renderedIndexSet.has(lineIndex)) {
+                    continue
+                }
+                renderedIndexSet.add(lineIndex)
+                const toPos = positions.get(neighbor)!
+                const color = generatorColors[i % generatorColors.length] ?? "#000000"
+                const line = createLine(fromPos.x, fromPos.y, toPos.x, toPos.y, color, "4")
+                const backLine = createLine(fromPos.x, fromPos.y, toPos.x, toPos.y, "#FFFFFF", "8")
+                this.lineGroup.prepend(line)
+                this.lineGroup.prepend(backLine)
             }
         }
 
         // 丸を描画
-        for (const rankElements of coxeterGroup.ranks) {
-            for (const element of rankElements) {
-                const pos = positions.get(element)!
-                const fillColor = element.rank === 0 ? "#000000" : "#FFFFFF"
-                const circle = createCircle(pos.x, pos.y, circleRadius, fillColor, "#000000", "2")
+        for (const element of allElements) {
+            const pos = positions.get(element)!
+            const fillColor = element.rank === 0 ? "#000000" : "#FFFFFF"
+            const circle = createCircle(pos.x, pos.y, circleRadius * pos.z, fillColor, "#000000", "2")
 
-                // クリックによる選択機能
-                if (element.rank !== 0) {
-                    circle.style.cursor = "pointer"
-                    circle.addEventListener("click", () => {
-                        const index = selectedElement.indexOf(element)
-                        if (index === -1) {
-                            // 選択
-                            selectedElement.push(element)
-                            circle.setAttribute("fill", "#FFFF00")
-                        } else {
-                            // 選択解除
-                            selectedElement.splice(index, 1)
-                            circle.setAttribute("fill", "#FFFFFF")
-                        }
-                    })
-                }
-
-                this.elementGroup.appendChild(circle)
+            // クリックによる選択機能
+            if (element.rank !== 0) {
+                circle.style.cursor = "pointer"
+                circle.addEventListener("click", () => {
+                    const index = selectedElement.indexOf(element)
+                    if (index === -1) {
+                        // 選択
+                        selectedElement.push(element)
+                        circle.setAttribute("fill", "#FF00FF")
+                    } else {
+                        // 選択解除
+                        selectedElement.splice(index, 1)
+                        circle.setAttribute("fill", "#FFFFFF")
+                    }
+                })
             }
+
+            this.elementGroup.prepend(circle)
         }
 
-        this.orderText.textContent = `order = ${coxeterGroup.order}`
+        this.orderText.textContent = `order = ${coxeterGroup.isLimitOver ? "∞" : coxeterGroup.order}`
         this.previewFigure.setAttribute("viewBox", `0 0 ${viewWidth} ${viewHeight}`)
     }
 }
