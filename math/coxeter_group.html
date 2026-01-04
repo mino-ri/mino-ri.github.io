@@ -37,12 +37,18 @@
           <g id="line_group"></g>
           <rect id="fade_rect" x="0" y="0" width="1920" height="1920" fill="#FFFFFF" fill-opacity="0" />
           <g id="element_group"></g>
-          <text id="order_text" x="0" y="0" fill="#000000" dominant-baseline="hanging"></text>
+          <text id="order_text" x="0" y="5" fill="#000000" dominant-baseline="hanging"></text>
         </svg>
       </div>
       <div class="editor-control">
         <div>
           <textarea id="textarea_editor" name="textarea_editor" rows="1" placeholder="3 2 2">3 2 2</textarea>
+        </div>
+        <div class="control-list">
+            <label>
+              <input type="checkbox" id="checkbox_nd" name="checkbox_nd" checked />
+              <span data-ls-en=" display in n-D if possible">可能なら立体的に表示</span>
+            </label>
         </div>
         <ul class="link-list">
           <li><input id="button_render" type="button" value="描画" data-ls-value-en="render" /></li>
