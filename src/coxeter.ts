@@ -785,7 +785,7 @@ class CoxeterGroupRenderer {
 }
 
 window.addEventListener("load", () => {
-    const textEditor = document.getElementById("textarea_editor") as HTMLTextAreaElement
+    const textEditor = document.getElementById("textarea_editor") as HTMLInputElement
     const buttonRender = document.getElementById("button_render") as HTMLInputElement
     const checkNd = document.getElementById("checkbox_nd") as HTMLInputElement
     const buttonSubgroup = document.getElementById("button_subgroup") as HTMLInputElement
