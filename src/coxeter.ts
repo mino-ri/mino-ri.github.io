@@ -5,7 +5,7 @@ const generatorColors = ["#DF4121", "#339564", "#217BDF", "#C3B827"]
 type Vector2 = [x: number, y: number]
 type Vector = number[]
 const directionMap = new Map<number, Vector2[]>([[2, [[1, 0], [0, 1]]]])
-const positionCenter = 200
+const positionCenter = 250
 
 class Vectors {
     static dot(a: Vector, b: Vector): number {
@@ -41,6 +41,10 @@ class Vectors {
             result[i] = a[i]! - b[i]!
         }
         return result
+    }
+
+    static normalize(v: Vector): Vector {
+        return Vectors.mul(v, 1 / Math.sqrt(Vectors.dot(v, v)))
     }
 
     static project(v: Vector): { x: number; y: number; z: number } {
@@ -205,7 +209,7 @@ export class CoxeterMatrix {
     }
 
     static create4DDemicube(a: number, b: number, c: number): CoxeterMatrix {
-        return new CoxeterMatrix([a, b, 2, c, 2, 2])
+        return new CoxeterMatrix([a, 2, b, 2, c, 2])
     }
 }
 
@@ -438,8 +442,11 @@ export class CoxeterGroup {
             case 2:
                 return CoxeterGroup.#setPositions2(elements, matrix)
 
-                case 3:
+            case 3:
                 return CoxeterGroup.#setPositions3(elements, matrix)
+
+            case 4:
+                return CoxeterGroup.#setPositions4(elements, matrix)
             default:
                 return false
         }
@@ -488,8 +495,67 @@ export class CoxeterGroup {
             new Mirror([-cosP, -cosQ, z]),
             new Mirror([0, 1, 0]),
         ]
-        let origin = [z, z, 1 + cosP + cosQ]
-        origin = Vectors.mul(origin, 1 / Math.sqrt(Vectors.dot(origin, origin)))
+        const origin = Vectors.normalize([z, z, 1 + cosP + cosQ])
+        for (const rank of elements) {
+            for (const element of rank) {
+                element.calcPosition(origin, mirrors)
+            }
+        }
+
+        return true
+    }
+
+    static #setPositions4(elements: CoxeterGroupElement[][], matrix: CoxeterMatrix): boolean {
+        if (matrix.dimension !== 4) {
+            return false
+        }
+
+        const thetaP = Math.PI / matrix.get(0, 1)
+        const thetaQ = Math.PI / matrix.get(1, 2)
+        const cosP = Math.cos(thetaP)
+        const cosQ = Math.cos(thetaQ)
+        const s = matrix.get(1, 3)
+        const mirrors = [
+            new Mirror([1, 0, 0, 0]),
+            null!,
+            null!,
+            new Mirror([0, 1, 0, 0]),
+        ]
+        let origin: Vector = dummyPosition
+        if (s >= 3) {
+            // この状況では入力制限により R = 2 が確定
+            const cosS = Math.cos(Math.PI / s)
+            const ws = 1 - cosP * cosP - cosQ * cosQ - cosS * cosS
+            if (ws <= 0.0001) {
+                return false
+            }
+            const w = Math.sqrt(ws)
+            mirrors[1] = new Mirror([-cosP, -cosS, -cosQ, w])
+            mirrors[2] = new Mirror([0, 0, 1, 0])
+            origin = Vectors.normalize([w, w, w, 1 + cosP + cosQ + cosS])
+        } else {
+            const thetaR = Math.PI / matrix.get(2, 3)
+            const sinP = Math.sin(thetaP)
+            const sinR = Math.sin(thetaR)
+            const cosR = Math.cos(thetaR)
+            const z = (1 - cosQ / sinP / sinR) / 2
+            if (z <= 0.0001) {
+                return false
+            }
+            const cosZ = Math.sqrt(z)
+            const sinZ = Math.sqrt(1 - z)
+            mirrors[1] = new Mirror([-cosP, 0, sinP * sinZ, sinP * cosZ])
+            mirrors[2] = new Mirror([0, -cosR, -sinR * sinZ, sinR * cosZ])
+            const t = 2 * sinZ * cosZ
+            const tP = (1 + cosP) / sinP
+            const tR = (1 + cosR) / sinR
+            origin = Vectors.normalize([
+                t,
+                t,
+                sinZ * (tP - tR),
+                cosZ * (tP + tR),
+            ])
+        }
 
         for (const rank of elements) {
             for (const element of rank) {
@@ -614,7 +680,7 @@ class CoxeterGroupRenderer {
         clearChildren(this.lineGroup, this.elementGroup)
     }
 
-    render<TGroup extends IRenderableGroup>(coxeterGroup: TGroup) {
+    render<TGroup extends IRenderableGroup>(coxeterGroup: TGroup, displayNd: boolean) {
         // レイアウト定数
         const circleRadius = 6
         const horizontalSpacing = 40
@@ -626,7 +692,7 @@ class CoxeterGroupRenderer {
         let viewWidth = 0
         let viewHeight = 0
 
-        if (coxeterGroup.hasPosition) {
+        if (displayNd && coxeterGroup.hasPosition) {
             viewWidth = positionCenter * 2
             viewHeight = positionCenter * 2
             setCenter(positionCenter, positionCenter)
@@ -721,28 +787,26 @@ class CoxeterGroupRenderer {
 window.addEventListener("load", () => {
     const textEditor = document.getElementById("textarea_editor") as HTMLTextAreaElement
     const buttonRender = document.getElementById("button_render") as HTMLInputElement
+    const checkNd = document.getElementById("checkbox_nd") as HTMLInputElement
     const buttonSubgroup = document.getElementById("button_subgroup") as HTMLInputElement
     const previewFigure = document.getElementById("preview_figure") as unknown as SVGSVGElement
     const lineGroup = document.getElementById("line_group") as unknown as SVGGElement
     const elementGroup = document.getElementById("element_group") as unknown as SVGGElement
     const oerderText = document.getElementById("order_text") as unknown as SVGTextElement
-    // const fadeRect = document.getElementById("fade_rect") as unknown as SVGRectElement
     const renderer = new CoxeterGroupRenderer(previewFigure, lineGroup, elementGroup, oerderText)
 
     buttonRender.addEventListener("click", () => {
-        // fadeRect.setAttribute("fill-opacity", "0")
         coxeterGroup = CoxeterGroup.parse(textEditor.value)
         selectedElement.length = 0
-        renderer.render(coxeterGroup)
+        renderer.render(coxeterGroup, checkNd.checked)
     })
     buttonSubgroup.addEventListener("click", () => {
-        // fadeRect.setAttribute("fill-opacity", "0.95")
         if (!coxeterGroup || selectedElement.length < 1) {
             return
         }
 
         coxeterGroup = new CoxeterSubgroup(coxeterGroup, [...selectedElement])
         selectedElement.length = 0
-        renderer.render(coxeterGroup)
+        renderer.render(coxeterGroup, checkNd.checked)
     })
 })
