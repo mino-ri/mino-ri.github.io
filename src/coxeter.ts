@@ -552,8 +552,8 @@ export class CoxeterGroup {
             origin = Vectors.normalize([
                 t,
                 t,
-                sinZ * (tP - tR),
-                cosZ * (tP + tR),
+                cosZ * (tP - tR),
+                sinZ * (tP + tR),
             ])
         }
 
