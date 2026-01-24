@@ -269,8 +269,6 @@ export class CoxeterGroupElement {
             const mirror = mirrors[code - Representation.beginCodePoint]!
             this.position = mirror.reflection(this.position)
         }
-
-        console.log(`${this.representation}: ${this.position}`)
     }
 
     toString(): string {
@@ -366,7 +364,6 @@ export class CoxeterGroup {
 
         while (true) {
             const nextRank = this.ranks.length
-            console.log(`探索: rank${nextRank}`)
             const sourceElements = this.ranks[nextRank - 1]!
             const targetElements: CoxeterGroupElement[] = []
             for (const element of sourceElements) {
@@ -404,7 +401,6 @@ export class CoxeterGroup {
                     element.neighbors[g] = targetElement
                 }
             }
-            console.log(`追加要素数: ${targetElements.length}`)
             this.ranks.push(targetElements)
             order += targetElements.length
             if (order >= maxOrder || nextRank >= maxIncrRank && targetElements.length >= this.ranks[this.ranks.length - 2]!.length) {
@@ -606,7 +602,6 @@ export class CoxeterSubgroup {
         while (elementAdded) {
             elementAdded = false
             const nextRank = this.ranks.length
-            console.log(`探索: rank${nextRank}`)
             const sourceElements = this.ranks[nextRank - 1]!
             const targetElements: SubgroupElement[] = []
             for (const element of sourceElements) {
@@ -632,7 +627,6 @@ export class CoxeterSubgroup {
                 }
             }
 
-            console.log(`追加要素数: ${targetElements.length}`)
             this.ranks.push(targetElements)
         }
 
@@ -655,6 +649,7 @@ export interface IRenderableGroupElement {
     readonly period: number
     readonly neighbors: IRenderableGroupElement[]
     readonly position: Vector
+    readonly representation: string
     mul(other: IRenderableGroupElement): IRenderableGroupElement
 }
 
@@ -697,8 +692,14 @@ class CoxeterGroupRenderer {
             viewHeight = positionCenter * 2
             setCenter(positionCenter, positionCenter)
 
+            const unit = coxeterGroup.ranks[0]![0]!
+            console.log(`${unit.representation} : [${unit.position}]`)
             for (const rank of coxeterGroup.ranks) {
                 for (const element of rank) {
+                    if (element.rank % 2 === 1 && element.period === 2) {
+                        const position = Vectors.normalize(Vectors.sub(element.position, unit.position))
+                        console.log(`${element.representation} : [${position}]`)
+                    }
                     positions.set(element, Vectors.project(element.position))
                 }
             }
