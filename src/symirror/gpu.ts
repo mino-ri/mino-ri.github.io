@@ -1,4 +1,5 @@
 /// <reference types="@webgpu/types" />
+import { Vector, Vectors } from "./vector.js"
 
 // 頂点シェーダー: MVP 変換を適用
 // フラグメントシェーダー: flat shading
@@ -308,59 +309,97 @@ class PolyhedronRendererImpl implements PolyhedronRenderer {
     }
 }
 
+const crosses: { value: Vector | null, source: Vector }[] = [
+    { value: null, source: [0, 0, 0] },
+    { value: null, source: [0, 0, 0] },
+    { value: null, source: [0, 0, 0] },
+    { value: null, source: [0, 0, 0] },
+    { value: null, source: [0, 0, 0] },
+    { value: null, source: [0, 0, 0] },
+    { value: null, source: [0, 0, 0] },
+    { value: null, source: [0, 0, 0] },
+    { value: null, source: [0, 0, 0] },
+    { value: null, source: [0, 0, 0] },
+    { value: null, source: [0, 0, 0] },
+    { value: null, source: [0, 0, 0] },
+    { value: null, source: [0, 0, 0] },
+    { value: null, source: [0, 0, 0] },
+    { value: null, source: [0, 0, 0] },
+    { value: null, source: [0, 0, 0] },
+]
+
 // 多面体データから描画用メッシュを生成するユーティリティ
 export function buildPolyhedronMesh(
     vertexes: { [n: number]: number; length: number }[],
     faces: { ColorIndex: number; VertexIndexes: number[] }[],
 ): PolyhedronMesh {
     const triangles: number[] = []
+    const cv = [0, 0, 0]
+    const nv = [0, 0, 0]
+    const mv = [0, 0, 0]
 
     for (const face of faces) {
         const indexes = face.VertexIndexes
         const colorIndex = Math.min(face.ColorIndex, faceColors.length - 1)
         const [r, g, b] = faceColors[colorIndex]!
+        cv[0]! = 0
+        cv[1]! = 0
+        cv[2]! = 0
 
         // 多角形の重心を計算
-        let cx = 0, cy = 0, cz = 0
         for (const idx of indexes) {
             const v = vertexes[idx]!
-            cx += v[0]!
-            cy += v[1]!
-            cz += v[2]!
+            Vectors.add(cv, v, cv)
         }
-        cx /= indexes.length
-        cy /= indexes.length
-        cz /= indexes.length
+        Vectors.div(cv, indexes.length, cv)
 
-        // 各辺と重心で三角形を形成
+        // crosses に、各辺の左右の辺の交点を格納
         for (let i = 0; i < indexes.length; i++) {
             const v0 = vertexes[indexes[i]!]!
             const v1 = vertexes[indexes[(i + 1) % indexes.length]!]!
+            const crossPoint = Vectors.getCrossPoint(
+                vertexes[indexes[(i + indexes.length - 1) % indexes.length]!]!,
+                v0,
+                v1,
+                vertexes[indexes[(i + 2) % indexes.length]!]!,
+                crosses[i]!.source,
+            )
 
-            // 三角形: v0, v1, centroid
-            // 法線を計算 (v0 -> v1 と v0 -> centroid の外積)
-            const e1x = v1[0]! - v0[0]!
-            const e1y = v1[1]! - v0[1]!
-            const e1z = v1[2]! - v0[2]!
-            const e2x = cx - v0[0]!
-            const e2y = cy - v0[1]!
-            const e2z = cz - v0[2]!
-
-            let nx = e1y * e2z - e1z * e2y
-            let ny = e1z * e2x - e1x * e2z
-            let nz = e1x * e2y - e1y * e2x
-            const nl = Math.sqrt(nx * nx + ny * ny + nz * nz)
-            if (nl > 0) {
-                nx /= nl
-                ny /= nl
-                nz /= nl
+            if (crossPoint !== null) {
+                const maxDistance = Vectors.middleDistanceSquared(v0, v1, cv)
+                const distance1 = Vectors.middleDistanceSquared(v0, v1, crossPoint)
+                const distance2 = Vectors.distanceSquared(crossPoint, cv)
+                if (distance1 <= maxDistance && distance2 <= maxDistance) {
+                    crosses[i]!.value = crossPoint
+                }
+            } else {
+                crosses[i]!.value = null
             }
+        }
+
+        // 各辺と重心で三角形を形成
+        for (let i = 0; i < indexes.length; i++) {
+            const beforeIndex = (i + indexes.length - 1) % indexes.length
+            const afterIndex = (i + 1) % indexes.length
+            const v0 = crosses[i]!.value ?? cv
+            const v1 = crosses[beforeIndex]!.value ?? vertexes[indexes[i]!]!
+            const v2 = crosses[afterIndex]!.value ?? vertexes[indexes[afterIndex]!]!
+
+            // 三角形: v0, v1, v2
+            // 法線を計算 (v0 -> v1 と v0 -> v2 の外積)
+            Vectors.sub(v1, v0, nv)
+            Vectors.sub(v2, v0, mv)
+            Vectors.cross(nv, mv, nv)
+            Vectors.normalizeSelf(nv)
+            const nx = nv[0]!
+            const ny = nv[1]!
+            const nz = nv[2]!
 
             // 頂点データ追加: position, normal, color
             triangles.push(
                 v0[0]!, v0[1]!, v0[2]!, nx, ny, nz, r, g, b,
                 v1[0]!, v1[1]!, v1[2]!, nx, ny, nz, r, g, b,
-                cx, cy, cz, nx, ny, nz, r, g, b,
+                v2[0]!, v2[1]!, v2[2]!, nx, ny, nz, r, g, b,
             )
         }
     }

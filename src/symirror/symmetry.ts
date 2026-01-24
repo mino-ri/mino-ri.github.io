@@ -46,12 +46,14 @@ export type PolyhedronFace = {
 }
 
 export class NormalPolyhedron {
+    origin: Vector
     vertexes: Vector[]
     lineIndexes: [number, number][]
     faces: PolyhedronFace[]
 
     constructor(public symmetryGroup: SymmetryGroup3) {
         this.vertexes = new Array<Vector>(symmetryGroup.coxeterGroup.order)
+        this.origin = symmetryGroup.origin
         for (let i = 0; i < symmetryGroup.transforms.length; i++) {
             this.vertexes[i] = Quaternions.transform(symmetryGroup.origin, symmetryGroup.transforms[i]!)
         }
@@ -100,6 +102,13 @@ export class NormalPolyhedron {
         
         this.lineIndexes = lines
         this.faces = faces
+    }
+
+    setOrigin(newOrigin: Vector): void {
+        this.origin = newOrigin
+        for (let i = 0; i < this.symmetryGroup.transforms.length; i++) {
+            this.vertexes[i] = Quaternions.transform(newOrigin, this.symmetryGroup.transforms[i]!)
+        }
     }
 }
 

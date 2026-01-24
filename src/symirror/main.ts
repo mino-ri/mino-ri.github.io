@@ -3,6 +3,7 @@ import { CoxeterMatrix } from "./coxeter_matrix.js"
 import { FiniteCoxeterGroup } from "./coxeter_group.js"
 import { SymmetryGroup3, NormalPolyhedron } from "./symmetry.js"
 import { initGpu, buildPolyhedronMesh, quaternionToMatrix, type GpuContext } from "./gpu.js"
+import { type Vector } from "./vector.js"
 
 // select の value からコクセター行列を生成
 function parseCoxeterGroup(value: string): CoxeterMatrix {
@@ -72,6 +73,107 @@ class RotationState {
     }
 }
 
+// origin 操作コントローラ
+class OriginController {
+    private isDragging = false
+
+    constructor(
+        private svg: SVGSVGElement,
+        private originPoint: SVGCircleElement,
+        private onOriginChange: (origin: Vector) => void,
+    ) {
+        this.setupEventListeners()
+    }
+
+    private setupEventListeners(): void {
+        this.svg.addEventListener("mousedown", this.onMouseDown.bind(this))
+        document.addEventListener("mousemove", this.onMouseMove.bind(this))
+        document.addEventListener("mouseup", this.onMouseUp.bind(this))
+
+        this.svg.addEventListener("touchstart", this.onTouchStart.bind(this))
+        document.addEventListener("touchmove", this.onTouchMove.bind(this), { passive: false })
+        document.addEventListener("touchend", this.onTouchEnd.bind(this))
+    }
+
+    private getPositionFromEvent(clientX: number, clientY: number): { x: number; y: number } | null {
+        const rect = this.svg.getBoundingClientRect()
+        const x = ((clientX - rect.left) / rect.width) * 2.4 - 1.2
+        const y = ((clientY - rect.top) / rect.height) * 2.4 - 1.2
+
+        // 半径1の円内に制限
+        const r = Math.sqrt(x * x + y * y)
+        if (r <= 1) {
+            return { x, y }
+        } else {
+            return { x: x / r, y: y / r }
+        }
+    }
+
+    private updateOrigin(x: number, y: number): void {
+        this.originPoint.setAttribute("cx", x.toString())
+        this.originPoint.setAttribute("cy", y.toString())
+
+        // UI座標から3Dベクトルへ変換
+        const r = Math.sqrt(x * x + y * y)
+        const sinVal = Math.sin(0.5 * Math.PI * r)
+        const scale = r > 0 ? sinVal / r : 0
+        const xPrime = x * scale
+        const yPrime = y * scale
+        const zPrime = Math.sqrt(Math.max(0, 1 - xPrime * xPrime - yPrime * yPrime))
+
+        this.onOriginChange([xPrime, yPrime, zPrime])
+    }
+
+    private onMouseDown(e: MouseEvent): void {
+        this.isDragging = true
+        const pos = this.getPositionFromEvent(e.clientX, e.clientY)
+        if (pos) {
+            this.updateOrigin(pos.x, pos.y)
+        }
+        e.preventDefault()
+    }
+
+    private onMouseMove(e: MouseEvent): void {
+        if (!this.isDragging) return
+        const pos = this.getPositionFromEvent(e.clientX, e.clientY)
+        if (pos) {
+            this.updateOrigin(pos.x, pos.y)
+        }
+    }
+
+    private onMouseUp(): void {
+        this.isDragging = false
+    }
+
+    private onTouchStart(e: TouchEvent): void {
+        if (e.touches.length === 1) {
+            this.isDragging = true
+            const pos = this.getPositionFromEvent(e.touches[0]!.clientX, e.touches[0]!.clientY)
+            if (pos) {
+                this.updateOrigin(pos.x, pos.y)
+            }
+            e.preventDefault()
+        }
+    }
+
+    private onTouchMove(e: TouchEvent): void {
+        if (!this.isDragging || e.touches.length !== 1) return
+        const pos = this.getPositionFromEvent(e.touches[0]!.clientX, e.touches[0]!.clientY)
+        if (pos) {
+            this.updateOrigin(pos.x, pos.y)
+        }
+        e.preventDefault()
+    }
+
+    private onTouchEnd(): void {
+        this.isDragging = false
+    }
+
+    reset(): void {
+        this.updateOrigin(0, 0)
+    }
+}
+
 // メインアプリケーションクラス
 class PolyhedronViewer {
     private renderer
@@ -81,6 +183,7 @@ class PolyhedronViewer {
     private lastMouseY = 0
     private animationFrameId: number | null = null
     private lastTime = 0
+    private polyhedron: NormalPolyhedron | null = null
     private autoRotate = false
 
     constructor(
@@ -157,9 +260,16 @@ class PolyhedronViewer {
         const matrix = parseCoxeterGroup(selectValue)
         const group = new FiniteCoxeterGroup(matrix)
         const symmetry = new SymmetryGroup3(group)
-        const polyhedron = new NormalPolyhedron(symmetry)
+        this.polyhedron = new NormalPolyhedron(symmetry)
 
-        const mesh = buildPolyhedronMesh(polyhedron.vertexes, polyhedron.faces)
+        const mesh = buildPolyhedronMesh(this.polyhedron.vertexes, this.polyhedron.faces)
+        this.renderer.updateMesh(mesh)
+    }
+
+    setOrigin(origin: Vector): void {
+        if (!this.polyhedron) return
+        this.polyhedron.setOrigin(origin)
+        const mesh = buildPolyhedronMesh(this.polyhedron.vertexes, this.polyhedron.faces)
         this.renderer.updateMesh(mesh)
     }
 
@@ -206,6 +316,8 @@ window.addEventListener("load", async () => {
     const canvas = document.getElementById("preview_figure") as HTMLCanvasElement | null
     const select = document.getElementById("select_coxeter_group") as HTMLSelectElement | null
     const autoRotateCheckbox = document.getElementById("checkbox_auto_rotate") as HTMLInputElement | null
+    const originControlSvg = document.getElementById("origin_control") as unknown as SVGSVGElement | null
+    const originPoint = document.getElementById("origin_point") as unknown as SVGCircleElement | null
 
     if (!canvas || !select) {
         console.error("Required elements not found")
@@ -228,8 +340,19 @@ window.addEventListener("load", async () => {
     const viewer = new PolyhedronViewer(canvas, gpuContext)
     viewer.setPolyhedron(select.value)
 
+    // origin コントローラの初期化
+    let originController: OriginController | null = null
+    if (originControlSvg && originPoint) {
+        originController = new OriginController(
+            originControlSvg,
+            originPoint,
+            (origin) => viewer.setOrigin(origin),
+        )
+    }
+
     select.addEventListener("change", () => {
         viewer.setPolyhedron(select.value)
+        originController?.reset()
     })
 
     if (autoRotateCheckbox) {
