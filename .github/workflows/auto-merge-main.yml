@@ -35,6 +35,7 @@ jobs:
           cd src
           npm install typescript
           npm install terser
+          npm install @webgpu/types
           npx tsc
           cd ../scripts
           for f in $(ls *.js); do
@@ -45,7 +46,7 @@ jobs:
 
       - name: Commit changes
         run: |
-          git add ./scripts/*.*
+          git add ./scripts/**/*.*
           git commit -m "Auto TypeScript Build" || true
           git push origin build
 
