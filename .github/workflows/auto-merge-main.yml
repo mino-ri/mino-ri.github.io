@@ -46,7 +46,7 @@ jobs:
 
       - name: Commit changes
         run: |
-          git add ./scripts/*.*
+          git add ./scripts/**/*.*
           git commit -m "Auto TypeScript Build" || true
           git push origin build
 
