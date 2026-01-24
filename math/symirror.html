@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Type" content="text/html" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="author" content="mino-ri" />
+  <meta name="copyright" content="copyright(C) 2025 mino-ri All rights reserved." />
+  <meta name="viewport" content="width=device-width">
+  <link rel="stylesheet" type="text/css" href="./../styles/color_standard.css" />
+  <link rel="stylesheet" type="text/css" href="./../styles/style.css" />
+  <script type="module" src="./../scripts/symirror/main.js"></script>
+  <script type="module" src="./../scripts/language_switcher.js"></script>
+  <title>Symirror3.web</title>
+</head>
+
+<body>
+  <header>
+    <a class="back" href="../">back</a>
+    <h1>Symirror3.web (α)</h1>
+    <nav class="language-switcher">
+      <label>
+        <input type="radio" name="language" value="ja" checked />
+        JP
+      </label>
+      <label>
+        <input type="radio" name="language" value="en" />
+        EN
+      </label>
+    </nav>
+  </header>
+  <section>
+    <article class="editor-container">
+      <div class="editor-preview" id="editor_preview">
+        <canvas id="preview_figure"></canvas>
+      </div>
+      <div class="editor-control">
+        <div>
+          <select id="select_coxeter_group" name="select_coxeter_group">
+            <option value="p3_3">3 3</option>
+            <option value="p3_4">3 4</option>
+            <option value="p3_5">3 5</option>
+            <option value="p2_3">2 3</option>
+            <option value="p2_4">2 4</option>
+            <option value="p2_5">2 5</option>
+            <option value="p2_6">2 6</option>
+            <option value="p2_7">2 7</option>
+          </select>
+        </div>
+        <div>
+          <label>
+            <input type="checkbox" id="checkbox_auto_rotate" name="checkbox_auto_rotate" />
+            <span data-ls-en="auto rotation">自動回転</span>
+          </label>
+        </div>
+        <div>
+          <svg id="origin_control" width="360" height="360" viewBox="-1.2 -1.2 2.4 2.4"
+            style="cursor: crosshair; border: 1px solid #ccc; border-radius: 50%;">
+            <circle cx="0" cy="0" r="1" fill="#f8f8f8" stroke="#888" stroke-width="0.02" />
+            <circle id="origin_point" cx="0" cy="0" r="0.03" fill="#e22" stroke="#800" stroke-width="0.02" />
+          </svg>
+        </div>
+      </div>
+    </article>
+  </section>
+  <footer>
+    copyright&copy; 2026 mino-ri All rights reserved.
+  </footer>
+</body>
+
+</html>
