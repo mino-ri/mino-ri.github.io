@@ -365,15 +365,14 @@ export function buildPolyhedronMesh(
                 crosses[i]!.source,
             )
 
+            crosses[i]!.value = null
             if (crossPoint !== null) {
                 const maxDistance = Vectors.middleDistanceSquared(v0, v1, cv)
                 const distance1 = Vectors.middleDistanceSquared(v0, v1, crossPoint)
                 const distance2 = Vectors.distanceSquared(crossPoint, cv)
-                if (distance1 <= maxDistance && distance2 <= maxDistance) {
+                if (distance1 < maxDistance && distance2 < maxDistance) {
                     crosses[i]!.value = crossPoint
                 }
-            } else {
-                crosses[i]!.value = null
             }
         }
 
