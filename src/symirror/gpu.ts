@@ -30,21 +30,21 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
     let worldPos = uniforms.modelMatrix * vec4<f32>(input.position, 1.0);
     output.worldPos = worldPos;
     output.position = uniforms.viewProjectionMatrix * worldPos;
-    output.worldNormal = normalize((uniforms.modelMatrix * vec4<f32>(input.normal, 0.0)).xyz);
+    output.worldNormal = (uniforms.modelMatrix * vec4<f32>(input.normal, 0.0)).xyz;
     output.color = input.color;
     return output;
 }
 
 @fragment
-fn fragmentMain(input: VertexOutput) -> @location(0) vec4<f32> {
-    let lightDir = normalize(input.worldPos.xyz - vec3<f32>(-0.81984437, 2.8232124, 4.0444193));
+fn fragmentMain(input: VertexOutput, @builtin(front_facing) isFront : bool) -> @location(0) vec4<f32> {
+    let lightDir = normalize(vec3<f32>(-1.5085136, 5.1947107, 7.4417315) - input.worldPos.xyz);
     let sight = vec3<f32>(0.0, 0.0, -5.0);
-    let cameraDir = normalize(input.worldPos.xyz - sight);
+    let cameraDir = normalize(sight - input.worldPos.xyz);
     let halfVector = normalize(lightDir + cameraDir);
-    let normal = input.worldNormal * select(-1.0, 1.0, dot(input.worldNormal, sight) >= 0.0);
-    let diffuse = max(0, dot(normal, lightDir)) * 0.9;
+    let normal = normalize(input.worldNormal) * select(-1.0, 1.0, isFront);
+    let diffuse = max(0, dot(normal.xyz, lightDir)) * 0.85;
     let specula = pow(max(0, dot(normal.xyz, halfVector)), 5.0) * 0.25;
-    let ambient = 0.15;
+    let ambient = 0.2;
     let brightness = ambient + diffuse;
     return vec4<f32>(input.color * brightness + vec3<f32>(specula, specula, specula), 1.0);
 }
@@ -52,10 +52,11 @@ fn fragmentMain(input: VertexOutput) -> @location(0) vec4<f32> {
 
 // カラーマッピング: colorIndex -> RGB
 const faceColors: [number, number, number][] = [
-    [1.0, 0.9, 0.3], // 0: 黄
-    [1.0, 0.3, 0.3], // 1: 赤
-    [0.3, 0.8, 0.3], // 2: 緑
-    [0.3, 0.5, 1.0], // 3: 青
+    [1.00, 0.85, 0.00], // 0: 黄
+    [1.00, 0.30, 0.04], // 1: 赤
+    [0.01, 0.68, 0.35], // 2: 緑
+    [0.00, 0.44, 1.00], // 3: 青
+    [0.25, 0.88, 1.00], // 4: 空
 ]
 
 export interface PolyhedronMesh {
@@ -169,6 +170,7 @@ class PolyhedronRendererImpl implements PolyhedronRenderer {
     private depthTexture: GPUTexture | null = null
     private lastWidth = 0
     private lastHeight = 0
+    private byteLength = 0
 
     constructor(
         private device: GPUDevice,
@@ -236,14 +238,14 @@ class PolyhedronRendererImpl implements PolyhedronRenderer {
     }
 
     updateMesh(mesh: PolyhedronMesh): void {
-        if (this.vertexBuffer) {
-            this.vertexBuffer.destroy()
+        if (!this.vertexBuffer || this.byteLength < mesh.vertexData.byteLength) {
+            this.vertexBuffer?.destroy()
+            this.vertexBuffer = this.device.createBuffer({
+                size: mesh.vertexData.byteLength,
+                usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
+            })
+            this.byteLength = mesh.vertexData.byteLength
         }
-
-        this.vertexBuffer = this.device.createBuffer({
-            size: mesh.vertexData.byteLength,
-            usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
-        })
         this.device.queue.writeBuffer(this.vertexBuffer, 0, mesh.vertexData.buffer, mesh.vertexData.byteOffset, mesh.vertexData.byteLength)
         this.vertexCount = mesh.vertexCount
     }
