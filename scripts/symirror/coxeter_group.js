@@ -72,7 +72,6 @@ export class FiniteCoxeterGroup {
         const maxIncrRank = matrix.dimension >= 4 ? 31 : 13;
         while (true) {
             const nextRank = this.ranks.length;
-            console.log(`探索: rank${nextRank}`);
             const sourceElements = this.ranks[nextRank - 1];
             const targetElements = [];
             for (const element of sourceElements) {
@@ -102,7 +101,6 @@ export class FiniteCoxeterGroup {
                     element.neighbors[g] = targetElement;
                 }
             }
-            console.log(`追加要素数: ${targetElements.length}`);
             this.ranks.push(targetElements);
             order += targetElements.length;
             if (order >= maxOrder || nextRank >= maxIncrRank && targetElements.length >= this.ranks[this.ranks.length - 2].length) {
