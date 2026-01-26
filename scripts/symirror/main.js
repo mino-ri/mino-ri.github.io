@@ -1,17 +1,5 @@
-import { Fraction } from "./fraction.js";
-import { CoxeterMatrix } from "./coxeter_matrix.js";
-import { FiniteCoxeterGroup } from "./coxeter_group.js";
-import { SymmetryGroup3, NormalPolyhedron } from "./symmetry.js";
+import { NormalPolyhedron, unitTriangles } from "./symmetry.js";
 import { initGpu, buildPolyhedronMesh, quaternionToMatrix } from "./gpu.js";
-function parseCoxeterGroup(value) {
-    const match = value.match(/^p(\d+)_(\d+)$/);
-    if (!match) {
-        return CoxeterMatrix.create3D(new Fraction(3, 1), new Fraction(3, 1));
-    }
-    const p = parseInt(match[1], 10);
-    const q = parseInt(match[2], 10);
-    return CoxeterMatrix.create3D(new Fraction(p, 1), new Fraction(q, 1));
-}
 class RotationState {
     w = 1;
     x = 0;
@@ -204,10 +192,8 @@ class PolyhedronViewer {
         this.isDragging = false;
     }
     setPolyhedron(selectValue) {
-        const matrix = parseCoxeterGroup(selectValue);
-        const group = new FiniteCoxeterGroup(matrix);
-        const symmetry = new SymmetryGroup3(group);
-        this.polyhedron = new NormalPolyhedron(symmetry);
+        const unitTriangle = unitTriangles.find((source) => source.id === selectValue);
+        this.polyhedron = new NormalPolyhedron(unitTriangle.unit);
         const mesh = buildPolyhedronMesh(this.polyhedron.vertexes, this.polyhedron.faces);
         this.renderer.updateMesh(mesh);
     }
@@ -269,6 +255,13 @@ window.addEventListener("load", async () => {
         return;
     }
     const viewer = new PolyhedronViewer(canvas, gpuContext);
+    for (const source of unitTriangles) {
+        const option = document.createElement("option");
+        option.value = source.id;
+        option.textContent = source.name;
+        select.appendChild(option);
+    }
+    select.value = unitTriangles[0].id;
     viewer.setPolyhedron(select.value);
     let originController = null;
     if (originControlSvg && originPoint) {
