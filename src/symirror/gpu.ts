@@ -19,26 +19,32 @@ struct VertexInput {
 
 struct VertexOutput {
     @builtin(position) position: vec4<f32>,
-    @location(0) worldNormal: vec3<f32>,
-    @location(1) color: vec3<f32>,
+    @location(0) worldPos: vec4<f32>,
+    @location(1) worldNormal: vec3<f32>,
+    @location(2) color: vec3<f32>,
 }
 
 @vertex
 fn vertexMain(input: VertexInput) -> VertexOutput {
     var output: VertexOutput;
     let worldPos = uniforms.modelMatrix * vec4<f32>(input.position, 1.0);
+    output.worldPos = worldPos;
     output.position = uniforms.viewProjectionMatrix * worldPos;
-    output.worldNormal = (uniforms.modelMatrix * vec4<f32>(input.normal, 0.0)).xyz;
+    output.worldNormal = normalize((uniforms.modelMatrix * vec4<f32>(input.normal, 0.0)).xyz);
     output.color = input.color;
     return output;
 }
 
 @fragment
 fn fragmentMain(input: VertexOutput) -> @location(0) vec4<f32> {
-    let lightDir = normalize(vec3<f32>(0.5, 1.0, 0.7));
-    let normal = normalize(input.worldNormal);
-    let ambient = 0.3;
-    let diffuse = max(dot(normal, lightDir), 0.0) * 0.7;
+    let lightDir = normalize(input.worldPos.xyz - vec3<f32>(-0.7, 2.0, 5.0));
+    let sight = vec3<f32>(0.0, 0.0, -5.0);
+    // let cameraDir = normalize(input.worldPos.xyz - sight);
+    // let halfVector = normalize(lightDir + cameraDir);
+    let normal = input.worldNormal * select(-1.0, 1.0, dot(input.worldNormal, sight) >= 0.0);
+    let diffuse = max(0, dot(normal, lightDir)) * 0.9;
+    // let specula = pow(max(0, dot(normal.xyz, halfVector)), 5) * 0.25;
+    let ambient = 0.15;
     let brightness = ambient + diffuse;
     return vec4<f32>(input.color * brightness, 1.0);
 }
@@ -204,7 +210,7 @@ class PolyhedronRendererImpl implements PolyhedronRenderer {
             },
             primitive: {
                 topology: "triangle-list",
-                cullMode: "back",
+                cullMode: "none",
                 frontFace: "ccw",
             },
             depthStencil: {

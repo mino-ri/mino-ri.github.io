@@ -1,6 +1,4 @@
-import { Fraction } from "./fraction.js";
-import { CoxeterMatrix } from "./coxeter_matrix.js";
-import { FiniteCoxeterGroup } from "./coxeter_group.js";
+import { FiniteCoxeterGroup, CoxeterGroupElement } from "./coxeter_group.js";
 import { Vector, Vectors } from "./vector.js";
 import { Quaternion, Quaternions } from "./quaternion.js";
 
@@ -38,6 +36,18 @@ export class SymmetryGroup3 {
             }
         }
     }
+
+    getDefaultFaces(): CoxeterGroupElement[][] {
+        const a = this.coxeterGroup.ranks[1]![0]!
+        const b = this.coxeterGroup.ranks[1]![1]!
+        const c = this.coxeterGroup.ranks[1]![2]!
+        return [[a, b], [b, c], [c, a]]
+    }
+}
+
+export type UnitTriangle = {
+    symmetryGroup: SymmetryGroup3
+    faces: CoxeterGroupElement[][]
 }
 
 export type PolyhedronFace = {
@@ -57,21 +67,33 @@ export class NormalPolyhedron {
         for (let i = 0; i < symmetryGroup.transforms.length; i++) {
             this.vertexes[i] = Quaternions.transform(symmetryGroup.origin, symmetryGroup.transforms[i]!)
         }
-        
-        const lines: [number, number][] = []
+
+        const faceDefinitions = symmetryGroup.getDefaultFaces()
+        const lineSet = new Map<number, Set<number>>()
         for (const element of symmetryGroup.coxeterGroup.elements) {
             const currentIndex = element.index
-            for (const neighbor of element.neighbors) {
-                if (neighbor.index > currentIndex) {
-                    lines.push([currentIndex, neighbor.index])
+            for (const faceDef of faceDefinitions) {
+                for (const edgeElement of faceDef) {
+                    const otherIndex = element.mul(edgeElement).index
+                    const [minIndex, maxIndex] = currentIndex < otherIndex ? [currentIndex, otherIndex] : [otherIndex, currentIndex]
+                    if (!lineSet.has(minIndex)) {
+                        lineSet.set(minIndex, new Set<number>())
+                    }
+                    lineSet.get(minIndex)!.add(maxIndex)
                 }
             }
         }
 
+        const lines: [number, number][] = []
+        for (const [a, bs] of lineSet) {
+            for (const b of bs) {
+                lines.push([a, b])
+            }
+        }
+        
         const usedVertexSet = new Set<number>()
         const faces: PolyhedronFace[] = []
-        for (let mirrorA = 0; mirrorA < 3; mirrorA++) {
-            const mirrorB = (mirrorA + 1) % 3
+        faceDefinitions.forEach((faceDef, mirrorA) => {
             usedVertexSet.clear()
             for (const element of symmetryGroup.coxeterGroup.elements) {
                 let currentIndex = element.index
@@ -80,17 +102,17 @@ export class NormalPolyhedron {
                 }
 
                 let targetElement = element
-                const faceVertexIndexes = [currentIndex]
+                const faceVertexIndexes: number[] = []
                 usedVertexSet.add(currentIndex)
                 while (true) {
-                    targetElement = targetElement.neighbors[mirrorA]!
-                    faceVertexIndexes.push(targetElement.index)
-                    targetElement = targetElement.neighbors[mirrorB]!
+                    for (const edgeElement of faceDef) {
+                        targetElement = targetElement.mul(edgeElement)
+                        faceVertexIndexes.push(targetElement.index)
+                        usedVertexSet.add(targetElement.index)
+                    }
                     if (targetElement.index === currentIndex) {
                         break
                     }
-                    
-                    faceVertexIndexes.push(targetElement.index)
                 }
 
                 faces.push({
@@ -98,8 +120,10 @@ export class NormalPolyhedron {
                     VertexIndexes: faceVertexIndexes,
                 })
             }
-        }
+        })
         
+        console.log(faces)
+
         this.lineIndexes = lines
         this.faces = faces
     }
@@ -111,14 +135,3 @@ export class NormalPolyhedron {
         }
     }
 }
-
-window.addEventListener("load", () => {
-    const matrix = CoxeterMatrix.create3D(new Fraction(3, 1), new Fraction(3, 1))
-    const group = new FiniteCoxeterGroup(matrix)
-    const symmetry = new SymmetryGroup3(group)
-    const polyhedron = new NormalPolyhedron(symmetry)
-
-    console.log(polyhedron.symmetryGroup.transforms.map((q) => `[${q.w}, ${q.x}, ${q.y}, ${q.z}]`).join("\n"))
-    console.log(polyhedron.vertexes.map((vertex, index) => `v${index} = [${vertex[0]}, ${vertex[1]}, ${vertex[2]}]`).join("\n"))
-    console.log(polyhedron.lineIndexes.map(([a, b]) => `line(v${a}, v${b})`).join("\n"))
-})
