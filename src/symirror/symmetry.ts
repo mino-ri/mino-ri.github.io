@@ -121,8 +121,6 @@ export class NormalPolyhedron {
                 })
             }
         })
-        
-        console.log(faces)
 
         this.lineIndexes = lines
         this.faces = faces
