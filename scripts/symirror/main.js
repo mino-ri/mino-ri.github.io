@@ -22,7 +22,7 @@ class RotationState {
         const c = Math.cos(halfAngle);
         const qw = c;
         const qx = ax * s;
-        const qy = ay * s;
+        const qy = ay * -s;
         const qz = az * s;
         const nw = qw * this.w - qx * this.x - qy * this.y - qz * this.z;
         const nx = qw * this.x + qx * this.w + qy * this.z - qz * this.y;
@@ -230,8 +230,11 @@ function resizeCanvas(canvas) {
     const rect = parent.getBoundingClientRect();
     const size = Math.min(rect.width, Math.max(800, rect.height), 1080);
     const dpr = window.devicePixelRatio || 1;
-    canvas.width = size * dpr;
-    canvas.height = size * dpr;
+    const pixelSize = Math.floor(size * dpr);
+    canvas.width = pixelSize;
+    canvas.height = pixelSize;
+    canvas.style.width = `${pixelSize / dpr}px`;
+    canvas.style.height = `${pixelSize / dpr}px`;
 }
 window.addEventListener("load", async () => {
     const canvas = document.getElementById("preview_figure");

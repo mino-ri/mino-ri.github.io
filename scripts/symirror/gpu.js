@@ -3,9 +3,12 @@ const shaderCode = `
 struct Uniforms {
     modelMatrix: mat4x4<f32>,
     viewProjectionMatrix: mat4x4<f32>,
+    lightProjection: mat4x4<f32>,
 }
 
 @group(0) @binding(0) var<uniform> uniforms: Uniforms;
+@group(0) @binding(1) var shadowMap: texture_depth_2d;
+@group(0) @binding(2) var shadowSampler: sampler_comparison;
 
 struct VertexInput {
     @location(0) position: vec3<f32>,
@@ -31,18 +34,32 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
     return output;
 }
 
+@vertex
+fn vertexShadow(input: VertexInput) -> @builtin(position) vec4<f32> {
+    let worldPos = uniforms.modelMatrix * vec4<f32>(input.position, 1.0);
+    let shadowPos = uniforms.lightProjection * worldPos;
+    return shadowPos;
+}
+
 @fragment
 fn fragmentMain(input: VertexOutput, @builtin(front_facing) isFront : bool) -> @location(0) vec4<f32> {
-    let lightDir = normalize(vec3<f32>(-1.5085136, 5.1947107, 7.4417315) - input.worldPos.xyz);
-    let sight = vec3<f32>(0.0, 0.0, 5.0);
+    let normal = normalize(input.worldNormal) * select(-1.0, 1.0, isFront);
+    var shadowPos = uniforms.lightProjection * (input.worldPos + vec4<f32>(normal / 512.0, 0.0));
+    shadowPos = shadowPos / shadowPos.w;
+    shadowPos.x = 0.5 + shadowPos.x * 0.5;
+    shadowPos.y = 0.5 - shadowPos.y * 0.5;
+    let shadowFactor = textureSampleCompare(shadowMap, shadowSampler, shadowPos.xy, shadowPos.z);
+    let shadow = 0.5 + shadowFactor * 0.5;
+    let lightPos = vec3<f32>(-1.5085136, -5.1947107, -7.4417315);
+    let sight = vec3<f32>(0.0, 0.0, -5.0);
+    let lightDir = normalize(lightPos - input.worldPos.xyz);
     let cameraDir = normalize(sight - input.worldPos.xyz);
     let halfVector = normalize(lightDir + cameraDir);
-    let normal = normalize(input.worldNormal) * select(-1.0, 1.0, isFront);
     let diffuse = max(0, dot(normal.xyz, lightDir)) * 0.85;
     let specula = pow(max(0, dot(normal.xyz, halfVector)), 5.0) * 0.2;
     let ambient = 0.2;
-    let brightness = ambient + diffuse;
-    return vec4<f32>(input.color * brightness + vec3<f32>(specula, specula, specula), 1.0);
+    let brightness = (ambient + diffuse * shadow);
+    return vec4<f32>(input.color * brightness + vec3<f32>(specula, specula, specula) * shadow, 1.0);
 }
 `;
 const faceColors = [
@@ -89,49 +106,33 @@ class GpuContextImpl {
         return new PolyhedronRendererImpl(this.device, this.context, this.format);
     }
 }
-function createViewProjectionMatrix(aspectRatio) {
-    const fov = Math.PI / 6;
-    const near = 1;
-    const far = 9;
-    const f = 1 / Math.tan(fov / 2);
-    const proj = new Float32Array([
-        f / aspectRatio, 0, 0, 0,
-        0, f, 0, 0,
-        0, 0, (far + near) / (near - far), -1,
-        0, 0, (2 * far * near) / (near - far), 0,
-    ]);
-    const eyeZ = 5;
-    const view = new Float32Array([
-        1, 0, 0, 0,
-        0, 1, 0, 0,
-        0, 0, 1, 0,
-        0, 0, -eyeZ, 1,
-    ]);
-    return multiplyMat4(proj, view);
-}
-function multiplyMat4(a, b) {
-    const result = new Float32Array(16);
-    for (let i = 0; i < 4; i++) {
-        for (let j = 0; j < 4; j++) {
-            let sum = 0;
-            for (let k = 0; k < 4; k++) {
-                sum += a[i + k * 4] * b[k + j * 4];
-            }
-            result[i + j * 4] = sum;
-        }
-    }
-    return result;
-}
+const viewProjectionMatrix = new Float32Array([
+    4, 0, 0, 0,
+    0, -4, 0, 0,
+    0, 0, 1.75, 1,
+    -0.009765625, 0.009765625, 3.5, 5,
+]);
+const lightViewProjectionMatrix = new Float32Array([
+    8.96319, 1.025915, 0.836241245, 0.163968876,
+    0, -7.548099, 2.87967658, 0.5646425,
+    -1.81692851, 5.06099749, 4.12530756, 0.808883846,
+    -0.0178622864, 0.0178622864, 5.09999847, 9.2,
+]);
 class PolyhedronRendererImpl {
     device;
     context;
     format;
     pipeline;
+    shadowPipeline;
     uniformBuffer;
+    shadowBindGroup;
+    bindGroupLayout;
     bindGroup;
     vertexBuffer = null;
     vertexCount = 0;
     depthTexture = null;
+    shadowTexture;
+    shadowSampler;
     lastWidth = 0;
     lastHeight = 0;
     byteLength = 0;
@@ -140,29 +141,80 @@ class PolyhedronRendererImpl {
         this.context = context;
         this.format = format;
         const shaderModule = device.createShaderModule({ code: shaderCode });
-        const bindGroupLayout = device.createBindGroupLayout({
-            entries: [{
-                    binding: 0,
-                    visibility: GPUShaderStage.VERTEX,
-                    buffer: { type: "uniform" },
-                }],
+        const vertexBuferLayout = {
+            arrayStride: 9 * 4,
+            attributes: [
+                { shaderLocation: 0, offset: 0, format: "float32x3" },
+                { shaderLocation: 1, offset: 12, format: "float32x3" },
+                { shaderLocation: 2, offset: 24, format: "float32x3" },
+            ],
+        };
+        this.shadowSampler = device.createSampler({
+            compare: 'less',
+            magFilter: 'linear',
+            minFilter: 'linear',
         });
-        const pipelineLayout = device.createPipelineLayout({
-            bindGroupLayouts: [bindGroupLayout],
+        this.uniformBuffer = device.createBuffer({
+            size: 64 * 3,
+            usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+        });
+        const shadowBindGroupLayout = device.createBindGroupLayout({
+            entries: [
+                { binding: 0, visibility: GPUShaderStage.VERTEX, buffer: { type: "uniform" } },
+            ],
+        });
+        this.shadowBindGroup = this.device.createBindGroup({
+            layout: shadowBindGroupLayout,
+            entries: [
+                { binding: 0, resource: { buffer: this.uniformBuffer } },
+            ],
+        });
+        this.shadowPipeline = device.createRenderPipeline({
+            layout: device.createPipelineLayout({
+                bindGroupLayouts: [shadowBindGroupLayout],
+            }),
+            vertex: {
+                module: shaderModule,
+                entryPoint: "vertexShadow",
+                buffers: [vertexBuferLayout],
+            },
+            primitive: {
+                topology: "triangle-list",
+            },
+            depthStencil: {
+                depthWriteEnabled: true,
+                depthCompare: 'less',
+                format: 'depth32float',
+            },
+        });
+        this.bindGroupLayout = device.createBindGroupLayout({
+            entries: [
+                { binding: 0, visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT, buffer: { type: "uniform" } },
+                { binding: 1, visibility: GPUShaderStage.FRAGMENT, texture: { sampleType: 'depth' } },
+                { binding: 2, visibility: GPUShaderStage.FRAGMENT, sampler: { type: 'comparison' } },
+            ],
+        });
+        this.shadowTexture = this.device.createTexture({
+            size: [2048, 2048],
+            format: 'depth32float',
+            usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING,
+        });
+        this.bindGroup = this.device.createBindGroup({
+            layout: this.bindGroupLayout,
+            entries: [
+                { binding: 0, resource: { buffer: this.uniformBuffer } },
+                { binding: 1, resource: this.shadowTexture.createView() },
+                { binding: 2, resource: this.shadowSampler },
+            ],
         });
         this.pipeline = device.createRenderPipeline({
-            layout: pipelineLayout,
+            layout: device.createPipelineLayout({
+                bindGroupLayouts: [this.bindGroupLayout],
+            }),
             vertex: {
                 module: shaderModule,
                 entryPoint: "vertexMain",
-                buffers: [{
-                        arrayStride: 9 * 4,
-                        attributes: [
-                            { shaderLocation: 0, offset: 0, format: "float32x3" },
-                            { shaderLocation: 1, offset: 12, format: "float32x3" },
-                            { shaderLocation: 2, offset: 24, format: "float32x3" },
-                        ],
-                    }],
+                buffers: [vertexBuferLayout],
             },
             fragment: {
                 module: shaderModule,
@@ -179,17 +231,6 @@ class PolyhedronRendererImpl {
                 depthWriteEnabled: true,
                 depthCompare: "less",
             },
-        });
-        this.uniformBuffer = device.createBuffer({
-            size: 128,
-            usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
-        });
-        this.bindGroup = device.createBindGroup({
-            layout: bindGroupLayout,
-            entries: [{
-                    binding: 0,
-                    resource: { buffer: this.uniformBuffer },
-                }],
         });
     }
     updateMesh(mesh) {
@@ -223,12 +264,26 @@ class PolyhedronRendererImpl {
             this.lastWidth = width;
             this.lastHeight = height;
         }
-        const viewProjection = createViewProjectionMatrix(width / height);
         this.device.queue.writeBuffer(this.uniformBuffer, 0, modelMatrix.buffer, modelMatrix.byteOffset, modelMatrix.byteLength);
-        this.device.queue.writeBuffer(this.uniformBuffer, 64, viewProjection.buffer, viewProjection.byteOffset, viewProjection.byteLength);
+        this.device.queue.writeBuffer(this.uniformBuffer, 64, viewProjectionMatrix.buffer, viewProjectionMatrix.byteOffset, viewProjectionMatrix.byteLength);
+        this.device.queue.writeBuffer(this.uniformBuffer, 128, lightViewProjectionMatrix.buffer, lightViewProjectionMatrix.byteOffset, lightViewProjectionMatrix.byteLength);
         const commandEncoder = this.device.createCommandEncoder();
         const textureView = this.context.getCurrentTexture().createView();
-        const renderPassDescriptor = {
+        const shadowPass = commandEncoder.beginRenderPass({
+            colorAttachments: [],
+            depthStencilAttachment: {
+                view: this.shadowTexture.createView(),
+                depthClearValue: 1.0,
+                depthLoadOp: 'clear',
+                depthStoreOp: 'store',
+            },
+        });
+        shadowPass.setPipeline(this.shadowPipeline);
+        shadowPass.setBindGroup(0, this.shadowBindGroup);
+        shadowPass.setVertexBuffer(0, this.vertexBuffer);
+        shadowPass.draw(this.vertexCount);
+        shadowPass.end();
+        const mainPass = commandEncoder.beginRenderPass({
             colorAttachments: [{
                     view: textureView,
                     clearValue: { r: 1.0, g: 1.0, b: 1.0, a: 1.0 },
@@ -241,13 +296,12 @@ class PolyhedronRendererImpl {
                 depthLoadOp: "clear",
                 depthStoreOp: "store",
             },
-        };
-        const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor);
-        passEncoder.setPipeline(this.pipeline);
-        passEncoder.setBindGroup(0, this.bindGroup);
-        passEncoder.setVertexBuffer(0, this.vertexBuffer);
-        passEncoder.draw(this.vertexCount);
-        passEncoder.end();
+        });
+        mainPass.setPipeline(this.pipeline);
+        mainPass.setBindGroup(0, this.bindGroup);
+        mainPass.setVertexBuffer(0, this.vertexBuffer);
+        mainPass.draw(this.vertexCount);
+        mainPass.end();
         this.device.queue.submit([commandEncoder.finish()]);
     }
     destroy() {
