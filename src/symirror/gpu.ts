@@ -38,12 +38,12 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
 @fragment
 fn fragmentMain(input: VertexOutput, @builtin(front_facing) isFront : bool) -> @location(0) vec4<f32> {
     let lightDir = normalize(vec3<f32>(-1.5085136, 5.1947107, 7.4417315) - input.worldPos.xyz);
-    let sight = vec3<f32>(0.0, 0.0, -5.0);
+    let sight = vec3<f32>(0.0, 0.0, 5.0);
     let cameraDir = normalize(sight - input.worldPos.xyz);
     let halfVector = normalize(lightDir + cameraDir);
     let normal = normalize(input.worldNormal) * select(-1.0, 1.0, isFront);
     let diffuse = max(0, dot(normal.xyz, lightDir)) * 0.85;
-    let specula = pow(max(0, dot(normal.xyz, halfVector)), 5.0) * 0.25;
+    let specula = pow(max(0, dot(normal.xyz, halfVector)), 5.0) * 0.2;
     let ambient = 0.2;
     let brightness = ambient + diffuse;
     return vec4<f32>(input.color * brightness + vec3<f32>(specula, specula, specula), 1.0);
