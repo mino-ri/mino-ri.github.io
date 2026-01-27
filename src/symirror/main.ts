@@ -36,7 +36,7 @@ class RotationState {
         // 新しい回転クォータニオン
         const qw = c
         const qx = ax * s
-        const qy = ay * s
+        const qy = ay * -s
         const qz = az * s
 
         // 現在のクォータニオンに乗算: q * current
@@ -288,10 +288,11 @@ function resizeCanvas(canvas: HTMLCanvasElement): void {
     const rect = parent.getBoundingClientRect()
     const size = Math.min(rect.width, Math.max(800, rect.height), 1080)
     const dpr = window.devicePixelRatio || 1
-    canvas.width = size * dpr
-    canvas.height = size * dpr
-    // canvas.style.width = `${size}px`
-    // canvas.style.height = `${size}px`
+    const pixelSize = Math.floor(size * dpr)
+    canvas.width = pixelSize
+    canvas.height = pixelSize
+    canvas.style.width = `${pixelSize / dpr}px`
+    canvas.style.height = `${pixelSize / dpr}px`
 }
 
 // エントリーポイント
