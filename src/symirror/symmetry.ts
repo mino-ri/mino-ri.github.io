@@ -82,15 +82,34 @@ export const unitTriangles: PolyhedronSource[] = function (): PolyhedronSource[]
         { id: "a00", name: "2 3 3", unit: symmetry3.getDefaultFaces() },
         { id: "a01", name: "2 3 3'", unit: symmetry3.getFaces(2, 1, 21) },
         { id: "a02", name: "3 3 3'", unit: symmetry3.getFaces(1, 2, 13) },
+
         { id: "b00", name: "2 3 4", unit: symmetry4.getDefaultFaces() },
         { id: "b01", name: "2 3 4'", unit: symmetry4.getFaces(1, 9, 3) },
         { id: "b02", name: "3 4 4'", unit: symmetry4.getFaces(1, 2, 13) },
+
         { id: "h00", name: "2 3 5", unit: symmetry5.getDefaultFaces() },
+        { id: "h01", name: "2 3 5'", unit: symmetry5.getFaces(2, 1, 26) },
+        { id: "h02", name: "2 3 $", unit: symmetry5.getFaces(1, 13, 3) },
+        { id: "h03", name: "2 3 $'", unit: symmetry5.getFaces(2, 1, 83) },
+        { id: "h04", name: "2 5 $", unit: symmetry5.getFaces(1, 13, 3) },
+        { id: "h05", name: "2 5 $'", unit: symmetry5.getFaces(1, 33, 3) },
+        { id: "h06", name: "3 3 5'", unit: symmetry5.getFaces(1, 2, 28) },
+        { id: "h07", name: "3 3 $", unit: symmetry5.getFaces(1, 2, 15) },
+        { id: "h08", name: "3 5 5'", unit: symmetry5.getFaces(1, 13, 2) },
+        { id: "h09", name: "3 5 $'", unit: symmetry5.getFaces(1, 33, 2) },
+        { id: "h10", name: "3 $ $'", unit: symmetry5.getFaces(1, 99, 2) },
+        { id: "h13", name: "5 5 5'", unit: symmetry5.getFaces(2, 3, 28) },
+        { id: "h14", name: "$ $ $", unit: symmetry5.getFaces(3, 13, 26) },
+
         { id: "p31", name: "2 2 3", unit: createSymmetry(2, 3).getDefaultFaces() },
         { id: "p41", name: "2 2 4", unit: createSymmetry(2, 4).getDefaultFaces() },
         { id: "p51", name: "2 2 5", unit: createSymmetry(2, 5).getDefaultFaces() },
         { id: "p61", name: "2 2 6", unit: createSymmetry(2, 6).getDefaultFaces() },
         { id: "p71", name: "2 2 7", unit: createSymmetry(2, 7).getDefaultFaces() },
+
+        { id: "bc01", name: "[[2 3 3]]", unit: symmetry4.getFaces(1, 2, 15) },
+        { id: "bc02", name: "[[2 3 3']]", unit: symmetry4.getFaces(1, 9, 27) },
+        { id: "bc03", name: "[[3 3 3']]", unit: symmetry4.getFaces(1, 2, 27) },
     ]
 }()
 
