@@ -1,4 +1,4 @@
-import { NormalPolyhedron, unitTriangles } from "./symmetry.js"
+import { NormalPolyhedron, unitTriangles, faceSelectorMap } from "./symmetry.js"
 import { initGpu, buildPolyhedronMesh, quaternionToMatrix, type GpuContext } from "./gpu.js"
 import { type Vector } from "./vector.js"
 
@@ -241,9 +241,10 @@ class PolyhedronViewer {
         this.isDragging = false
     }
 
-    setPolyhedron(selectValue: string): void {
-        const unitTriangle = unitTriangles.find((source) => source.id === selectValue)!
-        this.polyhedron = new NormalPolyhedron(unitTriangle.unit)
+    setPolyhedron(selectValue: string, faceSelector: string): void {
+        const unitTriangle = unitTriangles.find((source) => source.id === selectValue)!.unit
+        const selector = faceSelectorMap.get(faceSelector) || faceSelectorMap.get("xxx")!
+        this.polyhedron = new NormalPolyhedron(unitTriangle, selector)
 
         const mesh = buildPolyhedronMesh(this.polyhedron.vertexes, this.polyhedron.faces)
         this.renderer.updateMesh(mesh)
@@ -299,11 +300,12 @@ function resizeCanvas(canvas: HTMLCanvasElement): void {
 window.addEventListener("load", async () => {
     const canvas = document.getElementById("preview_figure") as HTMLCanvasElement | null
     const select = document.getElementById("select_coxeter_group") as HTMLSelectElement | null
+    const selectFace = document.getElementById("select_face_selector") as HTMLSelectElement | null
     const autoRotateCheckbox = document.getElementById("checkbox_auto_rotate") as HTMLInputElement | null
     const originControlSvg = document.getElementById("origin_control") as unknown as SVGSVGElement | null
     const originPoint = document.getElementById("origin_point") as unknown as SVGCircleElement | null
 
-    if (!canvas || !select) {
+    if (!canvas || !select || !selectFace) {
         console.error("Required elements not found")
         return
     }
@@ -330,7 +332,7 @@ window.addEventListener("load", async () => {
     }
 
     select.value = unitTriangles[0]!.id
-    viewer.setPolyhedron(select.value)
+    viewer.setPolyhedron(select.value, selectFace.value)
 
     // origin コントローラの初期化
     let originController: OriginController | null = null
@@ -343,7 +345,12 @@ window.addEventListener("load", async () => {
     }
 
     select.addEventListener("change", () => {
-        viewer.setPolyhedron(select.value)
+        viewer.setPolyhedron(select.value, selectFace.value)
+        originController?.reset()
+    })
+
+    selectFace.addEventListener("change", () => {
+        viewer.setPolyhedron(select.value, selectFace.value)
         originController?.reset()
     })
 
