@@ -121,7 +121,7 @@ export class Vectors {
             const d = (a[i]! + b[i]!) * 0.5 - p[i]!
             sum += d * d
         }
-        return sum 
+        return sum
     }
 
     static #u = [0, 0, 0]
@@ -148,7 +148,7 @@ export class Vectors {
 
         const s = (dotUv * dotVw - nrm2V * dotUw) / delta
         const t = (nrm2U * dotVw - dotUv * dotUw) / delta
-        
+
         if (s < 0 || s > 1 || t < 0 || t > 1) {
             return null
         }

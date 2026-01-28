@@ -196,10 +196,10 @@ class PolyhedronRendererImpl implements PolyhedronRenderer {
         })
 
         const shadowBindGroupLayout = device.createBindGroupLayout({
-                entries: [
-                    { binding: 0, visibility: GPUShaderStage.VERTEX, buffer: { type: "uniform" } },
-                ],
-            })
+            entries: [
+                { binding: 0, visibility: GPUShaderStage.VERTEX, buffer: { type: "uniform" } },
+            ],
+        })
         this.shadowBindGroup = this.device.createBindGroup({
             layout: shadowBindGroupLayout,
             entries: [
@@ -289,7 +289,7 @@ class PolyhedronRendererImpl implements PolyhedronRenderer {
     }
 
     render(modelMatrix: Float32Array): void {
-        if (!this.vertexBuffer || this.vertexCount === 0) {
+        if (!this.vertexBuffer) {
             return
         }
 
@@ -390,8 +390,9 @@ const crosses: { value: Vector | null, source: Vector }[] = [
 
 // 多面体データから描画用メッシュを生成するユーティリティ
 export function buildPolyhedronMesh(
-    vertexes: { [n: number]: number; length: number }[],
+    vertexes: Vector[],
     faces: { ColorIndex: number; VertexIndexes: number[] }[],
+    faceVisibility: boolean[],
 ): PolyhedronMesh {
     const triangles: number[] = []
     const cv = [0, 0, 0]
@@ -401,6 +402,10 @@ export function buildPolyhedronMesh(
     for (const face of faces) {
         const indexes = face.VertexIndexes
         const colorIndex = Math.min(face.ColorIndex, faceColors.length - 1)
+        if (!faceVisibility[colorIndex]) {
+            continue
+        }
+
         const [r, g, b] = faceColors[colorIndex]!
         cv[0]! = 0
         cv[1]! = 0

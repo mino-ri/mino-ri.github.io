@@ -1,5 +1,3 @@
-import { Fraction } from "./fraction.js";
-
 export type ElementExchange = {
     from: number[]
     to: number[]
@@ -15,24 +13,24 @@ export type SpaceType = "euclidean" | "spherical" | "hyperbolic" | "unknown"
 // c 1 2 - 5
 // d 3 4 5 -
 export class CoxeterMatrix {
-    values: Fraction[]
+    values: number[]
     dimension: number
 
-    constructor(values: Fraction[]) {
+    constructor(values: number[]) {
         this.values = values
         const length = this.values.length
         this.dimension = Math.sqrt(2 * length + 0.25) + 0.5
     }
 
-    get(a: number, b: number): Fraction {
+    get(a: number, b: number): number {
         if (a == b) {
-            return Fraction.one
+            return 1
         }
 
         const index = a > b
             ? a * (a - 1) / 2 + b
             : b * (b - 1) / 2 + a
-        return this.values[index] ?? Fraction.one
+        return this.values[index] ?? 1
     }
 
     // ElementExchange[先頭のジェネレータ番号][index]
@@ -44,8 +42,7 @@ export class CoxeterMatrix {
 
         for (let a = 0; a < this.dimension; a++) {
             for (let b = a + 1; b < this.dimension; b++) {
-                const m = this.get(a, b)
-                const [word0, word1] = CoxeterMatrix.#getAlternatingNumbers(a, b, m.num)
+                const [word0, word1] = CoxeterMatrix.#getAlternatingNumbers(a, b, this.get(a, b))
                 result[a]?.push({ from: word0, to: word1 })
                 result[b]?.push({ from: word1, to: word0 })
             }
@@ -60,11 +57,10 @@ export class CoxeterMatrix {
                 // 高次元と共通して扱う都合上、1次元も球面空間扱いにする
                 return "spherical"
             case 3: {
-                const discriminant = Fraction.sum(this.get(0, 1).recp(), this.get(1, 2).recp(), this.get(2, 0).recp()).sub(Fraction.one)
-                const sign = discriminant.sign()
-                if (sign == 0) {
+                const discriminant = 1 / this.get(0, 1) + 1 / this.get(1, 2) + 1 / this.get(2, 0)
+                if (discriminant == 1) {
                     return "euclidean"
-                } else if (sign > 0) {
+                } else if (discriminant > 1) {
                     return "spherical"
                 } else {
                     return "hyperbolic"
@@ -75,16 +71,16 @@ export class CoxeterMatrix {
         }
     }
 
-    static create2D(a: Fraction): CoxeterMatrix {
+    static create2D(a: number): CoxeterMatrix {
         return new CoxeterMatrix([a])
     }
 
-    static create3D(p: Fraction, q: Fraction, r?: Fraction): CoxeterMatrix {
-        return new CoxeterMatrix([p, r ?? Fraction.two, q])
+    static create3D(p: number, q: number, r?: number): CoxeterMatrix {
+        return new CoxeterMatrix([p, r ?? 2, q])
     }
 
-    static create4D(ab: Fraction, bc: Fraction, cd: Fraction, bd?: Fraction, ac?: Fraction, ad?: Fraction): CoxeterMatrix {
-        return new CoxeterMatrix([ab, ac ?? Fraction.two, bc, ad ?? Fraction.two, bd ?? Fraction.two, cd])
+    static create4D(ab: number, bc: number, cd: number, bd?: number, ac?: number, ad?: number): CoxeterMatrix {
+        return new CoxeterMatrix([ab, ac ?? 2, bc, ad ?? 2, bd ?? 2, cd])
     }
 
     static #getAlternatingNumbers(a: number, b: number, count: number): [number[], number[]] {
