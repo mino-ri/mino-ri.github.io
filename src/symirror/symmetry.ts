@@ -113,11 +113,26 @@ export type FaceSelectorFunction = (a: CoxeterGroupElement, b: CoxeterGroupEleme
 
 export const faceSelectorMap = new Map<string, FaceSelectorFunction>([
     ["xxx", (a, b, c) => [[a, b], [b, c], [c, a]]],
+    ["oxx", (a, b, c) => {
+        const aba = a.mul(b).mul(a)
+        const aca = a.mul(c).mul(a)
+        return [[aba, b], [b, c], [aca, c], [aba, aca]]
+    },
+    ["xox", (a, b, c) => {
+        const bab = b.mul(a).mul(b)
+        const bcb = b.mul(c).mul(b)
+        return [[a, bab], [bcb, c], [a, c], [bab, bcb]]
+    },
+    ["xxo", (a, b, c) => {
+        const cac = c.mul(a).mul(c)
+        const cbc = c.mul(b).mul(c)
+        return [[a, b], [b, cbc], [a, cac], [cac, cbc]]
+    },
     ["ooo", (a, b, c) => {
         const ab = a.mul(b)
         const bc = b.mul(c)
         const ca = c.mul(a)
-        return [[ab], [bc], [ca], [ab, bc, ca], [bc, ca, ab]]
+        return [[ab], [bc], [ca], [ab, bc, ca]]
     }],
 ])
 
