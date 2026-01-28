@@ -85,6 +85,12 @@ export const unitTriangles = function () {
 }();
 export const faceSelectorMap = new Map([
     ["xxx", (a, b, c) => [[a, b], [b, c], [c, a]]],
+    ["ooo", (a, b, c) => {
+            const ab = a.mul(b);
+            const bc = b.mul(c);
+            const ca = c.mul(a);
+            return [[ab], [bc], [ca], [ab, bc, ca], [bc, ca, ab]];
+        }],
 ]);
 export class NormalPolyhedron {
     origin;
@@ -143,6 +149,7 @@ export class NormalPolyhedron {
         const faces = [];
         faceDefinitions.forEach((faceDef, mirrorA) => {
             usedVertexSet.clear();
+            const isReflectable = faceDef[0].period === 2;
             for (const currentIndex of vertexIndexes) {
                 const element = source.symmetryGroup.coxeterGroup.elements[currentIndex];
                 if (usedVertexSet.has(currentIndex)) {
@@ -151,11 +158,13 @@ export class NormalPolyhedron {
                 let targetElement = element;
                 const faceVertexIndexes = [];
                 usedVertexSet.add(currentIndex);
+                if (isReflectable) {
+                    usedVertexSet.add(element.mul(faceDef[0]).index);
+                }
                 while (true) {
                     for (const edgeElement of faceDef) {
                         targetElement = targetElement.mul(edgeElement);
                         faceVertexIndexes.push(targetElement.index);
-                        usedVertexSet.add(targetElement.index);
                     }
                     if (targetElement.index === currentIndex) {
                         break;
