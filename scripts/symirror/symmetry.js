@@ -1,4 +1,3 @@
-import { Fraction } from "./fraction.js";
 import { CoxeterMatrix } from "./coxeter_matrix.js";
 import { FiniteCoxeterGroup } from "./coxeter_group.js";
 import { Vectors } from "./vector.js";
@@ -9,8 +8,8 @@ export class SymmetryGroup3 {
     transforms;
     constructor(coxeterGroup) {
         this.coxeterGroup = coxeterGroup;
-        const cosP = Math.cos(Math.PI / coxeterGroup.matrix.get(0, 1).toNumber());
-        const cosQ = Math.cos(Math.PI / coxeterGroup.matrix.get(1, 2).toNumber());
+        const cosP = Math.cos(Math.PI / coxeterGroup.matrix.get(0, 1));
+        const cosQ = Math.cos(Math.PI / coxeterGroup.matrix.get(1, 2));
         const cos2P = cosP * cosP;
         const cos2Q = cosQ * cosQ;
         const z = Math.sqrt(1 - cos2P - cos2Q);
@@ -51,7 +50,7 @@ export class SymmetryGroup3 {
 }
 export const unitTriangles = function () {
     const createSymmetry = (p, q) => {
-        return new SymmetryGroup3(new FiniteCoxeterGroup(CoxeterMatrix.create3D(new Fraction(p, 1), new Fraction(q, 1))));
+        return new SymmetryGroup3(new FiniteCoxeterGroup(CoxeterMatrix.create3D(p, q)));
     };
     const symmetry3 = createSymmetry(3, 3);
     const symmetry4 = createSymmetry(3, 4);
@@ -99,6 +98,27 @@ export const faceSelectorMap = new Map([
             const cac = c.mul(a).mul(c);
             const cbc = c.mul(b).mul(c);
             return [[a, b], [b, cbc], [a, cac], [cac, cbc]];
+        }],
+    ["xoo", (a, b, c) => {
+            const bab = b.mul(a).mul(b);
+            const cac = c.mul(a).mul(c);
+            const bc = b.mul(c);
+            const cb = c.mul(b);
+            return [[a, bab], [bc], [a, cac], [bc, cac, cb, bab]];
+        }],
+    ["oxo", (a, b, c) => {
+            const aba = a.mul(b).mul(a);
+            const cbc = c.mul(b).mul(c);
+            const ac = a.mul(c);
+            const ca = c.mul(a);
+            return [[b, aba], [b, cbc], [ac], [ac, cbc, ca, aba]];
+        }],
+    ["oox", (a, b, c) => {
+            const aca = a.mul(c).mul(a);
+            const bcb = b.mul(c).mul(b);
+            const ab = a.mul(b);
+            const ba = b.mul(a);
+            return [[ab], [c, bcb], [c, aca], [ab, bcb, ba, aca]];
         }],
     ["ooo", (a, b, c) => {
             const ab = a.mul(b);

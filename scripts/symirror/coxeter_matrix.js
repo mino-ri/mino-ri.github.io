@@ -1,4 +1,3 @@
-import { Fraction } from "./fraction.js";
 export class CoxeterMatrix {
     values;
     dimension;
@@ -9,12 +8,12 @@ export class CoxeterMatrix {
     }
     get(a, b) {
         if (a == b) {
-            return Fraction.one;
+            return 1;
         }
         const index = a > b
             ? a * (a - 1) / 2 + b
             : b * (b - 1) / 2 + a;
-        return this.values[index] ?? Fraction.one;
+        return this.values[index] ?? 1;
     }
     getExchanges() {
         const result = new Array(3);
@@ -23,8 +22,7 @@ export class CoxeterMatrix {
         }
         for (let a = 0; a < this.dimension; a++) {
             for (let b = a + 1; b < this.dimension; b++) {
-                const m = this.get(a, b);
-                const [word0, word1] = CoxeterMatrix.#getAlternatingNumbers(a, b, m.num);
+                const [word0, word1] = CoxeterMatrix.#getAlternatingNumbers(a, b, this.get(a, b));
                 result[a]?.push({ from: word0, to: word1 });
                 result[b]?.push({ from: word1, to: word0 });
             }
@@ -37,12 +35,11 @@ export class CoxeterMatrix {
             case 2:
                 return "spherical";
             case 3: {
-                const discriminant = Fraction.sum(this.get(0, 1).recp(), this.get(1, 2).recp(), this.get(2, 0).recp()).sub(Fraction.one);
-                const sign = discriminant.sign();
-                if (sign == 0) {
+                const discriminant = 1 / this.get(0, 1) + 1 / this.get(1, 2) + 1 / this.get(2, 0);
+                if (discriminant == 1) {
                     return "euclidean";
                 }
-                else if (sign > 0) {
+                else if (discriminant > 1) {
                     return "spherical";
                 }
                 else {
@@ -57,10 +54,10 @@ export class CoxeterMatrix {
         return new CoxeterMatrix([a]);
     }
     static create3D(p, q, r) {
-        return new CoxeterMatrix([p, r ?? Fraction.two, q]);
+        return new CoxeterMatrix([p, r ?? 2, q]);
     }
     static create4D(ab, bc, cd, bd, ac, ad) {
-        return new CoxeterMatrix([ab, ac ?? Fraction.two, bc, ad ?? Fraction.two, bd ?? Fraction.two, cd]);
+        return new CoxeterMatrix([ab, ac ?? 2, bc, ad ?? 2, bd ?? 2, cd]);
     }
     static #getAlternatingNumbers(a, b, count) {
         const aRepr = new Array(count);
