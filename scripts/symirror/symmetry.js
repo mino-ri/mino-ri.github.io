@@ -149,7 +149,7 @@ export class NormalPolyhedron {
         const faces = [];
         faceDefinitions.forEach((faceDef, mirrorA) => {
             usedVertexSet.clear();
-            const isReflectable = faceDef[0].period === 2;
+            const isReflectable = faceDef[0].period === 2 && faceDef[0].rank % 2 === 1;
             for (const currentIndex of vertexIndexes) {
                 const element = source.symmetryGroup.coxeterGroup.elements[currentIndex];
                 if (usedVertexSet.has(currentIndex)) {
