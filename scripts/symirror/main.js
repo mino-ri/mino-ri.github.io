@@ -1,4 +1,4 @@
-import { NormalPolyhedron, unitTriangles } from "./symmetry.js";
+import { NormalPolyhedron, unitTriangles, faceSelectorMap } from "./symmetry.js";
 import { initGpu, buildPolyhedronMesh, quaternionToMatrix } from "./gpu.js";
 class RotationState {
     w = 1;
@@ -191,9 +191,10 @@ class PolyhedronViewer {
     onTouchEnd() {
         this.isDragging = false;
     }
-    setPolyhedron(selectValue) {
-        const unitTriangle = unitTriangles.find((source) => source.id === selectValue);
-        this.polyhedron = new NormalPolyhedron(unitTriangle.unit);
+    setPolyhedron(selectValue, faceSelector) {
+        const unitTriangle = unitTriangles.find((source) => source.id === selectValue).unit;
+        const selector = faceSelectorMap.get(faceSelector) || faceSelectorMap.get("xxx");
+        this.polyhedron = new NormalPolyhedron(unitTriangle, selector);
         const mesh = buildPolyhedronMesh(this.polyhedron.vertexes, this.polyhedron.faces);
         this.renderer.updateMesh(mesh);
     }
@@ -239,10 +240,11 @@ function resizeCanvas(canvas) {
 window.addEventListener("load", async () => {
     const canvas = document.getElementById("preview_figure");
     const select = document.getElementById("select_coxeter_group");
+    const selectFace = document.getElementById("select_face_selector");
     const autoRotateCheckbox = document.getElementById("checkbox_auto_rotate");
     const originControlSvg = document.getElementById("origin_control");
     const originPoint = document.getElementById("origin_point");
-    if (!canvas || !select) {
+    if (!canvas || !select || !selectFace) {
         console.error("Required elements not found");
         return;
     }
@@ -265,13 +267,17 @@ window.addEventListener("load", async () => {
         select.appendChild(option);
     }
     select.value = unitTriangles[0].id;
-    viewer.setPolyhedron(select.value);
+    viewer.setPolyhedron(select.value, selectFace.value);
     let originController = null;
     if (originControlSvg && originPoint) {
         originController = new OriginController(originControlSvg, originPoint, (origin) => viewer.setOrigin(origin));
     }
     select.addEventListener("change", () => {
-        viewer.setPolyhedron(select.value);
+        viewer.setPolyhedron(select.value, selectFace.value);
+        originController?.reset();
+    });
+    selectFace.addEventListener("change", () => {
+        viewer.setPolyhedron(select.value, selectFace.value);
         originController?.reset();
     });
     if (autoRotateCheckbox) {
