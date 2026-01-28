@@ -136,6 +136,7 @@ class PolyhedronViewer {
     lastTime = 0;
     polyhedron = null;
     autoRotate = false;
+    faceVisibility = [true, true, true, true];
     constructor(canvas, gpuContext) {
         this.canvas = canvas;
         this.renderer = gpuContext.createPolyhedronRenderer();
@@ -195,14 +196,23 @@ class PolyhedronViewer {
         const unitTriangle = unitTriangles.find((source) => source.id === selectValue).unit;
         const selector = faceSelectorMap.get(faceSelector) || faceSelectorMap.get("xxx");
         this.polyhedron = new NormalPolyhedron(unitTriangle, selector);
-        const mesh = buildPolyhedronMesh(this.polyhedron.vertexes, this.polyhedron.faces);
+        const mesh = buildPolyhedronMesh(this.polyhedron.vertexes, this.polyhedron.faces, this.faceVisibility);
         this.renderer.updateMesh(mesh);
     }
     setOrigin(origin) {
         if (!this.polyhedron)
             return;
         this.polyhedron.setOrigin(origin);
-        const mesh = buildPolyhedronMesh(this.polyhedron.vertexes, this.polyhedron.faces);
+        const mesh = buildPolyhedronMesh(this.polyhedron.vertexes, this.polyhedron.faces, this.faceVisibility);
+        this.renderer.updateMesh(mesh);
+    }
+    setFaceVisibility(faceVisibility) {
+        for (let i = 0; i < 4; i++) {
+            this.faceVisibility[i] = faceVisibility[i];
+        }
+        if (!this.polyhedron)
+            return;
+        const mesh = buildPolyhedronMesh(this.polyhedron.vertexes, this.polyhedron.faces, this.faceVisibility);
         this.renderer.updateMesh(mesh);
     }
     startRenderLoop() {
@@ -229,7 +239,11 @@ function resizeCanvas(canvas) {
     if (!parent)
         return;
     const rect = parent.getBoundingClientRect();
-    const size = Math.min(rect.width, Math.max(800, rect.height), 1080);
+    const windowWidth = window.innerWidth;
+    const width = rect.width;
+    const height = window.innerHeight * (windowWidth > 800 ? 0.8 : 0.5);
+    console.log(`Resize ${window.innerWidth} ${window.innerHeight} -> ${width} ${height}`);
+    const size = Math.min(width, height, 1080);
     const dpr = window.devicePixelRatio || 1;
     const pixelSize = Math.floor(size * dpr);
     canvas.width = pixelSize;
@@ -244,7 +258,11 @@ window.addEventListener("load", async () => {
     const autoRotateCheckbox = document.getElementById("checkbox_auto_rotate");
     const originControlSvg = document.getElementById("origin_control");
     const originPoint = document.getElementById("origin_point");
-    if (!canvas || !select || !selectFace) {
+    const checkColor0 = document.getElementById("checkbox_color_0");
+    const checkColor1 = document.getElementById("checkbox_color_1");
+    const checkColor2 = document.getElementById("checkbox_color_2");
+    const checkColor3 = document.getElementById("checkbox_color_3");
+    if (!canvas || !select || !selectFace || !checkColor0 || !checkColor1 || !checkColor2 || !checkColor3) {
         console.error("Required elements not found");
         return;
     }
@@ -280,6 +298,18 @@ window.addEventListener("load", async () => {
         viewer.setPolyhedron(select.value, selectFace.value);
         originController?.reset();
     });
+    const colorCheckChangeHandler = () => {
+        viewer.setFaceVisibility([
+            checkColor0.checked,
+            checkColor1.checked,
+            checkColor2.checked,
+            checkColor3.checked,
+        ]);
+    };
+    checkColor0?.addEventListener("change", colorCheckChangeHandler);
+    checkColor1?.addEventListener("change", colorCheckChangeHandler);
+    checkColor2?.addEventListener("change", colorCheckChangeHandler);
+    checkColor3?.addEventListener("change", colorCheckChangeHandler);
     if (autoRotateCheckbox) {
         autoRotateCheckbox.addEventListener("change", () => {
             viewer.setAutoRotate(autoRotateCheckbox.checked);

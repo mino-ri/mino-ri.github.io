@@ -246,7 +246,7 @@ class PolyhedronRendererImpl {
         this.vertexCount = mesh.vertexCount;
     }
     render(modelMatrix) {
-        if (!this.vertexBuffer || this.vertexCount === 0) {
+        if (!this.vertexBuffer) {
             return;
         }
         const canvas = this.context.canvas;
@@ -332,7 +332,7 @@ const crosses = [
     { value: null, source: [0, 0, 0] },
     { value: null, source: [0, 0, 0] },
 ];
-export function buildPolyhedronMesh(vertexes, faces) {
+export function buildPolyhedronMesh(vertexes, faces, faceVisibility) {
     const triangles = [];
     const cv = [0, 0, 0];
     const nv = [0, 0, 0];
@@ -340,6 +340,9 @@ export function buildPolyhedronMesh(vertexes, faces) {
     for (const face of faces) {
         const indexes = face.VertexIndexes;
         const colorIndex = Math.min(face.ColorIndex, faceColors.length - 1);
+        if (!faceVisibility[colorIndex]) {
+            continue;
+        }
         const [r, g, b] = faceColors[colorIndex];
         cv[0] = 0;
         cv[1] = 0;
