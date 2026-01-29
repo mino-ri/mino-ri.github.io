@@ -1,5 +1,7 @@
 import { NormalPolyhedron, unitTriangles, faceSelectorMap } from "./symmetry.js";
 import { initGpu, buildPolyhedronMesh, quaternionToMatrix } from "./gpu.js";
+import { Vectors } from "./vector.js";
+import { setCenter, createCircle, createPath, createLine, clearChildren } from "../svg_generator.js";
 class RotationState {
     w = 1;
     x = 0;
@@ -41,11 +43,13 @@ class RotationState {
 class OriginController {
     svg;
     originPoint;
+    circleGroup;
     onOriginChange;
     isDragging = false;
-    constructor(svg, originPoint, onOriginChange) {
+    constructor(svg, originPoint, circleGroup, onOriginChange) {
         this.svg = svg;
         this.originPoint = originPoint;
+        this.circleGroup = circleGroup;
         this.onOriginChange = onOriginChange;
         this.setupEventListeners();
     }
@@ -59,8 +63,8 @@ class OriginController {
     }
     getPositionFromEvent(clientX, clientY) {
         const rect = this.svg.getBoundingClientRect();
-        const x = ((clientX - rect.left) / rect.width) * 2.4 - 1.2;
-        const y = ((clientY - rect.top) / rect.height) * 2.4 - 1.2;
+        const x = ((clientX - rect.left) / rect.width) * 2.25 - 1.125;
+        const y = ((clientY - rect.top) / rect.height) * 2.25 - 1.125;
         const r = Math.sqrt(x * x + y * y);
         if (r <= 1) {
             return { x, y };
@@ -72,11 +76,9 @@ class OriginController {
     updateOrigin(x, y) {
         this.originPoint.setAttribute("cx", x.toString());
         this.originPoint.setAttribute("cy", y.toString());
-        const r = Math.sqrt(x * x + y * y);
-        const sinVal = Math.sin(0.5 * Math.PI * r);
-        const scale = r > 0 ? sinVal / r : 0;
-        const xPrime = x * scale;
-        const yPrime = y * scale;
+        const scale = 1 / (x * x + y * y + 1);
+        const xPrime = 2 * x * scale;
+        const yPrime = 2 * y * scale;
         const zPrime = Math.sqrt(Math.max(0, 1 - xPrime * xPrime - yPrime * yPrime));
         this.onOriginChange([xPrime, yPrime, zPrime]);
     }
@@ -120,6 +122,45 @@ class OriginController {
     }
     onTouchEnd() {
         this.isDragging = false;
+    }
+    addMirror(normal, color, stroke) {
+        const z = normal[2];
+        if (Math.abs(z) >= 0.9999) {
+            this.circleGroup.appendChild(createCircle(0, 0, 1, "none", color, stroke));
+        }
+        else {
+            const top = [0, 0, 0];
+            Vectors.cross(normal, [0, 0, 1], top);
+            Vectors.normalizeSelf(top);
+            if (Math.abs(z) < 0.0001) {
+                this.circleGroup.appendChild(createLine(top[0], top[1], -top[0], -top[1], color, stroke));
+            }
+            else {
+                const r = Math.abs(1 / z);
+                const sweep = z > 0 ? 0 : 1;
+                this.circleGroup.appendChild(createPath(`M ${top[0]} ${top[1]} A ${r} ${r} 0 0 ${sweep} ${-top[0]} ${-top[1]}`, "none", color, stroke));
+            }
+        }
+    }
+    setMirrorCircles(polyhedron) {
+        clearChildren(this.circleGroup);
+        const length = polyhedron.generators.length;
+        for (let i = 0; i < length; i++) {
+            for (let j = i + 1; j < length; j++) {
+                const g1 = polyhedron.symmetryGroup.transforms[polyhedron.generators[i].index];
+                const g2 = polyhedron.symmetryGroup.transforms[polyhedron.generators[j].index];
+                const normal1 = [g1.x + g2.x, g1.y + g2.y, g1.z + g2.z];
+                const normal2 = [g1.x - g2.x, g1.y - g2.y, g1.z - g2.z];
+                Vectors.normalizeSelf(normal1);
+                Vectors.normalizeSelf(normal2);
+                this.addMirror(normal1, "#999", "0.015");
+                this.addMirror(normal2, "#999", "0.015");
+            }
+        }
+        for (const generator of polyhedron.generators) {
+            const q = polyhedron.symmetryGroup.transforms[generator.index];
+            this.addMirror([q.x, q.y, q.z], "#555", "0.03");
+        }
     }
     reset() {
         this.updateOrigin(0, 0);
@@ -198,6 +239,7 @@ class PolyhedronViewer {
         this.polyhedron = new NormalPolyhedron(unitTriangle, selector);
         const mesh = buildPolyhedronMesh(this.polyhedron.vertexes, this.polyhedron.faces, this.faceVisibility);
         this.renderer.updateMesh(mesh);
+        return this.polyhedron;
     }
     setOrigin(origin) {
         if (!this.polyhedron)
@@ -242,7 +284,6 @@ function resizeCanvas(canvas) {
     const windowWidth = window.innerWidth;
     const width = rect.width;
     const height = window.innerHeight * (windowWidth > 800 ? 0.8 : 0.5);
-    console.log(`Resize ${window.innerWidth} ${window.innerHeight} -> ${width} ${height}`);
     const size = Math.min(width, height, 1080);
     const dpr = window.devicePixelRatio || 1;
     const pixelSize = Math.floor(size * dpr);
@@ -252,17 +293,19 @@ function resizeCanvas(canvas) {
     canvas.style.height = `${pixelSize / dpr}px`;
 }
 window.addEventListener("load", async () => {
+    setCenter(0, 0);
     const canvas = document.getElementById("preview_figure");
     const select = document.getElementById("select_coxeter_group");
     const selectFace = document.getElementById("select_face_selector");
     const autoRotateCheckbox = document.getElementById("checkbox_auto_rotate");
     const originControlSvg = document.getElementById("origin_control");
     const originPoint = document.getElementById("origin_point");
+    const circleGroup = document.getElementById("g_circles");
     const checkColor0 = document.getElementById("checkbox_color_0");
     const checkColor1 = document.getElementById("checkbox_color_1");
     const checkColor2 = document.getElementById("checkbox_color_2");
     const checkColor3 = document.getElementById("checkbox_color_3");
-    if (!canvas || !select || !selectFace || !checkColor0 || !checkColor1 || !checkColor2 || !checkColor3) {
+    if (!canvas || !select || !selectFace || !checkColor0 || !checkColor1 || !checkColor2 || !checkColor3 || !circleGroup) {
         console.error("Required elements not found");
         return;
     }
@@ -285,13 +328,14 @@ window.addEventListener("load", async () => {
         select.appendChild(option);
     }
     select.value = unitTriangles[0].id;
-    viewer.setPolyhedron(select.value, selectFace.value);
     let originController = null;
     if (originControlSvg && originPoint) {
-        originController = new OriginController(originControlSvg, originPoint, (origin) => viewer.setOrigin(origin));
+        originController = new OriginController(originControlSvg, originPoint, circleGroup, (origin) => viewer.setOrigin(origin));
     }
+    originController?.setMirrorCircles(viewer.setPolyhedron(select.value, selectFace.value));
     select.addEventListener("change", () => {
-        viewer.setPolyhedron(select.value, selectFace.value);
+        const polyhedron = viewer.setPolyhedron(select.value, selectFace.value);
+        originController?.setMirrorCircles(polyhedron);
         originController?.reset();
     });
     selectFace.addEventListener("change", () => {
