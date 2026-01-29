@@ -61,7 +61,9 @@ class RotationState {
 
 // origin 操作コントローラ
 class OriginController {
-    private isDragging = false
+    private isDragging = false // ドラッグ操作中か
+    private isDragged = false // クリック・タッチ後、ドラッグ操作が行われたか
+    private specialPoints: Vector[] = []
 
     constructor(
         private svg: SVGSVGElement,
@@ -96,53 +98,76 @@ class OriginController {
         }
     }
 
-    private updateOrigin(x: number, y: number): void {
-        this.originPoint.setAttribute("cx", x.toString())
-        this.originPoint.setAttribute("cy", y.toString())
-
+    private uiVectorToSphereVector(x: number, y: number): Vector {
         // UI座標から3Dベクトルへ変換
         const scale = 1 / (x * x + y * y + 1)
         const xPrime = 2 * x * scale
         const yPrime = 2 * y * scale
         const zPrime = Math.sqrt(Math.max(0, 1 - xPrime * xPrime - yPrime * yPrime))
+        return [xPrime, yPrime, zPrime]
+    }
 
-        this.onOriginChange([xPrime, yPrime, zPrime])
+    private changeOrigin(vector: Vector): void {
+        const x = vector[0]! / (1 + vector[2]!)
+        const y = vector[1]! / (1 + vector[2]!)
+        this.originPoint.setAttribute("cx", x.toString())
+        this.originPoint.setAttribute("cy", y.toString())
+
+        this.onOriginChange(vector)
+    }
+
+    private updateOrigin(x: number, y: number): void {
+        this.changeOrigin(this.uiVectorToSphereVector(x, y))
+    }
+
+    private updateOriginWithSpecialPoints(x: number, y: number): void {
+        const v = this.uiVectorToSphereVector(x, y)
+        for (const sp of this.specialPoints) {
+            if (Math.abs(sp[0]! - v[0]!) < 0.1 && Math.abs(sp[1]! - v[1]!) < 0.1 && Math.abs(sp[2]! - v[2]!) < 0.1) {
+                this.changeOrigin(sp)
+                return
+            }
+        }
+
+        this.changeOrigin(v)
     }
 
     private onMouseDown(e: MouseEvent): void {
         this.isDragging = true
-        const pos = this.getPositionFromEvent(e.clientX, e.clientY)
-        if (pos) {
-            this.updateOrigin(pos.x, pos.y)
-        }
+        this.isDragged = false
         e.preventDefault()
     }
 
     private onMouseMove(e: MouseEvent): void {
         if (!this.isDragging) return
+        this.isDragged = true
         const pos = this.getPositionFromEvent(e.clientX, e.clientY)
         if (pos) {
             this.updateOrigin(pos.x, pos.y)
         }
     }
 
-    private onMouseUp(): void {
+    private onMouseUp(e: MouseEvent): void {
+        if (this.isDragging && !this.isDragged) {
+            const pos = this.getPositionFromEvent(e.clientX, e.clientY)
+            if (pos) {
+                this.updateOriginWithSpecialPoints(pos.x, pos.y)
+            }
+        }
         this.isDragging = false
+        this.isDragged = false
     }
 
     private onTouchStart(e: TouchEvent): void {
-        if (e.touches.length === 1) {
-            this.isDragging = true
-            const pos = this.getPositionFromEvent(e.touches[0]!.clientX, e.touches[0]!.clientY)
-            if (pos) {
-                this.updateOrigin(pos.x, pos.y)
-            }
-            e.preventDefault()
-        }
+        if (e.touches.length !== 1) return
+        this.isDragging = true
+        this.isDragged = false
+        e.preventDefault()
     }
 
     private onTouchMove(e: TouchEvent): void {
         if (!this.isDragging || e.touches.length !== 1) return
+        this.isDragged = true
         const pos = this.getPositionFromEvent(e.touches[0]!.clientX, e.touches[0]!.clientY)
         if (pos) {
             this.updateOrigin(pos.x, pos.y)
@@ -150,8 +175,15 @@ class OriginController {
         e.preventDefault()
     }
 
-    private onTouchEnd(): void {
+    private onTouchEnd(e: TouchEvent): void {
+        if (this.isDragging && !this.isDragged) {
+            const pos = this.getPositionFromEvent(e.touches[0]!.clientX, e.touches[0]!.clientY)
+            if (pos) {
+                this.updateOriginWithSpecialPoints(pos.x, pos.y)
+            }
+        }
         this.isDragging = false
+        this.isDragged = false
     }
 
     private addMirror(normal: Vector, color: string, stroke: string): void {
@@ -177,7 +209,10 @@ class OriginController {
 
     setMirrorCircles(polyhedron: NormalPolyhedron): void {
         clearChildren(this.circleGroup)
+        const normals = []
+        this.specialPoints.splice(0)
         const length = polyhedron.generators.length
+        // 鏡の二等分線の描画
         for (let i = 0; i < length; i++) {
             for (let j = i + 1; j < length; j++) {
                 const g1 = polyhedron.symmetryGroup.transforms[polyhedron.generators[i]!.index]!
@@ -188,12 +223,34 @@ class OriginController {
                 Vectors.normalizeSelf(normal2)
                 this.addMirror(normal1, "#999", "0.015")
                 this.addMirror(normal2, "#999", "0.015")
+                normals.push(normal1, normal2)
             }
         }
 
+        // 鏡そのものの描画
         for (const generator of polyhedron.generators) {
             const q = polyhedron.symmetryGroup.transforms[generator.index]!
-            this.addMirror([q.x, q.y, q.z], "#555", "0.03")
+            const normal = [q.x, q.y, q.z]
+            this.addMirror(normal, "#555", "0.03")
+            normals.push(normal)
+        }
+
+        // 特別な点の計算
+        for (let i = 0; i < normals.length; i++) {
+            for (let j = i + 1; j < normals.length; j++) {
+                const n1 = normals[i]!
+                const n2 = normals[j]!
+                const sp = [0, 0, 0]
+                Vectors.cross(n1, n2, sp)
+                Vectors.normalizeSelf(sp)
+                if (sp[2]! < 0) {
+                    Vectors.negateSelf(sp)
+                }
+                this.specialPoints.push(sp)
+                if (Math.abs(sp[2]!) <= 0.001) {
+                    this.specialPoints.push([-sp[0]!, -sp[1]!, -sp[2]!]) // 赤道上の点は反対側も追加
+                }
+            }
         }
     }
 

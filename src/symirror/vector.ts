@@ -85,6 +85,12 @@ export class Vectors {
         }
     }
 
+    static negateSelf(v: Vector) {
+        for (let i = 0; i < v.length; i++) {
+            v[i]! = -v[i]!
+        }
+    }
+
     static normalizeSelf(v: Vector) {
         const factor = 1 / Math.sqrt(Vectors.dot(v, v))
         for (let i = 0; i < v.length; i++) {
