@@ -115,6 +115,7 @@ class OriginController {
         this.isDragged = true;
         const { x, y } = this.getPositionFromEvent(e.clientX, e.clientY);
         this.updateOrigin(x, y);
+        e.preventDefault();
     }
     onMouseUp(e) {
         if (this.isDragging && !this.isDragged) {
@@ -146,10 +147,9 @@ class OriginController {
         this.updateOrigin(x, y);
         e.preventDefault();
     }
-    onTouchEnd(e) {
+    onTouchEnd() {
         if (this.isDragging && !this.isDragged) {
-            const { x, y } = this.getPositionFromEvent(e.touches[0].clientX, e.touches[0].clientY);
-            this.updateOriginWithSpecialPoints(x, y);
+            this.updateOriginWithSpecialPoints(this.touchX, this.touchY);
         }
         this.isDragging = false;
         this.isDragged = false;
