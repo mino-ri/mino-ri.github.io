@@ -75,19 +75,14 @@ export const unitTriangles: PolyhedronSource[] = function (): PolyhedronSource[]
     const symmetry5 = createSymmetry(3, 5)
     return [
         { id: "a00", name: "2 3 3", unit: symmetry3.getDefaultGenerators() },
-        { id: "a01", name: "2 3 3'", unit: symmetry3.getGenerators(2, 1, 21) },
         { id: "a02", name: "3 3 3'", unit: symmetry3.getGenerators(1, 2, 13) },
 
         { id: "b00", name: "2 3 4", unit: symmetry4.getDefaultGenerators() },
-        { id: "b01", name: "2 3 4'", unit: symmetry4.getGenerators(1, 9, 3) },
         { id: "b02", name: "3 4 4'", unit: symmetry4.getGenerators(1, 2, 13) },
 
         { id: "h00", name: "2 3 5", unit: symmetry5.getDefaultGenerators() },
-        { id: "h01", name: "2 3 5'", unit: symmetry5.getGenerators(2, 1, 26) },
-        { id: "h02", name: "2 3 $", unit: symmetry5.getGenerators(1, 13, 3) },
-        { id: "h03", name: "2 3 $'", unit: symmetry5.getGenerators(2, 1, 83) },
+        { id: "h03", name: "2 3 $", unit: symmetry5.getGenerators(2, 1, 83) },
         { id: "h04", name: "2 5 $", unit: symmetry5.getGenerators(1, 13, 3) },
-        { id: "h05", name: "2 5 $'", unit: symmetry5.getGenerators(1, 33, 3) },
         { id: "h06", name: "3 3 5'", unit: symmetry5.getGenerators(1, 2, 28) },
         { id: "h07", name: "3 3 $", unit: symmetry5.getGenerators(1, 2, 15) },
         { id: "h08", name: "3 5 5'", unit: symmetry5.getGenerators(1, 13, 2) },
@@ -101,10 +96,6 @@ export const unitTriangles: PolyhedronSource[] = function (): PolyhedronSource[]
         { id: "p51", name: "2 2 5", unit: createSymmetry(2, 5).getDefaultGenerators() },
         { id: "p61", name: "2 2 6", unit: createSymmetry(2, 6).getDefaultGenerators() },
         { id: "p71", name: "2 2 7", unit: createSymmetry(2, 7).getDefaultGenerators() },
-
-        // { id: "bc01", name: "[[2 3 3]]", unit: symmetry4.getFaces(1, 2, 15) },
-        // { id: "bc02", name: "[[2 3 3']]", unit: symmetry4.getFaces(1, 9, 27) },
-        // { id: "bc03", name: "[[3 3 3']]", unit: symmetry4.getFaces(1, 2, 27) },
     ]
 }()
 
@@ -168,10 +159,12 @@ export class NormalPolyhedron {
     lineIndexes: [number, number][]
     faces: PolyhedronFace[]
     symmetryGroup: SymmetryGroup3
+    generators: CoxeterGroupElement[]
 
     constructor(source: UnitTriangle, faceSelector: FaceSelectorFunction) {
         this.vertexes = new Array<Vector>(source.symmetryGroup.coxeterGroup.order)
         this.symmetryGroup = source.symmetryGroup
+        this.generators = source.generators
         this.origin = source.symmetryGroup.origin
         for (let i = 0; i < source.symmetryGroup.transforms.length; i++) {
             this.vertexes[i] = Quaternions.transform(source.symmetryGroup.origin, source.symmetryGroup.transforms[i]!)

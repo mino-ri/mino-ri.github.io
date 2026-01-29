@@ -1,6 +1,7 @@
 import { NormalPolyhedron, unitTriangles, faceSelectorMap } from "./symmetry.js"
 import { initGpu, buildPolyhedronMesh, quaternionToMatrix, type GpuContext } from "./gpu.js"
-import { type Vector } from "./vector.js"
+import { type Vector, Vectors } from "./vector.js"
+import { setCenter, createCircle, createPath, createLine, clearChildren } from "../svg_generator.js"
 
 // 回転状態を管理するクォータニオン
 class RotationState {
@@ -65,6 +66,7 @@ class OriginController {
     constructor(
         private svg: SVGSVGElement,
         private originPoint: SVGCircleElement,
+        private circleGroup: SVGGElement,
         private onOriginChange: (origin: Vector) => void,
     ) {
         this.setupEventListeners()
@@ -82,8 +84,8 @@ class OriginController {
 
     private getPositionFromEvent(clientX: number, clientY: number): { x: number; y: number } | null {
         const rect = this.svg.getBoundingClientRect()
-        const x = ((clientX - rect.left) / rect.width) * 2.4 - 1.2
-        const y = ((clientY - rect.top) / rect.height) * 2.4 - 1.2
+        const x = ((clientX - rect.left) / rect.width) * 2.25 - 1.125
+        const y = ((clientY - rect.top) / rect.height) * 2.25 - 1.125
 
         // 半径1の円内に制限
         const r = Math.sqrt(x * x + y * y)
@@ -99,11 +101,9 @@ class OriginController {
         this.originPoint.setAttribute("cy", y.toString())
 
         // UI座標から3Dベクトルへ変換
-        const r = Math.sqrt(x * x + y * y)
-        const sinVal = Math.sin(0.5 * Math.PI * r)
-        const scale = r > 0 ? sinVal / r : 0
-        const xPrime = x * scale
-        const yPrime = y * scale
+        const scale = 1 / (x * x + y * y + 1)
+        const xPrime = 2 * x * scale
+        const yPrime = 2 * y * scale
         const zPrime = Math.sqrt(Math.max(0, 1 - xPrime * xPrime - yPrime * yPrime))
 
         this.onOriginChange([xPrime, yPrime, zPrime])
@@ -152,6 +152,49 @@ class OriginController {
 
     private onTouchEnd(): void {
         this.isDragging = false
+    }
+
+    private addMirror(normal: Vector, color: string, stroke: string): void {
+        const z = normal[2]!
+        if (Math.abs(z) >= 0.9999) {
+            // ステレオ投影後に円になる
+            this.circleGroup.appendChild(createCircle(0, 0, 1, "none", color, stroke))                
+        } else {
+            const top = [0, 0, 0]
+            Vectors.cross(normal, [0, 0, 1], top)
+            Vectors.normalizeSelf(top)
+            if (Math.abs(z) < 0.0001) {
+                // ステレオ投影後に直線になる
+                this.circleGroup.appendChild(createLine(top[0]!, top[1]!, -top[0]!, -top[1]!, color, stroke))
+            } else {
+                // ステレオ投影後に円弧になる
+                const r = Math.abs(1 / z)
+                const sweep = z > 0 ? 0 : 1
+                this.circleGroup.appendChild(createPath(`M ${top[0]!} ${top[1]!} A ${r} ${r} 0 0 ${sweep} ${-top[0]!} ${-top[1]!}`, "none", color, stroke))
+            }
+        }
+    }        
+
+    setMirrorCircles(polyhedron: NormalPolyhedron): void {
+        clearChildren(this.circleGroup)
+        const length = polyhedron.generators.length
+        for (let i = 0; i < length; i++) {
+            for (let j = i + 1; j < length; j++) {
+                const g1 = polyhedron.symmetryGroup.transforms[polyhedron.generators[i]!.index]!
+                const g2 = polyhedron.symmetryGroup.transforms[polyhedron.generators[j]!.index]!
+                const normal1 = [g1.x + g2.x, g1.y + g2.y, g1.z + g2.z]
+                const normal2 = [g1.x - g2.x, g1.y - g2.y, g1.z - g2.z]
+                Vectors.normalizeSelf(normal1)
+                Vectors.normalizeSelf(normal2)
+                this.addMirror(normal1, "#999", "0.015")
+                this.addMirror(normal2, "#999", "0.015")
+            }
+        }
+
+        for (const generator of polyhedron.generators) {
+            const q = polyhedron.symmetryGroup.transforms[generator.index]!
+            this.addMirror([q.x, q.y, q.z], "#555", "0.03")
+        }
     }
 
     reset(): void {
@@ -242,13 +285,14 @@ class PolyhedronViewer {
         this.isDragging = false
     }
 
-    setPolyhedron(selectValue: string, faceSelector: string): void {
+    setPolyhedron(selectValue: string, faceSelector: string): NormalPolyhedron {
         const unitTriangle = unitTriangles.find((source) => source.id === selectValue)!.unit
         const selector = faceSelectorMap.get(faceSelector) || faceSelectorMap.get("xxx")!
         this.polyhedron = new NormalPolyhedron(unitTriangle, selector)
 
         const mesh = buildPolyhedronMesh(this.polyhedron.vertexes, this.polyhedron.faces, this.faceVisibility)
         this.renderer.updateMesh(mesh)
+        return this.polyhedron
     }
 
     setOrigin(origin: Vector): void {
@@ -300,7 +344,6 @@ function resizeCanvas(canvas: HTMLCanvasElement): void {
     const windowWidth = window.innerWidth
     const width = rect.width
     const height = window.innerHeight * (windowWidth > 800 ? 0.8 : 0.5)
-    console.log(`Resize ${window.innerWidth} ${window.innerHeight} -> ${width} ${height}`)
     const size = Math.min(width, height, 1080)
     const dpr = window.devicePixelRatio || 1
     const pixelSize = Math.floor(size * dpr)
@@ -312,18 +355,20 @@ function resizeCanvas(canvas: HTMLCanvasElement): void {
 
 // エントリーポイント
 window.addEventListener("load", async () => {
+    setCenter(0, 0)
     const canvas = document.getElementById("preview_figure") as HTMLCanvasElement | null
     const select = document.getElementById("select_coxeter_group") as HTMLSelectElement | null
     const selectFace = document.getElementById("select_face_selector") as HTMLSelectElement | null
     const autoRotateCheckbox = document.getElementById("checkbox_auto_rotate") as HTMLInputElement | null
     const originControlSvg = document.getElementById("origin_control") as unknown as SVGSVGElement | null
     const originPoint = document.getElementById("origin_point") as unknown as SVGCircleElement | null
+    const circleGroup = document.getElementById("g_circles") as unknown as SVGGElement | null
     const checkColor0 = document.getElementById("checkbox_color_0") as HTMLInputElement | null
     const checkColor1 = document.getElementById("checkbox_color_1") as HTMLInputElement | null
     const checkColor2 = document.getElementById("checkbox_color_2") as HTMLInputElement | null
     const checkColor3 = document.getElementById("checkbox_color_3") as HTMLInputElement | null
 
-    if (!canvas || !select || !selectFace || !checkColor0 || !checkColor1 || !checkColor2 || !checkColor3) {
+    if (!canvas || !select || !selectFace || !checkColor0 || !checkColor1 || !checkColor2 || !checkColor3 || !circleGroup) {
         console.error("Required elements not found")
         return
     }
@@ -350,7 +395,6 @@ window.addEventListener("load", async () => {
     }
 
     select.value = unitTriangles[0]!.id
-    viewer.setPolyhedron(select.value, selectFace.value)
 
     // origin コントローラの初期化
     let originController: OriginController | null = null
@@ -358,12 +402,16 @@ window.addEventListener("load", async () => {
         originController = new OriginController(
             originControlSvg,
             originPoint,
+            circleGroup,
             (origin) => viewer.setOrigin(origin),
         )
     }
 
+    originController?.setMirrorCircles(viewer.setPolyhedron(select.value, selectFace.value))
+
     select.addEventListener("change", () => {
-        viewer.setPolyhedron(select.value, selectFace.value)
+        const polyhedron = viewer.setPolyhedron(select.value, selectFace.value)
+        originController?.setMirrorCircles(polyhedron)
         originController?.reset()
     })
 
