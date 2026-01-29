@@ -63,6 +63,8 @@ class RotationState {
 class OriginController {
     private isDragging = false // ドラッグ操作中か
     private isDragged = false // クリック・タッチ後、ドラッグ操作が行われたか
+    private touchX = 0
+    private touchY = 0
     private specialPoints: Vector[] = []
 
     constructor(
@@ -84,7 +86,7 @@ class OriginController {
         document.addEventListener("touchend", this.onTouchEnd.bind(this))
     }
 
-    private getPositionFromEvent(clientX: number, clientY: number): { x: number; y: number } | null {
+    private getPositionFromEvent(clientX: number, clientY: number): { x: number; y: number } {
         const rect = this.svg.getBoundingClientRect()
         const x = ((clientX - rect.left) / rect.width) * 2.25 - 1.125
         const y = ((clientY - rect.top) / rect.height) * 2.25 - 1.125
@@ -141,18 +143,14 @@ class OriginController {
     private onMouseMove(e: MouseEvent): void {
         if (!this.isDragging) return
         this.isDragged = true
-        const pos = this.getPositionFromEvent(e.clientX, e.clientY)
-        if (pos) {
-            this.updateOrigin(pos.x, pos.y)
-        }
+        const { x, y } = this.getPositionFromEvent(e.clientX, e.clientY)
+        this.updateOrigin(x, y)
     }
 
     private onMouseUp(e: MouseEvent): void {
         if (this.isDragging && !this.isDragged) {
-            const pos = this.getPositionFromEvent(e.clientX, e.clientY)
-            if (pos) {
-                this.updateOriginWithSpecialPoints(pos.x, pos.y)
-            }
+            const { x, y } = this.getPositionFromEvent(e.clientX, e.clientY)
+            this.updateOriginWithSpecialPoints(x, y)
         }
         this.isDragging = false
         this.isDragged = false
@@ -162,25 +160,28 @@ class OriginController {
         if (e.touches.length !== 1) return
         this.isDragging = true
         this.isDragged = false
+        const { x, y } = this.getPositionFromEvent(e.touches[0]!.clientX, e.touches[0]!.clientY)
+        this.touchX = x
+        this.touchY = y
         e.preventDefault()
     }
 
     private onTouchMove(e: TouchEvent): void {
         if (!this.isDragging || e.touches.length !== 1) return
-        this.isDragged = true
-        const pos = this.getPositionFromEvent(e.touches[0]!.clientX, e.touches[0]!.clientY)
-        if (pos) {
-            this.updateOrigin(pos.x, pos.y)
+        const { x, y } = this.getPositionFromEvent(e.touches[0]!.clientX, e.touches[0]!.clientY)
+        const dx = x - this.touchX
+        const dy = y - this.touchY
+        if (dx * dx + dy * dy > 0.01) {
+            this.isDragged = true
         }
+        this.updateOrigin(x, y)
         e.preventDefault()
     }
 
     private onTouchEnd(e: TouchEvent): void {
         if (this.isDragging && !this.isDragged) {
-            const pos = this.getPositionFromEvent(e.touches[0]!.clientX, e.touches[0]!.clientY)
-            if (pos) {
-                this.updateOriginWithSpecialPoints(pos.x, pos.y)
-            }
+            const { x, y } = this.getPositionFromEvent(e.touches[0]!.clientX, e.touches[0]!.clientY)
+            this.updateOriginWithSpecialPoints(x, y)
         }
         this.isDragging = false
         this.isDragged = false
