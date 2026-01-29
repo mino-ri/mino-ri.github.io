@@ -46,6 +46,8 @@ class OriginController {
     circleGroup;
     onOriginChange;
     isDragging = false;
+    isDragged = false;
+    specialPoints = [];
     constructor(svg, originPoint, circleGroup, onOriginChange) {
         this.svg = svg;
         this.originPoint = originPoint;
@@ -73,55 +75,83 @@ class OriginController {
             return { x: x / r, y: y / r };
         }
     }
-    updateOrigin(x, y) {
-        this.originPoint.setAttribute("cx", x.toString());
-        this.originPoint.setAttribute("cy", y.toString());
+    uiVectorToSphereVector(x, y) {
         const scale = 1 / (x * x + y * y + 1);
         const xPrime = 2 * x * scale;
         const yPrime = 2 * y * scale;
         const zPrime = Math.sqrt(Math.max(0, 1 - xPrime * xPrime - yPrime * yPrime));
-        this.onOriginChange([xPrime, yPrime, zPrime]);
+        return [xPrime, yPrime, zPrime];
+    }
+    changeOrigin(vector) {
+        const x = vector[0] / (1 + vector[2]);
+        const y = vector[1] / (1 + vector[2]);
+        this.originPoint.setAttribute("cx", x.toString());
+        this.originPoint.setAttribute("cy", y.toString());
+        this.onOriginChange(vector);
+    }
+    updateOrigin(x, y) {
+        this.changeOrigin(this.uiVectorToSphereVector(x, y));
+    }
+    updateOriginWithSpecialPoints(x, y) {
+        const v = this.uiVectorToSphereVector(x, y);
+        for (const sp of this.specialPoints) {
+            if (Math.abs(sp[0] - v[0]) < 0.1 && Math.abs(sp[1] - v[1]) < 0.1 && Math.abs(sp[2] - v[2]) < 0.1) {
+                this.changeOrigin(sp);
+                return;
+            }
+        }
+        this.changeOrigin(v);
     }
     onMouseDown(e) {
         this.isDragging = true;
-        const pos = this.getPositionFromEvent(e.clientX, e.clientY);
-        if (pos) {
-            this.updateOrigin(pos.x, pos.y);
-        }
+        this.isDragged = false;
         e.preventDefault();
     }
     onMouseMove(e) {
         if (!this.isDragging)
             return;
+        this.isDragged = true;
         const pos = this.getPositionFromEvent(e.clientX, e.clientY);
         if (pos) {
             this.updateOrigin(pos.x, pos.y);
         }
     }
-    onMouseUp() {
+    onMouseUp(e) {
+        if (this.isDragging && !this.isDragged) {
+            const pos = this.getPositionFromEvent(e.clientX, e.clientY);
+            if (pos) {
+                this.updateOriginWithSpecialPoints(pos.x, pos.y);
+            }
+        }
         this.isDragging = false;
+        this.isDragged = false;
     }
     onTouchStart(e) {
-        if (e.touches.length === 1) {
-            this.isDragging = true;
-            const pos = this.getPositionFromEvent(e.touches[0].clientX, e.touches[0].clientY);
-            if (pos) {
-                this.updateOrigin(pos.x, pos.y);
-            }
-            e.preventDefault();
-        }
+        if (e.touches.length !== 1)
+            return;
+        this.isDragging = true;
+        this.isDragged = false;
+        e.preventDefault();
     }
     onTouchMove(e) {
         if (!this.isDragging || e.touches.length !== 1)
             return;
+        this.isDragged = true;
         const pos = this.getPositionFromEvent(e.touches[0].clientX, e.touches[0].clientY);
         if (pos) {
             this.updateOrigin(pos.x, pos.y);
         }
         e.preventDefault();
     }
-    onTouchEnd() {
+    onTouchEnd(e) {
+        if (this.isDragging && !this.isDragged) {
+            const pos = this.getPositionFromEvent(e.touches[0].clientX, e.touches[0].clientY);
+            if (pos) {
+                this.updateOriginWithSpecialPoints(pos.x, pos.y);
+            }
+        }
         this.isDragging = false;
+        this.isDragged = false;
     }
     addMirror(normal, color, stroke) {
         const z = normal[2];
@@ -144,6 +174,8 @@ class OriginController {
     }
     setMirrorCircles(polyhedron) {
         clearChildren(this.circleGroup);
+        const normals = [];
+        this.specialPoints.splice(0);
         const length = polyhedron.generators.length;
         for (let i = 0; i < length; i++) {
             for (let j = i + 1; j < length; j++) {
@@ -155,11 +187,30 @@ class OriginController {
                 Vectors.normalizeSelf(normal2);
                 this.addMirror(normal1, "#999", "0.015");
                 this.addMirror(normal2, "#999", "0.015");
+                normals.push(normal1, normal2);
             }
         }
         for (const generator of polyhedron.generators) {
             const q = polyhedron.symmetryGroup.transforms[generator.index];
-            this.addMirror([q.x, q.y, q.z], "#555", "0.03");
+            const normal = [q.x, q.y, q.z];
+            this.addMirror(normal, "#555", "0.03");
+            normals.push(normal);
+        }
+        for (let i = 0; i < normals.length; i++) {
+            for (let j = i + 1; j < normals.length; j++) {
+                const n1 = normals[i];
+                const n2 = normals[j];
+                const sp = [0, 0, 0];
+                Vectors.cross(n1, n2, sp);
+                Vectors.normalizeSelf(sp);
+                if (sp[2] < 0) {
+                    Vectors.negateSelf(sp);
+                }
+                this.specialPoints.push(sp);
+                if (Math.abs(sp[2]) <= 0.001) {
+                    this.specialPoints.push([-sp[0], -sp[1], -sp[2]]);
+                }
+            }
         }
     }
     reset() {

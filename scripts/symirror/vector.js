@@ -63,6 +63,11 @@ export class Vectors {
             return Vectors.mul(v, 1 / Math.sqrt(Vectors.dot(v, v)), resultTo);
         }
     }
+    static negateSelf(v) {
+        for (let i = 0; i < v.length; i++) {
+            v[i] = -v[i];
+        }
+    }
     static normalizeSelf(v) {
         const factor = 1 / Math.sqrt(Vectors.dot(v, v));
         for (let i = 0; i < v.length; i++) {
