@@ -47,6 +47,8 @@ class OriginController {
     onOriginChange;
     isDragging = false;
     isDragged = false;
+    touchX = 0;
+    touchY = 0;
     specialPoints = [];
     constructor(svg, originPoint, circleGroup, onOriginChange) {
         this.svg = svg;
@@ -111,17 +113,13 @@ class OriginController {
         if (!this.isDragging)
             return;
         this.isDragged = true;
-        const pos = this.getPositionFromEvent(e.clientX, e.clientY);
-        if (pos) {
-            this.updateOrigin(pos.x, pos.y);
-        }
+        const { x, y } = this.getPositionFromEvent(e.clientX, e.clientY);
+        this.updateOrigin(x, y);
     }
     onMouseUp(e) {
         if (this.isDragging && !this.isDragged) {
-            const pos = this.getPositionFromEvent(e.clientX, e.clientY);
-            if (pos) {
-                this.updateOriginWithSpecialPoints(pos.x, pos.y);
-            }
+            const { x, y } = this.getPositionFromEvent(e.clientX, e.clientY);
+            this.updateOriginWithSpecialPoints(x, y);
         }
         this.isDragging = false;
         this.isDragged = false;
@@ -131,24 +129,27 @@ class OriginController {
             return;
         this.isDragging = true;
         this.isDragged = false;
+        const { x, y } = this.getPositionFromEvent(e.touches[0].clientX, e.touches[0].clientY);
+        this.touchX = x;
+        this.touchY = y;
         e.preventDefault();
     }
     onTouchMove(e) {
         if (!this.isDragging || e.touches.length !== 1)
             return;
-        this.isDragged = true;
-        const pos = this.getPositionFromEvent(e.touches[0].clientX, e.touches[0].clientY);
-        if (pos) {
-            this.updateOrigin(pos.x, pos.y);
+        const { x, y } = this.getPositionFromEvent(e.touches[0].clientX, e.touches[0].clientY);
+        const dx = x - this.touchX;
+        const dy = y - this.touchY;
+        if (dx * dx + dy * dy > 0.01) {
+            this.isDragged = true;
         }
+        this.updateOrigin(x, y);
         e.preventDefault();
     }
     onTouchEnd(e) {
         if (this.isDragging && !this.isDragged) {
-            const pos = this.getPositionFromEvent(e.touches[0].clientX, e.touches[0].clientY);
-            if (pos) {
-                this.updateOriginWithSpecialPoints(pos.x, pos.y);
-            }
+            const { x, y } = this.getPositionFromEvent(e.touches[0].clientX, e.touches[0].clientY);
+            this.updateOriginWithSpecialPoints(x, y);
         }
         this.isDragging = false;
         this.isDragged = false;
