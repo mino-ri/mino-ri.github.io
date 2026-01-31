@@ -12,11 +12,11 @@ class RotationState {
         const angleX = deltaY * sensitivity;
         const angleY = deltaX * sensitivity;
         this.rotateByAxis(1, 0, 0, angleX);
-        this.rotateByAxis(0, 1, 0, angleY);
+        this.rotateByAxis(0, -1, 0, angleY);
     }
     applyAutoRotate(deltaTime) {
         const rotationSpeed = 0.5;
-        this.rotateByAxis(0, 1, 0, rotationSpeed * deltaTime);
+        this.rotateByAxis(0, -1, 0, rotationSpeed * deltaTime);
     }
     rotateByAxis(ax, ay, az, angle) {
         const halfAngle = angle * 0.5;
@@ -24,7 +24,7 @@ class RotationState {
         const c = Math.cos(halfAngle);
         const qw = c;
         const qx = ax * s;
-        const qy = ay * -s;
+        const qy = ay * s;
         const qz = az * s;
         const nw = qw * this.w - qx * this.x - qy * this.y - qz * this.z;
         const nx = qw * this.x + qx * this.w + qy * this.z - qz * this.y;

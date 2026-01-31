@@ -55,26 +55,31 @@ export const unitTriangles = function () {
     const symmetry3 = createSymmetry(3, 3);
     const symmetry4 = createSymmetry(3, 4);
     const symmetry5 = createSymmetry(3, 5);
+    const symmetryP5 = createSymmetry(2, 5);
+    const symmetryP7 = createSymmetry(2, 7);
     return [
         { id: "a00", name: "2 3 3", unit: symmetry3.getDefaultGenerators() },
         { id: "a02", name: "3 3 3'", unit: symmetry3.getGenerators(1, 2, 13) },
         { id: "b00", name: "2 3 4", unit: symmetry4.getDefaultGenerators() },
         { id: "b02", name: "3 4 4'", unit: symmetry4.getGenerators(1, 2, 13) },
         { id: "h00", name: "2 3 5", unit: symmetry5.getDefaultGenerators() },
-        { id: "h03", name: "2 3 $", unit: symmetry5.getGenerators(2, 1, 83) },
-        { id: "h04", name: "2 5 $", unit: symmetry5.getGenerators(1, 13, 3) },
+        { id: "h03", name: "2 3 5/2", unit: symmetry5.getGenerators(2, 1, 83) },
+        { id: "h04", name: "2 5 5/2", unit: symmetry5.getGenerators(1, 13, 3) },
         { id: "h06", name: "3 3 5'", unit: symmetry5.getGenerators(1, 2, 28) },
-        { id: "h07", name: "3 3 $", unit: symmetry5.getGenerators(1, 2, 15) },
+        { id: "h07", name: "3 3 5/2", unit: symmetry5.getGenerators(1, 2, 15) },
         { id: "h08", name: "3 5 5'", unit: symmetry5.getGenerators(1, 13, 2) },
-        { id: "h09", name: "3 5 $'", unit: symmetry5.getGenerators(1, 33, 2) },
-        { id: "h10", name: "3 $ $'", unit: symmetry5.getGenerators(1, 99, 2) },
+        { id: "h09", name: "3 5 5/2'", unit: symmetry5.getGenerators(1, 33, 2) },
+        { id: "h10", name: "3 5/2 5/2'", unit: symmetry5.getGenerators(1, 99, 2) },
         { id: "h13", name: "5 5 5'", unit: symmetry5.getGenerators(2, 3, 28) },
-        { id: "h14", name: "$ $ $", unit: symmetry5.getGenerators(3, 13, 26) },
+        { id: "h14", name: "5/2 5/2 5/2", unit: symmetry5.getGenerators(3, 13, 26) },
         { id: "p31", name: "2 2 3", unit: createSymmetry(2, 3).getDefaultGenerators() },
         { id: "p41", name: "2 2 4", unit: createSymmetry(2, 4).getDefaultGenerators() },
-        { id: "p51", name: "2 2 5", unit: createSymmetry(2, 5).getDefaultGenerators() },
+        { id: "p51", name: "2 2 5", unit: symmetryP5.getDefaultGenerators() },
+        { id: "p53", name: "2 2 5/2", unit: symmetryP5.getGenerators(1, 2, 11) },
         { id: "p61", name: "2 2 6", unit: createSymmetry(2, 6).getDefaultGenerators() },
-        { id: "p71", name: "2 2 7", unit: createSymmetry(2, 7).getDefaultGenerators() },
+        { id: "p71", name: "2 2 7", unit: symmetryP7.getDefaultGenerators() },
+        { id: "p72", name: "2 2 7/2", unit: symmetryP7.getGenerators(1, 2, 11) },
+        { id: "p73", name: "2 2 7/3", unit: symmetryP7.getGenerators(1, 2, 19) },
     ];
 }();
 export const faceSelectorMap = new Map([
