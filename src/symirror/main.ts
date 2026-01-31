@@ -20,13 +20,13 @@ class RotationState {
 
         // 累積回転を適用
         this.rotateByAxis(1, 0, 0, angleX)
-        this.rotateByAxis(0, 1, 0, angleY)
+        this.rotateByAxis(0, -1, 0, angleY)
     }
 
     // 自動回転を適用 (Y軸周り)
     applyAutoRotate(deltaTime: number): void {
         const rotationSpeed = 0.5 // ラジアン/秒
-        this.rotateByAxis(0, 1, 0, rotationSpeed * deltaTime)
+        this.rotateByAxis(0, -1, 0, rotationSpeed * deltaTime)
     }
 
     private rotateByAxis(ax: number, ay: number, az: number, angle: number): void {
@@ -37,7 +37,7 @@ class RotationState {
         // 新しい回転クォータニオン
         const qw = c
         const qx = ax * s
-        const qy = ay * -s
+        const qy = ay * s
         const qz = az * s
 
         // 現在のクォータニオンに乗算: q * current
