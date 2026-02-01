@@ -335,7 +335,8 @@ class PolyhedronViewer {
     private lastTime = 0
     private polyhedron: NormalPolyhedron | null = null
     private autoRotate = false
-    private faceVisibility: boolean[] = [true, true, true, true]
+    private faceVisibility: boolean[] = [true, true, true, true, true]
+    private verfView: boolean = false
 
     constructor(
         private canvas: HTMLCanvasElement,
@@ -412,7 +413,7 @@ class PolyhedronViewer {
         const selector = faceSelectorMap.get(faceSelector) || faceSelectorMap.get("xxx")!
         this.polyhedron = new NormalPolyhedron(unitTriangle, selector)
 
-        const mesh = buildPolyhedronMesh(this.polyhedron.vertexes, this.polyhedron.faces, this.faceVisibility)
+        const mesh = buildPolyhedronMesh(this.polyhedron.vertexes, this.polyhedron.faces, this.faceVisibility, this.verfView)
         this.renderer.updateMesh(mesh)
         return this.polyhedron
     }
@@ -420,16 +421,23 @@ class PolyhedronViewer {
     setOrigin(origin: Vector): void {
         if (!this.polyhedron) return
         this.polyhedron.setOrigin(origin)
-        const mesh = buildPolyhedronMesh(this.polyhedron.vertexes, this.polyhedron.faces, this.faceVisibility)
+        const mesh = buildPolyhedronMesh(this.polyhedron.vertexes, this.polyhedron.faces, this.faceVisibility, this.verfView)
         this.renderer.updateMesh(mesh)
     }
 
     setFaceVisibility(faceVisibility: boolean[]): void {
-        for (let i = 0; i < 4; i++) {
+        for (let i = 0; i < faceVisibility.length; i++) {
             this.faceVisibility[i] = faceVisibility[i]!
         }
         if (!this.polyhedron) return
-        const mesh = buildPolyhedronMesh(this.polyhedron.vertexes, this.polyhedron.faces, this.faceVisibility)
+        const mesh = buildPolyhedronMesh(this.polyhedron.vertexes, this.polyhedron.faces, this.faceVisibility, this.verfView)
+        this.renderer.updateMesh(mesh)
+    }
+
+    setVerfView(verfView: boolean): void {
+        this.verfView = verfView
+        if (!this.polyhedron) return
+        const mesh = buildPolyhedronMesh(this.polyhedron.vertexes, this.polyhedron.faces, this.faceVisibility, this.verfView)
         this.renderer.updateMesh(mesh)
     }
 
@@ -490,8 +498,10 @@ window.addEventListener("load", async () => {
     const checkColor1 = document.getElementById("checkbox_color_1") as HTMLInputElement | null
     const checkColor2 = document.getElementById("checkbox_color_2") as HTMLInputElement | null
     const checkColor3 = document.getElementById("checkbox_color_3") as HTMLInputElement | null
+    const checkColor4 = document.getElementById("checkbox_color_4") as HTMLInputElement | null
+    const checkVerf = document.getElementById("checkbox_verf") as HTMLInputElement | null
 
-    if (!canvas || !select || !selectFace || !checkColor0 || !checkColor1 || !checkColor2 || !checkColor3 || !circleGroup || !originBack) {
+    if (!canvas || !select || !selectFace || !checkColor0 || !checkColor1 || !checkColor2 || !checkColor3 || !checkColor4 || !circleGroup || !originBack) {
         console.error("Required elements not found")
         return
     }
@@ -545,12 +555,17 @@ window.addEventListener("load", async () => {
         originController?.reset()
     })
 
+    checkVerf?.addEventListener("change", () => {
+        viewer.setVerfView(checkVerf.checked)
+    })
+
     const colorCheckChangeHandler = () => {
         viewer.setFaceVisibility([
             checkColor0.checked,
             checkColor1.checked,
             checkColor2.checked,
             checkColor3.checked,
+            checkColor4.checked,
         ])
     }
 
@@ -558,6 +573,7 @@ window.addEventListener("load", async () => {
     checkColor1?.addEventListener("change", colorCheckChangeHandler)
     checkColor2?.addEventListener("change", colorCheckChangeHandler)
     checkColor3?.addEventListener("change", colorCheckChangeHandler)
+    checkColor4?.addEventListener("change", colorCheckChangeHandler)
 
     if (autoRotateCheckbox) {
         autoRotateCheckbox.addEventListener("change", () => {
