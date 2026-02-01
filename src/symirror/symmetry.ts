@@ -150,6 +150,15 @@ export const faceSelectorMap = new Map<string, FaceSelectorFunction>([
         const ca = c.mul(a)
         return [[ab], [bc], [ca], [ab, bc, ca]]
     }],
+    ["oooo", (a, b, c) => {
+        const ab = a.mul(b)
+        const bc = b.mul(c)
+        const ac = a.mul(c)
+        const ca = c.mul(a)
+        const abDash = ac.mul(ab).mul(ca)
+        const bcDash = ca.mul(bc).mul(ac)
+        return [[bc], [bcDash], [ab], [ab, bc, abDash, bcDash], [abDash]]
+    }],
 ])
 
 export type PolyhedronFace = {

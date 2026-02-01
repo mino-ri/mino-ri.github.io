@@ -393,6 +393,7 @@ export function buildPolyhedronMesh(
     vertexes: Vector[],
     faces: { ColorIndex: number; VertexIndexes: number[] }[],
     faceVisibility: boolean[],
+    verfView: boolean,
 ): PolyhedronMesh {
     const triangles: number[] = []
     const cv = [0, 0, 0]
@@ -403,6 +404,10 @@ export function buildPolyhedronMesh(
         const indexes = face.VertexIndexes
         const colorIndex = Math.min(face.ColorIndex, faceColors.length - 1)
         if (!faceVisibility[colorIndex]) {
+            continue
+        }
+
+        if (verfView && face.VertexIndexes.every(i => i !== 0)) {
             continue
         }
 
