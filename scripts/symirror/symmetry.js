@@ -135,6 +135,7 @@ export class NormalPolyhedron {
     faces;
     symmetryGroup;
     generators;
+    faceDefinitions;
     constructor(source, faceSelector) {
         this.vertexes = new Array(source.symmetryGroup.coxeterGroup.order);
         this.symmetryGroup = source.symmetryGroup;
@@ -144,6 +145,7 @@ export class NormalPolyhedron {
             this.vertexes[i] = Quaternions.transform(source.symmetryGroup.origin, source.symmetryGroup.transforms[i]);
         }
         const faceDefinitions = faceSelector(source.generators[0], source.generators[1], source.generators[2]);
+        this.faceDefinitions = faceDefinitions;
         const vertexIndexes = [0];
         const vertexSet = new Set();
         vertexSet.add(0);
@@ -217,6 +219,28 @@ export class NormalPolyhedron {
         });
         this.lineIndexes = lines;
         this.faces = faces;
+    }
+    #isExisting(existing, element) {
+        for (const ex of existing) {
+            if (ex.index === element.index) {
+                return true;
+            }
+            else if (ex.mul(element).index === 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+    getEdgeGenerators() {
+        const result = [];
+        for (const face of this.faceDefinitions) {
+            for (const element of face) {
+                if (!this.#isExisting(result, element)) {
+                    result.push(element);
+                }
+            }
+        }
+        return result.map((e) => this.symmetryGroup.transforms[e.index]);
     }
     setOrigin(newOrigin) {
         this.origin = newOrigin;
