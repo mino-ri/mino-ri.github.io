@@ -332,7 +332,7 @@ const crosses = [
     { value: null, source: [0, 0, 0] },
     { value: null, source: [0, 0, 0] },
 ];
-export function buildPolyhedronMesh(vertexes, faces, faceVisibility) {
+export function buildPolyhedronMesh(vertexes, faces, faceVisibility, verfView) {
     const triangles = [];
     const cv = [0, 0, 0];
     const nv = [0, 0, 0];
@@ -341,6 +341,9 @@ export function buildPolyhedronMesh(vertexes, faces, faceVisibility) {
         const indexes = face.VertexIndexes;
         const colorIndex = Math.min(face.ColorIndex, faceColors.length - 1);
         if (!faceVisibility[colorIndex]) {
+            continue;
+        }
+        if (verfView && face.VertexIndexes.every(i => i !== 0)) {
             continue;
         }
         const [r, g, b] = faceColors[colorIndex];
