@@ -234,7 +234,6 @@ class OriginController {
         const width = this.canvas.width
         const height = this.canvas.height
         const imageData = ctx.createImageData(width, height)
-        const rect = this.canvas.getBoundingClientRect()
         const edgeGenerators = polyhedron.getEdgeGenerators()
         const vector0: Vector = [0, 0, 0]
         const vector1: Vector = [0, 0, 0]
@@ -242,8 +241,8 @@ class OriginController {
 
         for (let px = 0; px < width; px++) {
             for (let py = 0; py < height; py++) {
-                const x = px / rect.width * 2.25 - 1.125
-                const y = py / rect.height * 2.25 - 1.125
+                const x = (px + 0.5) / width * 2.25 - 1.125
+                const y = (py + 0.5) / height * 2.25 - 1.125
                 if (x * x + y * y > 1) {
                     continue
                 }
