@@ -399,6 +399,12 @@ export function buildPolyhedronMesh(
     const cv = [0, 0, 0]
     const nv = [0, 0, 0]
     const mv = [0, 0, 0]
+    const refPointIndexes: number[] = []
+    vertexes.forEach((vertex, i) => {
+        if (Vectors.distanceSquared(vertex, vertexes[0]!) < 0.005) {
+            refPointIndexes.push(i)
+        }
+    })
 
     for (const face of faces) {
         const indexes = face.VertexIndexes
@@ -407,7 +413,7 @@ export function buildPolyhedronMesh(
             continue
         }
 
-        if (verfView && face.VertexIndexes.every(i => i !== 0)) {
+        if (verfView && face.VertexIndexes.every(i => !refPointIndexes.includes(i))) {
             continue
         }
 
