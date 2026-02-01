@@ -165,6 +165,7 @@ export class NormalPolyhedron {
     faces: PolyhedronFace[]
     symmetryGroup: SymmetryGroup3
     generators: CoxeterGroupElement[]
+    faceDefinitions: CoxeterGroupElement[][]
 
     constructor(source: UnitTriangle, faceSelector: FaceSelectorFunction) {
         this.vertexes = new Array<Vector>(source.symmetryGroup.coxeterGroup.order)
@@ -175,6 +176,7 @@ export class NormalPolyhedron {
             this.vertexes[i] = Quaternions.transform(source.symmetryGroup.origin, source.symmetryGroup.transforms[i]!)
         }
         const faceDefinitions = faceSelector(source.generators[0]!, source.generators[1]!, source.generators[2]!)
+        this.faceDefinitions = faceDefinitions
 
         // 頂点の選別
         const vertexIndexes = [0]
@@ -258,6 +260,31 @@ export class NormalPolyhedron {
 
         this.lineIndexes = lines
         this.faces = faces
+    }
+
+    #isExisting(existing: CoxeterGroupElement[], element: CoxeterGroupElement): boolean {
+        for (const ex of existing) {
+            if (ex.index === element.index) {
+                return true
+            } else if (ex.mul(element).index === 0) {
+                return true
+            }
+        }
+
+        return false
+    }
+
+    getEdgeGenerators(): Quaternion[] {
+        const result: CoxeterGroupElement[] = []
+        for (const face of this.faceDefinitions) {
+            for (const element of face) {
+                if (!this.#isExisting(result, element)) {
+                    result.push(element)
+                }
+            }
+        }
+
+        return result.map((e) => this.symmetryGroup.transforms[e.index]!)
     }
 
     setOrigin(newOrigin: Vector): void {

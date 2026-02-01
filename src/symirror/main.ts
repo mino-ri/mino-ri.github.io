@@ -2,6 +2,7 @@ import { NormalPolyhedron, unitTriangles, faceSelectorMap } from "./symmetry.js"
 import { initGpu, buildPolyhedronMesh, quaternionToMatrix, type GpuContext } from "./gpu.js"
 import { type Vector, Vectors } from "./vector.js"
 import { setCenter, createCircle, createPath, createLine, clearChildren } from "../svg_generator.js"
+import { Quaternions } from "./quaternion.js"
 
 // 回転状態を管理するクォータニオン
 class RotationState {
@@ -71,6 +72,7 @@ class OriginController {
         private svg: SVGSVGElement,
         private originPoint: SVGCircleElement,
         private circleGroup: SVGGElement,
+        private canvas: HTMLCanvasElement,
         private onOriginChange: (origin: Vector) => void,
     ) {
         this.setupEventListeners()
@@ -100,13 +102,20 @@ class OriginController {
         }
     }
 
-    private uiVectorToSphereVector(x: number, y: number): Vector {
+    private uiVectorToSphereVector(x: number, y: number, resultTo?: Vector): Vector {
         // UI座標から3Dベクトルへ変換
         const scale = 1 / (x * x + y * y + 1)
         const xPrime = 2 * x * scale
         const yPrime = 2 * y * scale
         const zPrime = Math.sqrt(Math.max(0, 1 - xPrime * xPrime - yPrime * yPrime))
-        return [xPrime, yPrime, zPrime]
+        if (!resultTo) {
+            return [xPrime, yPrime, zPrime]
+        } else {
+            resultTo[0] = xPrime
+            resultTo[1] = yPrime
+            resultTo[2] = zPrime
+            return resultTo
+        }
     }
 
     private changeOrigin(vector: Vector): void {
@@ -191,7 +200,7 @@ class OriginController {
         const z = normal[2]!
         if (Math.abs(z) >= 0.9999) {
             // ステレオ投影後に円になる
-            this.circleGroup.appendChild(createCircle(0, 0, 1, "none", color, stroke))                
+            this.circleGroup.appendChild(createCircle(0, 0, 1, "none", color, stroke))
         } else {
             const top = [0, 0, 0]
             Vectors.cross(normal, [0, 0, 1], top)
@@ -206,7 +215,63 @@ class OriginController {
                 this.circleGroup.appendChild(createPath(`M ${top[0]!} ${top[1]!} A ${r} ${r} 0 0 ${sweep} ${-top[0]!} ${-top[1]!}`, "none", color, stroke))
             }
         }
-    }        
+    }
+
+    static #colors = [
+        { r: 0, g: 0, b: 0 },
+        { r: 180, g: 0, b: 0 },
+        { r: 0, g: 180, b: 0 },
+        { r: 255, g: 200, b: 0 },
+        { r: 0, g: 0, b: 180 },
+        { r: 255, g: 0, b: 255 },
+        { r: 0, g: 255, b: 255 },
+        { r: 255, g: 255, b: 255 },
+    ]
+
+    setCanvas(polyhedron: NormalPolyhedron): void {
+        const ctx = this.canvas.getContext("2d")
+        if (!ctx) return
+        const width = this.canvas.width
+        const height = this.canvas.height
+        const imageData = ctx.createImageData(width, height)
+        const rect = this.canvas.getBoundingClientRect()
+        const edgeGenerators = polyhedron.getEdgeGenerators()
+        const vector0: Vector = [0, 0, 0]
+        const vector1: Vector = [0, 0, 0]
+        const distances = new Array<number>(edgeGenerators.length)
+
+        for (let px = 0; px < width; px++) {
+            for (let py = 0; py < height; py++) {
+                const x = px / rect.width * 2.25 - 1.125
+                const y = py / rect.height * 2.25 - 1.125
+                if (x * x + y * y > 1) {
+                    continue
+                }
+
+                this.uiVectorToSphereVector(x, y, vector0)
+                for (let i = 0; i < edgeGenerators.length; i++) {
+                    Quaternions.transform(vector0, edgeGenerators[i]!, vector1)
+                    distances[i] = Vectors.distanceSquared(vector0, vector1)
+                }
+
+                const colorIndex = distances.length >= 4
+                    ? ((distances[0]! > distances[1]!) === (distances[2]! > distances[3]!) ? 1 : 0) +
+                    ((distances[1]! > distances[2]!) === (distances[0]! > distances[3]!) ? 2 : 0) +
+                    ((distances[2]! > distances[0]!) === (distances[1]! > distances[3]!) ? 4 : 0)
+                    : (distances[0]! > distances[1]! ? 1 : 0) +
+                    (distances[1]! > distances[2]! ? 2 : 0) +
+                    (distances[2]! > distances[0]! ? 4 : 0)
+                const { r, g, b } = OriginController.#colors[colorIndex]!
+                const baseIndex = (py * width + px) * 4
+                imageData.data[baseIndex + 0] = r
+                imageData.data[baseIndex + 1] = g
+                imageData.data[baseIndex + 2] = b
+                imageData.data[baseIndex + 3] = 255
+            }
+        }
+
+        ctx.putImageData(imageData, 0, 0)
+    }
 
     setMirrorCircles(polyhedron: NormalPolyhedron): void {
         clearChildren(this.circleGroup)
@@ -222,8 +287,6 @@ class OriginController {
                 const normal2 = [g1.x - g2.x, g1.y - g2.y, g1.z - g2.z]
                 Vectors.normalizeSelf(normal1)
                 Vectors.normalizeSelf(normal2)
-                this.addMirror(normal1, "#999", "0.015")
-                this.addMirror(normal2, "#999", "0.015")
                 normals.push(normal1, normal2)
             }
         }
@@ -232,7 +295,7 @@ class OriginController {
         for (const generator of polyhedron.generators) {
             const q = polyhedron.symmetryGroup.transforms[generator.index]!
             const normal = [q.x, q.y, q.z]
-            this.addMirror(normal, "#555", "0.03")
+            this.addMirror(normal, "#fff", "0.02")
             normals.push(normal)
         }
 
@@ -253,6 +316,8 @@ class OriginController {
                 }
             }
         }
+
+        this.setCanvas(polyhedron)
     }
 
     reset(): void {
@@ -415,6 +480,7 @@ function resizeCanvas(canvas: HTMLCanvasElement): void {
 window.addEventListener("load", async () => {
     setCenter(0, 0)
     const canvas = document.getElementById("preview_figure") as HTMLCanvasElement | null
+    const originBack = document.getElementById("origin_back") as HTMLCanvasElement | null
     const select = document.getElementById("select_coxeter_group") as HTMLSelectElement | null
     const selectFace = document.getElementById("select_face_selector") as HTMLSelectElement | null
     const autoRotateCheckbox = document.getElementById("checkbox_auto_rotate") as HTMLInputElement | null
@@ -426,7 +492,7 @@ window.addEventListener("load", async () => {
     const checkColor2 = document.getElementById("checkbox_color_2") as HTMLInputElement | null
     const checkColor3 = document.getElementById("checkbox_color_3") as HTMLInputElement | null
 
-    if (!canvas || !select || !selectFace || !checkColor0 || !checkColor1 || !checkColor2 || !checkColor3 || !circleGroup) {
+    if (!canvas || !select || !selectFace || !checkColor0 || !checkColor1 || !checkColor2 || !checkColor3 || !circleGroup || !originBack) {
         console.error("Required elements not found")
         return
     }
@@ -461,6 +527,7 @@ window.addEventListener("load", async () => {
             originControlSvg,
             originPoint,
             circleGroup,
+            originBack,
             (origin) => viewer.setOrigin(origin),
         )
     }
@@ -474,7 +541,8 @@ window.addEventListener("load", async () => {
     })
 
     selectFace.addEventListener("change", () => {
-        viewer.setPolyhedron(select.value, selectFace.value)
+        const polyhedron = viewer.setPolyhedron(select.value, selectFace.value)
+        originController?.setCanvas(polyhedron)
         originController?.reset()
     })
 
