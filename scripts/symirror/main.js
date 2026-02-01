@@ -2,6 +2,7 @@ import { NormalPolyhedron, unitTriangles, faceSelectorMap } from "./symmetry.js"
 import { initGpu, buildPolyhedronMesh, quaternionToMatrix } from "./gpu.js";
 import { Vectors } from "./vector.js";
 import { setCenter, createCircle, createPath, createLine, clearChildren } from "../svg_generator.js";
+import { Quaternions } from "./quaternion.js";
 class RotationState {
     w = 1;
     x = 0;
@@ -44,16 +45,18 @@ class OriginController {
     svg;
     originPoint;
     circleGroup;
+    canvas;
     onOriginChange;
     isDragging = false;
     isDragged = false;
     touchX = 0;
     touchY = 0;
     specialPoints = [];
-    constructor(svg, originPoint, circleGroup, onOriginChange) {
+    constructor(svg, originPoint, circleGroup, canvas, onOriginChange) {
         this.svg = svg;
         this.originPoint = originPoint;
         this.circleGroup = circleGroup;
+        this.canvas = canvas;
         this.onOriginChange = onOriginChange;
         this.setupEventListeners();
     }
@@ -77,12 +80,20 @@ class OriginController {
             return { x: x / r, y: y / r };
         }
     }
-    uiVectorToSphereVector(x, y) {
+    uiVectorToSphereVector(x, y, resultTo) {
         const scale = 1 / (x * x + y * y + 1);
         const xPrime = 2 * x * scale;
         const yPrime = 2 * y * scale;
         const zPrime = Math.sqrt(Math.max(0, 1 - xPrime * xPrime - yPrime * yPrime));
-        return [xPrime, yPrime, zPrime];
+        if (!resultTo) {
+            return [xPrime, yPrime, zPrime];
+        }
+        else {
+            resultTo[0] = xPrime;
+            resultTo[1] = yPrime;
+            resultTo[2] = zPrime;
+            return resultTo;
+        }
     }
     changeOrigin(vector) {
         const x = vector[0] / (1 + vector[2]);
@@ -173,6 +184,57 @@ class OriginController {
             }
         }
     }
+    static #colors = [
+        { r: 0, g: 0, b: 0 },
+        { r: 180, g: 0, b: 0 },
+        { r: 0, g: 180, b: 0 },
+        { r: 255, g: 200, b: 0 },
+        { r: 0, g: 0, b: 180 },
+        { r: 255, g: 0, b: 255 },
+        { r: 0, g: 255, b: 255 },
+        { r: 255, g: 255, b: 255 },
+    ];
+    setCanvas(polyhedron) {
+        const ctx = this.canvas.getContext("2d");
+        if (!ctx)
+            return;
+        const width = this.canvas.width;
+        const height = this.canvas.height;
+        const imageData = ctx.createImageData(width, height);
+        const rect = this.canvas.getBoundingClientRect();
+        const edgeGenerators = polyhedron.getEdgeGenerators();
+        const vector0 = [0, 0, 0];
+        const vector1 = [0, 0, 0];
+        const distances = new Array(edgeGenerators.length);
+        for (let px = 0; px < width; px++) {
+            for (let py = 0; py < height; py++) {
+                const x = px / rect.width * 2.25 - 1.125;
+                const y = py / rect.height * 2.25 - 1.125;
+                if (x * x + y * y > 1) {
+                    continue;
+                }
+                this.uiVectorToSphereVector(x, y, vector0);
+                for (let i = 0; i < edgeGenerators.length; i++) {
+                    Quaternions.transform(vector0, edgeGenerators[i], vector1);
+                    distances[i] = Vectors.distanceSquared(vector0, vector1);
+                }
+                const colorIndex = distances.length >= 4
+                    ? ((distances[0] > distances[1]) === (distances[2] > distances[3]) ? 1 : 0) +
+                        ((distances[1] > distances[2]) === (distances[0] > distances[3]) ? 2 : 0) +
+                        ((distances[2] > distances[0]) === (distances[1] > distances[3]) ? 4 : 0)
+                    : (distances[0] > distances[1] ? 1 : 0) +
+                        (distances[1] > distances[2] ? 2 : 0) +
+                        (distances[2] > distances[0] ? 4 : 0);
+                const { r, g, b } = OriginController.#colors[colorIndex];
+                const baseIndex = (py * width + px) * 4;
+                imageData.data[baseIndex + 0] = r;
+                imageData.data[baseIndex + 1] = g;
+                imageData.data[baseIndex + 2] = b;
+                imageData.data[baseIndex + 3] = 255;
+            }
+        }
+        ctx.putImageData(imageData, 0, 0);
+    }
     setMirrorCircles(polyhedron) {
         clearChildren(this.circleGroup);
         const normals = [];
@@ -186,15 +248,13 @@ class OriginController {
                 const normal2 = [g1.x - g2.x, g1.y - g2.y, g1.z - g2.z];
                 Vectors.normalizeSelf(normal1);
                 Vectors.normalizeSelf(normal2);
-                this.addMirror(normal1, "#999", "0.015");
-                this.addMirror(normal2, "#999", "0.015");
                 normals.push(normal1, normal2);
             }
         }
         for (const generator of polyhedron.generators) {
             const q = polyhedron.symmetryGroup.transforms[generator.index];
             const normal = [q.x, q.y, q.z];
-            this.addMirror(normal, "#555", "0.03");
+            this.addMirror(normal, "#fff", "0.02");
             normals.push(normal);
         }
         for (let i = 0; i < normals.length; i++) {
@@ -213,6 +273,7 @@ class OriginController {
                 }
             }
         }
+        this.setCanvas(polyhedron);
     }
     reset() {
         this.updateOrigin(0, 0);
@@ -347,6 +408,7 @@ function resizeCanvas(canvas) {
 window.addEventListener("load", async () => {
     setCenter(0, 0);
     const canvas = document.getElementById("preview_figure");
+    const originBack = document.getElementById("origin_back");
     const select = document.getElementById("select_coxeter_group");
     const selectFace = document.getElementById("select_face_selector");
     const autoRotateCheckbox = document.getElementById("checkbox_auto_rotate");
@@ -357,7 +419,7 @@ window.addEventListener("load", async () => {
     const checkColor1 = document.getElementById("checkbox_color_1");
     const checkColor2 = document.getElementById("checkbox_color_2");
     const checkColor3 = document.getElementById("checkbox_color_3");
-    if (!canvas || !select || !selectFace || !checkColor0 || !checkColor1 || !checkColor2 || !checkColor3 || !circleGroup) {
+    if (!canvas || !select || !selectFace || !checkColor0 || !checkColor1 || !checkColor2 || !checkColor3 || !circleGroup || !originBack) {
         console.error("Required elements not found");
         return;
     }
@@ -382,7 +444,7 @@ window.addEventListener("load", async () => {
     select.value = unitTriangles[0].id;
     let originController = null;
     if (originControlSvg && originPoint) {
-        originController = new OriginController(originControlSvg, originPoint, circleGroup, (origin) => viewer.setOrigin(origin));
+        originController = new OriginController(originControlSvg, originPoint, circleGroup, originBack, (origin) => viewer.setOrigin(origin));
     }
     originController?.setMirrorCircles(viewer.setPolyhedron(select.value, selectFace.value));
     select.addEventListener("change", () => {
@@ -391,7 +453,8 @@ window.addEventListener("load", async () => {
         originController?.reset();
     });
     selectFace.addEventListener("change", () => {
-        viewer.setPolyhedron(select.value, selectFace.value);
+        const polyhedron = viewer.setPolyhedron(select.value, selectFace.value);
+        originController?.setCanvas(polyhedron);
         originController?.reset();
     });
     const colorCheckChangeHandler = () => {
