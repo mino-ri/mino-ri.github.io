@@ -1,3 +1,4 @@
+var _a;
 import { NormalPolyhedron, unitTriangles, faceSelectorMap } from "./symmetry.js";
 import { initGpu, buildPolyhedronMesh, quaternionToMatrix } from "./gpu.js";
 import { Vectors } from "./vector.js";
@@ -47,6 +48,7 @@ class OriginController {
     circleGroup;
     canvas;
     onOriginChange;
+    isSmallDragging = false;
     isDragging = false;
     isDragged = false;
     touchX = 0;
@@ -73,6 +75,12 @@ class OriginController {
         document.addEventListener("touchend", this.onTouchEnd.bind(this));
     }
     getPositionFromEvent(clientX, clientY) {
+        const rect = this.svg.getBoundingClientRect();
+        const x = ((clientX - rect.left) / rect.width) * 2.25 - 1.125;
+        const y = ((clientY - rect.top) / rect.height) * 2.25 - 1.125;
+        return { x, y };
+    }
+    getLimitedPositionFromEvent(clientX, clientY) {
         const rect = this.svg.getBoundingClientRect();
         const x = ((clientX - rect.left) / rect.width) * 2.25 - 1.125;
         const y = ((clientY - rect.top) / rect.height) * 2.25 - 1.125;
@@ -148,66 +156,80 @@ class OriginController {
         }
         this.targetPoint = v;
     }
-    onMouseDown(e) {
-        this.isDragging = true;
+    beginOperation(clientX, clientY) {
         this.isDragged = false;
-        const { x, y } = this.getPositionFromEvent(e.clientX, e.clientY);
-        this.touchX = x;
-        this.touchY = y;
+        const { x, y } = this.getPositionFromEvent(clientX, clientY);
+        const r = Math.sqrt(x * x + y * y);
+        if (r <= 1) {
+            this.isDragging = true;
+            this.touchX = x;
+            this.touchY = y;
+        }
+        else {
+            this.isSmallDragging = true;
+            this.touchX = x;
+            this.touchY = y;
+        }
+    }
+    moveOperation(clientX, clientY) {
+        if (this.isDragging) {
+            const { x, y } = this.getLimitedPositionFromEvent(clientX, clientY);
+            const dx = x - this.touchX;
+            const dy = y - this.touchY;
+            if (!this.isDragged && dx * dx + dy * dy > 0.0025) {
+                this.isDragged = true;
+            }
+            if (this.isDragged) {
+                this.updateOrigin(x, y);
+                return true;
+            }
+        }
+        else if (this.isSmallDragging) {
+            const { x, y } = this.getPositionFromEvent(clientX, clientY);
+            const dx = x - this.touchX;
+            const dy = y - this.touchY;
+            const cx = Number(this.originPoint.getAttribute("cx"));
+            const cy = Number(this.originPoint.getAttribute("cy"));
+            this.updateOrigin(cx + dx / 32, cy + dy / 32);
+            this.touchX = x;
+            this.touchY = y;
+            return true;
+        }
+        return false;
+    }
+    endOperation() {
+        if (this.isDragging && !this.isDragged) {
+            this.updateOriginWithSpecialPoints(this.touchX, this.touchY);
+        }
+        this.isSmallDragging = false;
+        this.isDragging = false;
+        this.isDragged = false;
+    }
+    onMouseDown(e) {
+        this.beginOperation(e.clientX, e.clientY);
         e.preventDefault();
     }
     onMouseMove(e) {
-        if (!this.isDragging)
-            return;
-        const { x, y } = this.getPositionFromEvent(e.clientX, e.clientY);
-        const dx = x - this.touchX;
-        const dy = y - this.touchY;
-        if (!this.isDragged && dx * dx + dy * dy > 0.0025) {
-            this.isDragged = true;
-        }
-        if (this.isDragged) {
-            this.updateOrigin(x, y);
+        if (this.moveOperation(e.clientX, e.clientY))
             e.preventDefault();
-        }
     }
-    onMouseUp(e) {
-        if (this.isDragging && !this.isDragged) {
-            const { x, y } = this.getPositionFromEvent(e.clientX, e.clientY);
-            this.updateOriginWithSpecialPoints(x, y);
-        }
-        this.isDragging = false;
-        this.isDragged = false;
+    onMouseUp() {
+        this.endOperation();
     }
     onTouchStart(e) {
         if (e.touches.length !== 1)
             return;
-        this.isDragging = true;
-        this.isDragged = false;
-        const { x, y } = this.getPositionFromEvent(e.touches[0].clientX, e.touches[0].clientY);
-        this.touchX = x;
-        this.touchY = y;
+        this.beginOperation(e.touches[0].clientX, e.touches[0].clientY);
         e.preventDefault();
     }
     onTouchMove(e) {
-        if (!this.isDragging || e.touches.length !== 1)
+        if (e.touches.length !== 1)
             return;
-        const { x, y } = this.getPositionFromEvent(e.touches[0].clientX, e.touches[0].clientY);
-        const dx = x - this.touchX;
-        const dy = y - this.touchY;
-        if (!this.isDragged && dx * dx + dy * dy > 0.0025) {
-            this.isDragged = true;
-        }
-        if (this.isDragged) {
-            this.updateOrigin(x, y);
+        if (this.moveOperation(e.touches[0].clientX, e.touches[0].clientY))
             e.preventDefault();
-        }
     }
     onTouchEnd() {
-        if (this.isDragging && !this.isDragged) {
-            this.updateOriginWithSpecialPoints(this.touchX, this.touchY);
-        }
-        this.isDragging = false;
-        this.isDragged = false;
+        this.endOperation();
     }
     addMirror(normal, color, stroke) {
         const z = normal[2];
@@ -238,7 +260,7 @@ class OriginController {
         { r: 0, g: 255, b: 255 },
         { r: 255, g: 255, b: 255 },
     ];
-    setCanvas(polyhedron) {
+    #setCanvas(polyhedron) {
         const ctx = this.canvas.getContext("2d");
         if (!ctx)
             return;
@@ -268,7 +290,7 @@ class OriginController {
                     : (distances[0] > distances[1] ? 1 : 0) +
                         (distances[1] > distances[2] ? 2 : 0) +
                         (distances[2] > distances[0] ? 4 : 0);
-                const { r, g, b } = OriginController.#colors[colorIndex];
+                const { r, g, b } = _a.#colors[colorIndex];
                 const baseIndex = (py * width + px) * 4;
                 imageData.data[baseIndex + 0] = r;
                 imageData.data[baseIndex + 1] = g;
@@ -278,8 +300,21 @@ class OriginController {
         }
         ctx.putImageData(imageData, 0, 0);
     }
+    #addCrossMirror(n1, n2) {
+        const sp = [0, 0, 0];
+        Vectors.cross(n1, n2, sp);
+        Vectors.normalizeSelf(sp);
+        if (sp[2] < 0) {
+            Vectors.negateSelf(sp);
+        }
+        this.specialPoints.push(sp);
+        if (Math.abs(sp[2]) <= 0.001) {
+            this.specialPoints.push([-sp[0], -sp[1], -sp[2]]);
+        }
+    }
     setMirrorCircles(polyhedron) {
         clearChildren(this.circleGroup);
+        const mirrors = [];
         const normals = [];
         this.specialPoints.splice(0);
         const length = polyhedron.generators.length;
@@ -298,30 +333,34 @@ class OriginController {
             const q = polyhedron.symmetryGroup.transforms[generator.index];
             const normal = [q.x, q.y, q.z];
             this.addMirror(normal, "#fff", "0.02");
-            normals.push(normal);
+            mirrors.push(normal);
         }
-        for (let i = 0; i < normals.length; i++) {
-            for (let j = i + 1; j < normals.length; j++) {
-                const n1 = normals[i];
-                const n2 = normals[j];
-                const sp = [0, 0, 0];
-                Vectors.cross(n1, n2, sp);
-                Vectors.normalizeSelf(sp);
-                if (sp[2] < 0) {
-                    Vectors.negateSelf(sp);
-                }
+        for (const n1 of mirrors) {
+            for (const n2 of normals) {
+                this.#addCrossMirror(n1, n2);
+            }
+        }
+        if (polyhedron.snubPoints && polyhedron.faceDefinitions.length === 4 &&
+            polyhedron.faceDefinitions[0].length === 1 && polyhedron.faceDefinitions[1].length === 1 &&
+            polyhedron.faceDefinitions[2].length === 1 && polyhedron.faceDefinitions[3].length === 3) {
+            for (const sp of polyhedron.snubPoints) {
                 this.specialPoints.push(sp);
-                if (Math.abs(sp[2]) <= 0.001) {
-                    this.specialPoints.push([-sp[0], -sp[1], -sp[2]]);
+            }
+        }
+        else {
+            for (let i = 0; i < normals.length; i++) {
+                for (let j = i + 1; j < normals.length; j++) {
+                    this.#addCrossMirror(normals[i], normals[j]);
                 }
             }
         }
-        this.setCanvas(polyhedron);
+        this.#setCanvas(polyhedron);
     }
     reset() {
         this.updateOrigin(0, 0);
     }
 }
+_a = OriginController;
 class PolyhedronViewer {
     canvas;
     originController;
@@ -395,9 +434,9 @@ class PolyhedronViewer {
         this.isDragging = false;
     }
     setPolyhedron(selectValue, faceSelector) {
-        const unitTriangle = unitTriangles.find((source) => source.id === selectValue).unit;
+        const { unit, snubPoints } = unitTriangles.find((source) => source.id === selectValue);
         const selector = faceSelectorMap.get(faceSelector) || faceSelectorMap.get("xxx");
-        this.polyhedron = new NormalPolyhedron(unitTriangle, selector);
+        this.polyhedron = new NormalPolyhedron(unit, snubPoints, selector);
         const mesh = buildPolyhedronMesh(this.polyhedron, this.faceVisibility, this.verfView, this.vertexVisibility, this.edgeVisibility);
         this.renderer.updateMesh(mesh);
         return this.polyhedron;
@@ -526,7 +565,7 @@ window.addEventListener("load", async () => {
     });
     selectFace.addEventListener("change", () => {
         const polyhedron = viewer.setPolyhedron(select.value, selectFace.value);
-        originController?.setCanvas(polyhedron);
+        originController?.setMirrorCircles(polyhedron);
         originController?.reset();
     });
     checkEdge?.addEventListener("change", () => {
