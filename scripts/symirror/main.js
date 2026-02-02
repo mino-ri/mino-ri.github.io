@@ -291,6 +291,8 @@ class PolyhedronViewer {
     autoRotate = false;
     faceVisibility = [true, true, true, true, true];
     verfView = false;
+    vertexVisibility = false;
+    edgeVisibility = false;
     constructor(canvas, gpuContext) {
         this.canvas = canvas;
         this.renderer = gpuContext.createPolyhedronRenderer();
@@ -350,7 +352,7 @@ class PolyhedronViewer {
         const unitTriangle = unitTriangles.find((source) => source.id === selectValue).unit;
         const selector = faceSelectorMap.get(faceSelector) || faceSelectorMap.get("xxx");
         this.polyhedron = new NormalPolyhedron(unitTriangle, selector);
-        const mesh = buildPolyhedronMesh(this.polyhedron.vertexes, this.polyhedron.faces, this.faceVisibility, this.verfView);
+        const mesh = buildPolyhedronMesh(this.polyhedron, this.faceVisibility, this.verfView, this.vertexVisibility, this.edgeVisibility);
         this.renderer.updateMesh(mesh);
         return this.polyhedron;
     }
@@ -358,7 +360,7 @@ class PolyhedronViewer {
         if (!this.polyhedron)
             return;
         this.polyhedron.setOrigin(origin);
-        const mesh = buildPolyhedronMesh(this.polyhedron.vertexes, this.polyhedron.faces, this.faceVisibility, this.verfView);
+        const mesh = buildPolyhedronMesh(this.polyhedron, this.faceVisibility, this.verfView, this.vertexVisibility, this.edgeVisibility);
         this.renderer.updateMesh(mesh);
     }
     setFaceVisibility(faceVisibility) {
@@ -367,14 +369,28 @@ class PolyhedronViewer {
         }
         if (!this.polyhedron)
             return;
-        const mesh = buildPolyhedronMesh(this.polyhedron.vertexes, this.polyhedron.faces, this.faceVisibility, this.verfView);
+        const mesh = buildPolyhedronMesh(this.polyhedron, this.faceVisibility, this.verfView, this.vertexVisibility, this.edgeVisibility);
+        this.renderer.updateMesh(mesh);
+    }
+    setEdgeVisibility(edgeVisibility) {
+        this.edgeVisibility = edgeVisibility;
+        if (!this.polyhedron)
+            return;
+        const mesh = buildPolyhedronMesh(this.polyhedron, this.faceVisibility, this.verfView, this.vertexVisibility, this.edgeVisibility);
+        this.renderer.updateMesh(mesh);
+    }
+    setVertexVisibility(vertexVisibility) {
+        this.vertexVisibility = vertexVisibility;
+        if (!this.polyhedron)
+            return;
+        const mesh = buildPolyhedronMesh(this.polyhedron, this.faceVisibility, this.verfView, this.vertexVisibility, this.edgeVisibility);
         this.renderer.updateMesh(mesh);
     }
     setVerfView(verfView) {
         this.verfView = verfView;
         if (!this.polyhedron)
             return;
-        const mesh = buildPolyhedronMesh(this.polyhedron.vertexes, this.polyhedron.faces, this.faceVisibility, this.verfView);
+        const mesh = buildPolyhedronMesh(this.polyhedron, this.faceVisibility, this.verfView, this.vertexVisibility, this.edgeVisibility);
         this.renderer.updateMesh(mesh);
     }
     startRenderLoop() {
@@ -428,6 +444,8 @@ window.addEventListener("load", async () => {
     const checkColor3 = document.getElementById("checkbox_color_3");
     const checkColor4 = document.getElementById("checkbox_color_4");
     const checkVerf = document.getElementById("checkbox_verf");
+    const checkVertex = document.getElementById("checkbox_vertex");
+    const checkEdge = document.getElementById("checkbox_edge");
     if (!canvas || !select || !selectFace || !checkColor0 || !checkColor1 || !checkColor2 || !checkColor3 || !checkColor4 || !circleGroup || !originBack) {
         console.error("Required elements not found");
         return;
@@ -465,6 +483,12 @@ window.addEventListener("load", async () => {
         const polyhedron = viewer.setPolyhedron(select.value, selectFace.value);
         originController?.setCanvas(polyhedron);
         originController?.reset();
+    });
+    checkEdge?.addEventListener("change", () => {
+        viewer.setEdgeVisibility(checkEdge.checked);
+    });
+    checkVertex?.addEventListener("change", () => {
+        viewer.setVertexVisibility(checkVertex.checked);
     });
     checkVerf?.addEventListener("change", () => {
         viewer.setVerfView(checkVerf.checked);
