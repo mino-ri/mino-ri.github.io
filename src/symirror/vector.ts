@@ -120,6 +120,15 @@ export class Vectors {
         return sum
     }
 
+    static lengthSquared(a: Vector): number {
+        let sum = 0
+        for (let i = 0; i < a.length; i++) {
+            const d = a[i]!
+            sum += d * d
+        }
+        return sum
+    }
+
     static middleDistanceSquared(a: Vector, b: Vector, p: Vector): number {
         const length = Math.min(a.length, b.length)
         let sum = 0
@@ -165,5 +174,19 @@ export class Vectors {
         Vectors.add(Vectors.#v, c, Vectors.#v)
         Vectors.add(Vectors.#u, Vectors.#v, resultTo)
         return Vectors.mul(resultTo, 0.5, resultTo)
+    }
+
+    static average(vectors: Vector[], resultTo: Vector): Vector {
+        for (let i = 0; i < resultTo.length; i++) {
+            resultTo[i] = 0
+        }
+        if (vectors.length === 0) {
+            return resultTo
+        }
+
+        for (const vector of vectors) {
+            Vectors.add(resultTo, vector, resultTo)
+        }
+        return Vectors.div(resultTo, vectors.length, resultTo)
     }
 }

@@ -336,7 +336,9 @@ class PolyhedronViewer {
     private polyhedron: NormalPolyhedron | null = null
     private autoRotate = false
     private faceVisibility: boolean[] = [true, true, true, true, true]
-    private verfView: boolean = false
+    private verfView = false
+    private vertexVisibility = false
+    private edgeVisibility = false
 
     constructor(
         private canvas: HTMLCanvasElement,
@@ -413,7 +415,7 @@ class PolyhedronViewer {
         const selector = faceSelectorMap.get(faceSelector) || faceSelectorMap.get("xxx")!
         this.polyhedron = new NormalPolyhedron(unitTriangle, selector)
 
-        const mesh = buildPolyhedronMesh(this.polyhedron.vertexes, this.polyhedron.faces, this.faceVisibility, this.verfView)
+        const mesh = buildPolyhedronMesh(this.polyhedron, this.faceVisibility, this.verfView, this.vertexVisibility, this.edgeVisibility)
         this.renderer.updateMesh(mesh)
         return this.polyhedron
     }
@@ -421,7 +423,7 @@ class PolyhedronViewer {
     setOrigin(origin: Vector): void {
         if (!this.polyhedron) return
         this.polyhedron.setOrigin(origin)
-        const mesh = buildPolyhedronMesh(this.polyhedron.vertexes, this.polyhedron.faces, this.faceVisibility, this.verfView)
+        const mesh = buildPolyhedronMesh(this.polyhedron, this.faceVisibility, this.verfView, this.vertexVisibility, this.edgeVisibility)
         this.renderer.updateMesh(mesh)
     }
 
@@ -430,14 +432,28 @@ class PolyhedronViewer {
             this.faceVisibility[i] = faceVisibility[i]!
         }
         if (!this.polyhedron) return
-        const mesh = buildPolyhedronMesh(this.polyhedron.vertexes, this.polyhedron.faces, this.faceVisibility, this.verfView)
+        const mesh = buildPolyhedronMesh(this.polyhedron, this.faceVisibility, this.verfView, this.vertexVisibility, this.edgeVisibility)
+        this.renderer.updateMesh(mesh)
+    }
+
+    setEdgeVisibility(edgeVisibility: boolean): void {
+        this.edgeVisibility = edgeVisibility
+        if (!this.polyhedron) return
+        const mesh = buildPolyhedronMesh(this.polyhedron, this.faceVisibility, this.verfView, this.vertexVisibility, this.edgeVisibility)
+        this.renderer.updateMesh(mesh)
+    }
+
+    setVertexVisibility(vertexVisibility: boolean): void {
+        this.vertexVisibility = vertexVisibility
+        if (!this.polyhedron) return
+        const mesh = buildPolyhedronMesh(this.polyhedron, this.faceVisibility, this.verfView, this.vertexVisibility, this.edgeVisibility)
         this.renderer.updateMesh(mesh)
     }
 
     setVerfView(verfView: boolean): void {
         this.verfView = verfView
         if (!this.polyhedron) return
-        const mesh = buildPolyhedronMesh(this.polyhedron.vertexes, this.polyhedron.faces, this.faceVisibility, this.verfView)
+        const mesh = buildPolyhedronMesh(this.polyhedron, this.faceVisibility, this.verfView, this.vertexVisibility, this.edgeVisibility)
         this.renderer.updateMesh(mesh)
     }
 
@@ -500,6 +516,8 @@ window.addEventListener("load", async () => {
     const checkColor3 = document.getElementById("checkbox_color_3") as HTMLInputElement | null
     const checkColor4 = document.getElementById("checkbox_color_4") as HTMLInputElement | null
     const checkVerf = document.getElementById("checkbox_verf") as HTMLInputElement | null
+    const checkVertex = document.getElementById("checkbox_vertex") as HTMLInputElement | null
+    const checkEdge = document.getElementById("checkbox_edge") as HTMLInputElement | null
 
     if (!canvas || !select || !selectFace || !checkColor0 || !checkColor1 || !checkColor2 || !checkColor3 || !checkColor4 || !circleGroup || !originBack) {
         console.error("Required elements not found")
@@ -553,6 +571,14 @@ window.addEventListener("load", async () => {
         const polyhedron = viewer.setPolyhedron(select.value, selectFace.value)
         originController?.setCanvas(polyhedron)
         originController?.reset()
+    })
+
+    checkEdge?.addEventListener("change", () => {
+        viewer.setEdgeVisibility(checkEdge.checked)
+    })
+
+    checkVertex?.addEventListener("change", () => {
+        viewer.setVertexVisibility(checkVertex.checked)
     })
 
     checkVerf?.addEventListener("change", () => {
