@@ -2,7 +2,7 @@ import { NormalPolyhedron, unitTriangles, faceSelectorMap } from "./symmetry.js"
 import { initGpu, buildPolyhedronMesh, quaternionToMatrix, type GpuContext } from "./gpu.js"
 import { type Vector, Vectors } from "./vector.js"
 import { setCenter, createCircle, createPath, createLine, clearChildren } from "../svg_generator.js"
-import { Quaternions } from "./quaternion.js"
+import { Quaternion, Quaternions } from "./quaternion.js"
 
 // 回転状態を管理するクォータニオン
 class RotationState {
@@ -67,6 +67,10 @@ class OriginController {
     private touchX = 0
     private touchY = 0
     private specialPoints: Vector[] = []
+    private currentPoint: Vector = [0, 0, 1]
+    private targetPoint: Vector | null = null
+    private axis: Vector = [0, 0, 0]
+    private quaternion: Quaternion = { w: 1, x: 0, y: 0, z: 0, negate: false }
 
     constructor(
         private svg: SVGSVGElement,
@@ -123,8 +127,36 @@ class OriginController {
         const y = vector[1]! / (1 + vector[2]!)
         this.originPoint.setAttribute("cx", x.toString())
         this.originPoint.setAttribute("cy", y.toString())
-
+        Vectors.copy(vector, this.currentPoint)
         this.onOriginChange(vector)
+    }
+
+    applyAutoOriginMovement(deltaTime: number): void {
+        if (!this.targetPoint) {
+            return
+        }
+
+        const anglePerSec = Math.PI * 0.25
+        const cos = Vectors.dot(this.currentPoint, this.targetPoint)
+        const deltaAngle = anglePerSec * deltaTime
+        const deltaCos = Math.cos(deltaAngle)
+        if (deltaCos <= cos) {
+            this.changeOrigin(this.targetPoint)
+            this.targetPoint = null
+        } else {
+            if (cos < -0.995) {
+                this.axis[0] = 0
+                this.axis[1] = 0
+                this.axis[2] = 1
+                Vectors.cross(this.axis, this.targetPoint, this.axis)
+            } else {
+                Vectors.cross(this.currentPoint, this.targetPoint, this.axis)
+            }
+            Vectors.normalizeSelf(this.axis)
+            Quaternions.rotation(this.axis, deltaAngle, this.quaternion)
+            Quaternions.transform(this.currentPoint, this.quaternion, this.currentPoint)
+            this.changeOrigin(this.currentPoint)
+        }
     }
 
     private updateOrigin(x: number, y: number): void {
@@ -135,26 +167,35 @@ class OriginController {
         const v = this.uiVectorToSphereVector(x, y)
         for (const sp of this.specialPoints) {
             if (Math.abs(sp[0]! - v[0]!) < 0.1 && Math.abs(sp[1]! - v[1]!) < 0.1 && Math.abs(sp[2]! - v[2]!) < 0.1) {
-                this.changeOrigin(sp)
+                this.targetPoint = sp
                 return
             }
         }
 
-        this.changeOrigin(v)
+        this.targetPoint = v
     }
 
     private onMouseDown(e: MouseEvent): void {
         this.isDragging = true
         this.isDragged = false
+        const { x, y } = this.getPositionFromEvent(e.clientX, e.clientY)
+        this.touchX = x
+        this.touchY = y
         e.preventDefault()
     }
 
     private onMouseMove(e: MouseEvent): void {
         if (!this.isDragging) return
-        this.isDragged = true
         const { x, y } = this.getPositionFromEvent(e.clientX, e.clientY)
-        this.updateOrigin(x, y)
-        e.preventDefault()
+        const dx = x - this.touchX
+        const dy = y - this.touchY
+        if (!this.isDragged && dx * dx + dy * dy > 0.0025) {
+            this.isDragged = true
+        }
+        if (this.isDragged) {
+            this.updateOrigin(x, y)
+            e.preventDefault()
+        }
     }
 
     private onMouseUp(e: MouseEvent): void {
@@ -181,11 +222,13 @@ class OriginController {
         const { x, y } = this.getPositionFromEvent(e.touches[0]!.clientX, e.touches[0]!.clientY)
         const dx = x - this.touchX
         const dy = y - this.touchY
-        if (dx * dx + dy * dy > 0.01) {
+        if (!this.isDragged && dx * dx + dy * dy > 0.0025) {
             this.isDragged = true
         }
-        this.updateOrigin(x, y)
-        e.preventDefault()
+        if (this.isDragged) {
+            this.updateOrigin(x, y)
+            e.preventDefault()
+        }
     }
 
     private onTouchEnd(): void {
@@ -343,6 +386,7 @@ class PolyhedronViewer {
     constructor(
         private canvas: HTMLCanvasElement,
         gpuContext: GpuContext,
+        private originController: OriginController,
     ) {
         this.renderer = gpuContext.createPolyhedronRenderer()
         this.setupEventListeners()
@@ -467,6 +511,7 @@ class PolyhedronViewer {
                 this.rotation.applyAutoRotate(deltaTime)
             }
 
+            this.originController.applyAutoOriginMovement(deltaTime)
             this.renderer.render(this.rotation.getMatrix())
             this.animationFrameId = requestAnimationFrame(render)
         }
@@ -519,7 +564,8 @@ window.addEventListener("load", async () => {
     const checkVertex = document.getElementById("checkbox_vertex") as HTMLInputElement | null
     const checkEdge = document.getElementById("checkbox_edge") as HTMLInputElement | null
 
-    if (!canvas || !select || !selectFace || !checkColor0 || !checkColor1 || !checkColor2 || !checkColor3 || !checkColor4 || !circleGroup || !originBack) {
+    if (!canvas || !select || !selectFace || !checkColor0 || !checkColor1 || !checkColor2 || !checkColor3 || !checkColor4 ||
+        !circleGroup || !originBack || !originControlSvg || !originPoint) {
         console.error("Required elements not found")
         return
     }
@@ -537,26 +583,23 @@ window.addEventListener("load", async () => {
         return
     }
 
-    const viewer = new PolyhedronViewer(canvas, gpuContext)
+    select.value = unitTriangles[0]!.id
+
+    // origin コントローラの初期化
+    const originController = new OriginController(
+        originControlSvg,
+        originPoint,
+        circleGroup,
+        originBack,
+        (origin) => viewer.setOrigin(origin),
+    )
+
+    const viewer = new PolyhedronViewer(canvas, gpuContext, originController)
     for (const source of unitTriangles) {
         const option = document.createElement("option")
         option.value = source.id
         option.textContent = source.name
         select.appendChild(option)
-    }
-
-    select.value = unitTriangles[0]!.id
-
-    // origin コントローラの初期化
-    let originController: OriginController | null = null
-    if (originControlSvg && originPoint) {
-        originController = new OriginController(
-            originControlSvg,
-            originPoint,
-            circleGroup,
-            originBack,
-            (origin) => viewer.setOrigin(origin),
-        )
     }
 
     originController?.setMirrorCircles(viewer.setPolyhedron(select.value, selectFace.value))
