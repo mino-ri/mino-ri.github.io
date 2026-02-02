@@ -52,6 +52,10 @@ class OriginController {
     touchX = 0;
     touchY = 0;
     specialPoints = [];
+    currentPoint = [0, 0, 1];
+    targetPoint = null;
+    axis = [0, 0, 0];
+    quaternion = { w: 1, x: 0, y: 0, z: 0, negate: false };
     constructor(svg, originPoint, circleGroup, canvas, onOriginChange) {
         this.svg = svg;
         this.originPoint = originPoint;
@@ -100,7 +104,36 @@ class OriginController {
         const y = vector[1] / (1 + vector[2]);
         this.originPoint.setAttribute("cx", x.toString());
         this.originPoint.setAttribute("cy", y.toString());
+        Vectors.copy(vector, this.currentPoint);
         this.onOriginChange(vector);
+    }
+    applyAutoOriginMovement(deltaTime) {
+        if (!this.targetPoint) {
+            return;
+        }
+        const anglePerSec = Math.PI * 0.25;
+        const cos = Vectors.dot(this.currentPoint, this.targetPoint);
+        const deltaAngle = anglePerSec * deltaTime;
+        const deltaCos = Math.cos(deltaAngle);
+        if (deltaCos <= cos) {
+            this.changeOrigin(this.targetPoint);
+            this.targetPoint = null;
+        }
+        else {
+            if (cos < -0.995) {
+                this.axis[0] = 0;
+                this.axis[1] = 0;
+                this.axis[2] = 1;
+                Vectors.cross(this.axis, this.targetPoint, this.axis);
+            }
+            else {
+                Vectors.cross(this.currentPoint, this.targetPoint, this.axis);
+            }
+            Vectors.normalizeSelf(this.axis);
+            Quaternions.rotation(this.axis, deltaAngle, this.quaternion);
+            Quaternions.transform(this.currentPoint, this.quaternion, this.currentPoint);
+            this.changeOrigin(this.currentPoint);
+        }
     }
     updateOrigin(x, y) {
         this.changeOrigin(this.uiVectorToSphereVector(x, y));
@@ -109,24 +142,33 @@ class OriginController {
         const v = this.uiVectorToSphereVector(x, y);
         for (const sp of this.specialPoints) {
             if (Math.abs(sp[0] - v[0]) < 0.1 && Math.abs(sp[1] - v[1]) < 0.1 && Math.abs(sp[2] - v[2]) < 0.1) {
-                this.changeOrigin(sp);
+                this.targetPoint = sp;
                 return;
             }
         }
-        this.changeOrigin(v);
+        this.targetPoint = v;
     }
     onMouseDown(e) {
         this.isDragging = true;
         this.isDragged = false;
+        const { x, y } = this.getPositionFromEvent(e.clientX, e.clientY);
+        this.touchX = x;
+        this.touchY = y;
         e.preventDefault();
     }
     onMouseMove(e) {
         if (!this.isDragging)
             return;
-        this.isDragged = true;
         const { x, y } = this.getPositionFromEvent(e.clientX, e.clientY);
-        this.updateOrigin(x, y);
-        e.preventDefault();
+        const dx = x - this.touchX;
+        const dy = y - this.touchY;
+        if (!this.isDragged && dx * dx + dy * dy > 0.0025) {
+            this.isDragged = true;
+        }
+        if (this.isDragged) {
+            this.updateOrigin(x, y);
+            e.preventDefault();
+        }
     }
     onMouseUp(e) {
         if (this.isDragging && !this.isDragged) {
@@ -152,11 +194,13 @@ class OriginController {
         const { x, y } = this.getPositionFromEvent(e.touches[0].clientX, e.touches[0].clientY);
         const dx = x - this.touchX;
         const dy = y - this.touchY;
-        if (dx * dx + dy * dy > 0.01) {
+        if (!this.isDragged && dx * dx + dy * dy > 0.0025) {
             this.isDragged = true;
         }
-        this.updateOrigin(x, y);
-        e.preventDefault();
+        if (this.isDragged) {
+            this.updateOrigin(x, y);
+            e.preventDefault();
+        }
     }
     onTouchEnd() {
         if (this.isDragging && !this.isDragged) {
@@ -280,6 +324,7 @@ class OriginController {
 }
 class PolyhedronViewer {
     canvas;
+    originController;
     renderer;
     rotation = new RotationState();
     isDragging = false;
@@ -293,8 +338,9 @@ class PolyhedronViewer {
     verfView = false;
     vertexVisibility = false;
     edgeVisibility = false;
-    constructor(canvas, gpuContext) {
+    constructor(canvas, gpuContext, originController) {
         this.canvas = canvas;
+        this.originController = originController;
         this.renderer = gpuContext.createPolyhedronRenderer();
         this.setupEventListeners();
         this.startRenderLoop();
@@ -400,6 +446,7 @@ class PolyhedronViewer {
             if (this.autoRotate && !this.isDragging) {
                 this.rotation.applyAutoRotate(deltaTime);
             }
+            this.originController.applyAutoOriginMovement(deltaTime);
             this.renderer.render(this.rotation.getMatrix());
             this.animationFrameId = requestAnimationFrame(render);
         };
@@ -446,7 +493,8 @@ window.addEventListener("load", async () => {
     const checkVerf = document.getElementById("checkbox_verf");
     const checkVertex = document.getElementById("checkbox_vertex");
     const checkEdge = document.getElementById("checkbox_edge");
-    if (!canvas || !select || !selectFace || !checkColor0 || !checkColor1 || !checkColor2 || !checkColor3 || !checkColor4 || !circleGroup || !originBack) {
+    if (!canvas || !select || !selectFace || !checkColor0 || !checkColor1 || !checkColor2 || !checkColor3 || !checkColor4 ||
+        !circleGroup || !originBack || !originControlSvg || !originPoint) {
         console.error("Required elements not found");
         return;
     }
@@ -461,17 +509,14 @@ window.addEventListener("load", async () => {
         canvas.parentElement?.appendChild(errorDiv);
         return;
     }
-    const viewer = new PolyhedronViewer(canvas, gpuContext);
+    select.value = unitTriangles[0].id;
+    const originController = new OriginController(originControlSvg, originPoint, circleGroup, originBack, (origin) => viewer.setOrigin(origin));
+    const viewer = new PolyhedronViewer(canvas, gpuContext, originController);
     for (const source of unitTriangles) {
         const option = document.createElement("option");
         option.value = source.id;
         option.textContent = source.name;
         select.appendChild(option);
-    }
-    select.value = unitTriangles[0].id;
-    let originController = null;
-    if (originControlSvg && originPoint) {
-        originController = new OriginController(originControlSvg, originPoint, circleGroup, originBack, (origin) => viewer.setOrigin(origin));
     }
     originController?.setMirrorCircles(viewer.setPolyhedron(select.value, selectFace.value));
     select.addEventListener("change", () => {

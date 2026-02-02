@@ -1,6 +1,5 @@
 import { CoxeterMatrix } from "./coxeter_matrix.js";
 import { FiniteCoxeterGroup } from "./coxeter_group.js";
-import { Vectors } from "./vector.js";
 import { Quaternions } from "./quaternion.js";
 export class SymmetryGroup3 {
     coxeterGroup;
@@ -18,7 +17,7 @@ export class SymmetryGroup3 {
             Quaternions.mirror([-cosP, -cosQ, z]),
             Quaternions.mirror([0, 1, 0]),
         ];
-        this.origin = Vectors.normalize([z, z, 1 + cosP + cosQ]);
+        this.origin = [0, 0, 1];
         this.transforms = new Array(coxeterGroup.order);
         this.transforms[0] = Quaternions.identity;
         for (const rank of coxeterGroup.ranks) {
