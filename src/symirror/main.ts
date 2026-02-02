@@ -62,6 +62,7 @@ class RotationState {
 
 // origin 操作コントローラ
 class OriginController {
+    private isSmallDragging = false // 移動微調整中か
     private isDragging = false // ドラッグ操作中か
     private isDragged = false // クリック・タッチ後、ドラッグ操作が行われたか
     private touchX = 0
@@ -93,6 +94,14 @@ class OriginController {
     }
 
     private getPositionFromEvent(clientX: number, clientY: number): { x: number; y: number } {
+        const rect = this.svg.getBoundingClientRect()
+        const x = ((clientX - rect.left) / rect.width) * 2.25 - 1.125
+        const y = ((clientY - rect.top) / rect.height) * 2.25 - 1.125
+
+        return { x, y }
+    }
+
+    private getLimitedPositionFromEvent(clientX: number, clientY: number): { x: number; y: number } {
         const rect = this.svg.getBoundingClientRect()
         const x = ((clientX - rect.left) / rect.width) * 2.25 - 1.125
         const y = ((clientY - rect.top) / rect.height) * 2.25 - 1.125
@@ -175,68 +184,86 @@ class OriginController {
         this.targetPoint = v
     }
 
-    private onMouseDown(e: MouseEvent): void {
-        this.isDragging = true
+    private beginOperation(clientX: number, clientY: number): void {
         this.isDragged = false
-        const { x, y } = this.getPositionFromEvent(e.clientX, e.clientY)
-        this.touchX = x
-        this.touchY = y
+        const { x, y } = this.getPositionFromEvent(clientX, clientY)
+        const r = Math.sqrt(x * x + y * y)
+        if (r <= 1) {
+            this.isDragging = true
+            this.touchX = x
+            this.touchY = y
+        } else {
+            this.isSmallDragging = true
+            this.touchX = x
+            this.touchY = y
+        }
+    }
+
+    private moveOperation(clientX: number, clientY: number): boolean {
+        if (this.isDragging) {
+            const { x, y } = this.getLimitedPositionFromEvent(clientX, clientY)
+            const dx = x - this.touchX
+            const dy = y - this.touchY
+            if (!this.isDragged && dx * dx + dy * dy > 0.0025) {
+                this.isDragged = true
+            }
+            if (this.isDragged) {
+                this.updateOrigin(x, y)
+                return true
+            }
+        } else if (this.isSmallDragging) {
+            const { x, y } = this.getPositionFromEvent(clientX, clientY)
+            const dx = x - this.touchX
+            const dy = y - this.touchY
+            const cx = Number(this.originPoint.getAttribute("cx"))
+            const cy = Number(this.originPoint.getAttribute("cy"))
+            this.updateOrigin(cx + dx / 32, cy + dy / 32)
+            this.touchX = x
+            this.touchY = y
+            return true
+        }
+
+        return false
+    }
+
+    private endOperation(): void {
+        if (this.isDragging && !this.isDragged) {
+            this.updateOriginWithSpecialPoints(this.touchX, this.touchY)
+        }
+
+        this.isSmallDragging = false
+        this.isDragging = false
+        this.isDragged = false
+    }
+
+    private onMouseDown(e: MouseEvent): void {
+        this.beginOperation(e.clientX, e.clientY)
         e.preventDefault()
     }
 
     private onMouseMove(e: MouseEvent): void {
-        if (!this.isDragging) return
-        const { x, y } = this.getPositionFromEvent(e.clientX, e.clientY)
-        const dx = x - this.touchX
-        const dy = y - this.touchY
-        if (!this.isDragged && dx * dx + dy * dy > 0.0025) {
-            this.isDragged = true
-        }
-        if (this.isDragged) {
-            this.updateOrigin(x, y)
+        if (this.moveOperation(e.clientX, e.clientY))
             e.preventDefault()
-        }
     }
 
-    private onMouseUp(e: MouseEvent): void {
-        if (this.isDragging && !this.isDragged) {
-            const { x, y } = this.getPositionFromEvent(e.clientX, e.clientY)
-            this.updateOriginWithSpecialPoints(x, y)
-        }
-        this.isDragging = false
-        this.isDragged = false
+    private onMouseUp(): void {
+        this.endOperation()
     }
 
     private onTouchStart(e: TouchEvent): void {
         if (e.touches.length !== 1) return
-        this.isDragging = true
-        this.isDragged = false
-        const { x, y } = this.getPositionFromEvent(e.touches[0]!.clientX, e.touches[0]!.clientY)
-        this.touchX = x
-        this.touchY = y
+        this.beginOperation(e.touches[0]!.clientX, e.touches[0]!.clientY)
         e.preventDefault()
     }
 
     private onTouchMove(e: TouchEvent): void {
-        if (!this.isDragging || e.touches.length !== 1) return
-        const { x, y } = this.getPositionFromEvent(e.touches[0]!.clientX, e.touches[0]!.clientY)
-        const dx = x - this.touchX
-        const dy = y - this.touchY
-        if (!this.isDragged && dx * dx + dy * dy > 0.0025) {
-            this.isDragged = true
-        }
-        if (this.isDragged) {
-            this.updateOrigin(x, y)
+        if (e.touches.length !== 1) return
+        if (this.moveOperation(e.touches[0]!.clientX, e.touches[0]!.clientY))
             e.preventDefault()
-        }
     }
 
     private onTouchEnd(): void {
-        if (this.isDragging && !this.isDragged) {
-            this.updateOriginWithSpecialPoints(this.touchX, this.touchY)
-        }
-        this.isDragging = false
-        this.isDragged = false
+        this.endOperation()
     }
 
     private addMirror(normal: Vector, color: string, stroke: string): void {
@@ -271,7 +298,7 @@ class OriginController {
         { r: 255, g: 255, b: 255 },
     ]
 
-    setCanvas(polyhedron: NormalPolyhedron): void {
+    #setCanvas(polyhedron: NormalPolyhedron): void {
         const ctx = this.canvas.getContext("2d")
         if (!ctx) return
         const width = this.canvas.width
@@ -315,8 +342,22 @@ class OriginController {
         ctx.putImageData(imageData, 0, 0)
     }
 
+    #addCrossMirror(n1: Vector, n2: Vector): void {
+        const sp = [0, 0, 0]
+        Vectors.cross(n1, n2, sp)
+        Vectors.normalizeSelf(sp)
+        if (sp[2]! < 0) {
+            Vectors.negateSelf(sp)
+        }
+        this.specialPoints.push(sp)
+        if (Math.abs(sp[2]!) <= 0.001) {
+            this.specialPoints.push([-sp[0]!, -sp[1]!, -sp[2]!]) // 赤道上の点は反対側も追加
+        }
+    }
+
     setMirrorCircles(polyhedron: NormalPolyhedron): void {
         clearChildren(this.circleGroup)
+        const mirrors = []
         const normals = []
         this.specialPoints.splice(0)
         const length = polyhedron.generators.length
@@ -338,28 +379,31 @@ class OriginController {
             const q = polyhedron.symmetryGroup.transforms[generator.index]!
             const normal = [q.x, q.y, q.z]
             this.addMirror(normal, "#fff", "0.02")
-            normals.push(normal)
+            mirrors.push(normal)
         }
 
         // 特別な点の計算
-        for (let i = 0; i < normals.length; i++) {
-            for (let j = i + 1; j < normals.length; j++) {
-                const n1 = normals[i]!
-                const n2 = normals[j]!
-                const sp = [0, 0, 0]
-                Vectors.cross(n1, n2, sp)
-                Vectors.normalizeSelf(sp)
-                if (sp[2]! < 0) {
-                    Vectors.negateSelf(sp)
-                }
+        for (const n1 of mirrors) {
+            for (const n2 of normals) {
+                this.#addCrossMirror(n1, n2)
+            }
+        }
+
+        if (polyhedron.snubPoints && polyhedron.faceDefinitions.length === 4 &&
+            polyhedron.faceDefinitions[0]!.length === 1 && polyhedron.faceDefinitions[1]!.length === 1 &&
+            polyhedron.faceDefinitions[2]!.length === 1 && polyhedron.faceDefinitions[3]!.length === 3) {
+            for (const sp of polyhedron.snubPoints) {
                 this.specialPoints.push(sp)
-                if (Math.abs(sp[2]!) <= 0.001) {
-                    this.specialPoints.push([-sp[0]!, -sp[1]!, -sp[2]!]) // 赤道上の点は反対側も追加
+            }
+        } else {
+            for (let i = 0; i < normals.length; i++) {
+                for (let j = i + 1; j < normals.length; j++) {
+                    this.#addCrossMirror(normals[i]!, normals[j]!)
                 }
             }
         }
 
-        this.setCanvas(polyhedron)
+        this.#setCanvas(polyhedron)
     }
 
     reset(): void {
@@ -455,9 +499,9 @@ class PolyhedronViewer {
     }
 
     setPolyhedron(selectValue: string, faceSelector: string): NormalPolyhedron {
-        const unitTriangle = unitTriangles.find((source) => source.id === selectValue)!.unit
+        const { unit, snubPoints } = unitTriangles.find((source) => source.id === selectValue)!
         const selector = faceSelectorMap.get(faceSelector) || faceSelectorMap.get("xxx")!
-        this.polyhedron = new NormalPolyhedron(unitTriangle, selector)
+        this.polyhedron = new NormalPolyhedron(unit, snubPoints, selector)
 
         const mesh = buildPolyhedronMesh(this.polyhedron, this.faceVisibility, this.verfView, this.vertexVisibility, this.edgeVisibility)
         this.renderer.updateMesh(mesh)
@@ -612,7 +656,7 @@ window.addEventListener("load", async () => {
 
     selectFace.addEventListener("change", () => {
         const polyhedron = viewer.setPolyhedron(select.value, selectFace.value)
-        originController?.setCanvas(polyhedron)
+        originController?.setMirrorCircles(polyhedron)
         originController?.reset()
     })
 
