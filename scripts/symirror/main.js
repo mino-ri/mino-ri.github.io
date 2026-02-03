@@ -335,11 +335,6 @@ class OriginController {
             this.addMirror(normal, "#fff", "0.02");
             mirrors.push(normal);
         }
-        for (const n1 of mirrors) {
-            for (const n2 of normals) {
-                this.#addCrossMirror(n1, n2);
-            }
-        }
         if (polyhedron.snubPoints && polyhedron.faceDefinitions.length === 4 &&
             polyhedron.faceDefinitions[0].length === 1 && polyhedron.faceDefinitions[1].length === 1 &&
             polyhedron.faceDefinitions[2].length === 1 && polyhedron.faceDefinitions[3].length === 3) {
@@ -352,6 +347,11 @@ class OriginController {
                 for (let j = i + 1; j < normals.length; j++) {
                     this.#addCrossMirror(normals[i], normals[j]);
                 }
+            }
+        }
+        for (const n1 of mirrors) {
+            for (const n2 of normals) {
+                this.#addCrossMirror(n1, n2);
             }
         }
         this.#setCanvas(polyhedron);
@@ -374,7 +374,7 @@ class PolyhedronViewer {
     polyhedron = null;
     autoRotate = false;
     faceVisibility = [true, true, true, true, true];
-    verfView = false;
+    visibilityType = "All";
     vertexVisibility = false;
     edgeVisibility = false;
     constructor(canvas, gpuContext, originController) {
@@ -437,7 +437,7 @@ class PolyhedronViewer {
         const { unit, snubPoints } = unitTriangles.find((source) => source.id === selectValue);
         const selector = faceSelectorMap.get(faceSelector) || faceSelectorMap.get("xxx");
         this.polyhedron = new NormalPolyhedron(unit, snubPoints, selector);
-        const mesh = buildPolyhedronMesh(this.polyhedron, this.faceVisibility, this.verfView, this.vertexVisibility, this.edgeVisibility);
+        const mesh = buildPolyhedronMesh(this.polyhedron, this.faceVisibility, this.visibilityType, this.vertexVisibility, this.edgeVisibility);
         this.renderer.updateMesh(mesh);
         return this.polyhedron;
     }
@@ -445,7 +445,7 @@ class PolyhedronViewer {
         if (!this.polyhedron)
             return;
         this.polyhedron.setOrigin(origin);
-        const mesh = buildPolyhedronMesh(this.polyhedron, this.faceVisibility, this.verfView, this.vertexVisibility, this.edgeVisibility);
+        const mesh = buildPolyhedronMesh(this.polyhedron, this.faceVisibility, this.visibilityType, this.vertexVisibility, this.edgeVisibility);
         this.renderer.updateMesh(mesh);
     }
     setFaceVisibility(faceVisibility) {
@@ -454,28 +454,28 @@ class PolyhedronViewer {
         }
         if (!this.polyhedron)
             return;
-        const mesh = buildPolyhedronMesh(this.polyhedron, this.faceVisibility, this.verfView, this.vertexVisibility, this.edgeVisibility);
+        const mesh = buildPolyhedronMesh(this.polyhedron, this.faceVisibility, this.visibilityType, this.vertexVisibility, this.edgeVisibility);
         this.renderer.updateMesh(mesh);
     }
     setEdgeVisibility(edgeVisibility) {
         this.edgeVisibility = edgeVisibility;
         if (!this.polyhedron)
             return;
-        const mesh = buildPolyhedronMesh(this.polyhedron, this.faceVisibility, this.verfView, this.vertexVisibility, this.edgeVisibility);
+        const mesh = buildPolyhedronMesh(this.polyhedron, this.faceVisibility, this.visibilityType, this.vertexVisibility, this.edgeVisibility);
         this.renderer.updateMesh(mesh);
     }
     setVertexVisibility(vertexVisibility) {
         this.vertexVisibility = vertexVisibility;
         if (!this.polyhedron)
             return;
-        const mesh = buildPolyhedronMesh(this.polyhedron, this.faceVisibility, this.verfView, this.vertexVisibility, this.edgeVisibility);
+        const mesh = buildPolyhedronMesh(this.polyhedron, this.faceVisibility, this.visibilityType, this.vertexVisibility, this.edgeVisibility);
         this.renderer.updateMesh(mesh);
     }
-    setVerfView(verfView) {
-        this.verfView = verfView;
+    setVisibilityType(visibilityType) {
+        this.visibilityType = visibilityType;
         if (!this.polyhedron)
             return;
-        const mesh = buildPolyhedronMesh(this.polyhedron, this.faceVisibility, this.verfView, this.vertexVisibility, this.edgeVisibility);
+        const mesh = buildPolyhedronMesh(this.polyhedron, this.faceVisibility, this.visibilityType, this.vertexVisibility, this.edgeVisibility);
         this.renderer.updateMesh(mesh);
     }
     startRenderLoop() {
@@ -520,6 +520,7 @@ window.addEventListener("load", async () => {
     const originBack = document.getElementById("origin_back");
     const select = document.getElementById("select_coxeter_group");
     const selectFace = document.getElementById("select_face_selector");
+    const selectVisibility = document.getElementById("select_visibility_type");
     const autoRotateCheckbox = document.getElementById("checkbox_auto_rotate");
     const originControlSvg = document.getElementById("origin_control");
     const originPoint = document.getElementById("origin_point");
@@ -529,7 +530,6 @@ window.addEventListener("load", async () => {
     const checkColor2 = document.getElementById("checkbox_color_2");
     const checkColor3 = document.getElementById("checkbox_color_3");
     const checkColor4 = document.getElementById("checkbox_color_4");
-    const checkVerf = document.getElementById("checkbox_verf");
     const checkVertex = document.getElementById("checkbox_vertex");
     const checkEdge = document.getElementById("checkbox_edge");
     if (!canvas || !select || !selectFace || !checkColor0 || !checkColor1 || !checkColor2 || !checkColor3 || !checkColor4 ||
@@ -574,8 +574,8 @@ window.addEventListener("load", async () => {
     checkVertex?.addEventListener("change", () => {
         viewer.setVertexVisibility(checkVertex.checked);
     });
-    checkVerf?.addEventListener("change", () => {
-        viewer.setVerfView(checkVerf.checked);
+    selectVisibility?.addEventListener("change", () => {
+        viewer.setVisibilityType(selectVisibility.value);
     });
     const colorCheckChangeHandler = () => {
         viewer.setFaceVisibility([
