@@ -650,11 +650,13 @@ export interface IPolyhedron {
     readonly faces: IPolyhedronFace[]
 }
 
+export type VisibilityType = "All" | "VertexFigure" | "OneForEach"
+
 // 多面体データから描画用メッシュを生成するユーティリティ
 export function buildPolyhedronMesh(
     polyhedron: IPolyhedron,
     faceVisibility: boolean[],
-    verfView: boolean,
+    visibilityType: VisibilityType,
     vertexVisibility: boolean,
     edgeVisibility: boolean,
 ): PolyhedronMesh {
@@ -663,12 +665,19 @@ export function buildPolyhedronMesh(
     const nv = [0, 0, 0]
     const mv = [0, 0, 0]
     const ov = [0, 0, 0]
+    const verfView = visibilityType === "VertexFigure"
+    const eachForOne = visibilityType === "OneForEach"
     const refPointIndexes: number[] = []
-    polyhedron.vertexes.forEach((vertex, i) => {
-        if (Vectors.distanceSquared(vertex, polyhedron.vertexes[0]!) < 0.005) {
-            refPointIndexes.push(i)
-        }
-    })
+    if (verfView) {
+        polyhedron.vertexes.forEach((vertex, i) => {
+            if (Vectors.distanceSquared(vertex, polyhedron.vertexes[0]!) < 0.005) {
+                refPointIndexes.push(i)
+            }
+        })
+    } else if (eachForOne) {
+        refPointIndexes.push(0)
+    }
+
 
     if (vertexVisibility) {
         if (verfView) {
@@ -689,11 +698,18 @@ export function buildPolyhedronMesh(
         }
     }
 
+    const colorDrawn = eachForOne ? new Set<number>() : null
     for (const face of polyhedron.faces) {
         const indexes = face.VertexIndexes
         const colorIndex = Math.min(face.ColorIndex, faceColors.length - 1)
         if (!faceVisibility[colorIndex]) {
             continue
+        }
+        if (colorDrawn) {
+            if (colorDrawn.has(colorIndex)) {
+                continue
+            }
+            colorDrawn.add(colorIndex)
         }
 
         if (verfView && face.VertexIndexes.every(i => !refPointIndexes.includes(i))) {

@@ -1,5 +1,5 @@
 import { NormalPolyhedron, unitTriangles, faceSelectorMap } from "./symmetry.js"
-import { initGpu, buildPolyhedronMesh, quaternionToMatrix, type GpuContext } from "./gpu.js"
+import { initGpu, buildPolyhedronMesh, quaternionToMatrix, type GpuContext, VisibilityType } from "./gpu.js"
 import { type Vector, Vectors } from "./vector.js"
 import { setCenter, createCircle, createPath, createLine, clearChildren } from "../svg_generator.js"
 import { Quaternion, Quaternions } from "./quaternion.js"
@@ -382,13 +382,6 @@ class OriginController {
             mirrors.push(normal)
         }
 
-        // 特別な点の計算
-        for (const n1 of mirrors) {
-            for (const n2 of normals) {
-                this.#addCrossMirror(n1, n2)
-            }
-        }
-
         if (polyhedron.snubPoints && polyhedron.faceDefinitions.length === 4 &&
             polyhedron.faceDefinitions[0]!.length === 1 && polyhedron.faceDefinitions[1]!.length === 1 &&
             polyhedron.faceDefinitions[2]!.length === 1 && polyhedron.faceDefinitions[3]!.length === 3) {
@@ -400,6 +393,13 @@ class OriginController {
                 for (let j = i + 1; j < normals.length; j++) {
                     this.#addCrossMirror(normals[i]!, normals[j]!)
                 }
+            }
+        }
+
+        // 特別な点の計算
+        for (const n1 of mirrors) {
+            for (const n2 of normals) {
+                this.#addCrossMirror(n1, n2)
             }
         }
 
@@ -423,7 +423,7 @@ class PolyhedronViewer {
     private polyhedron: NormalPolyhedron | null = null
     private autoRotate = false
     private faceVisibility: boolean[] = [true, true, true, true, true]
-    private verfView = false
+    private visibilityType: VisibilityType = "All"
     private vertexVisibility = false
     private edgeVisibility = false
 
@@ -503,7 +503,7 @@ class PolyhedronViewer {
         const selector = faceSelectorMap.get(faceSelector) || faceSelectorMap.get("xxx")!
         this.polyhedron = new NormalPolyhedron(unit, snubPoints, selector)
 
-        const mesh = buildPolyhedronMesh(this.polyhedron, this.faceVisibility, this.verfView, this.vertexVisibility, this.edgeVisibility)
+        const mesh = buildPolyhedronMesh(this.polyhedron, this.faceVisibility, this.visibilityType, this.vertexVisibility, this.edgeVisibility)
         this.renderer.updateMesh(mesh)
         return this.polyhedron
     }
@@ -511,7 +511,7 @@ class PolyhedronViewer {
     setOrigin(origin: Vector): void {
         if (!this.polyhedron) return
         this.polyhedron.setOrigin(origin)
-        const mesh = buildPolyhedronMesh(this.polyhedron, this.faceVisibility, this.verfView, this.vertexVisibility, this.edgeVisibility)
+        const mesh = buildPolyhedronMesh(this.polyhedron, this.faceVisibility, this.visibilityType, this.vertexVisibility, this.edgeVisibility)
         this.renderer.updateMesh(mesh)
     }
 
@@ -520,28 +520,28 @@ class PolyhedronViewer {
             this.faceVisibility[i] = faceVisibility[i]!
         }
         if (!this.polyhedron) return
-        const mesh = buildPolyhedronMesh(this.polyhedron, this.faceVisibility, this.verfView, this.vertexVisibility, this.edgeVisibility)
+        const mesh = buildPolyhedronMesh(this.polyhedron, this.faceVisibility, this.visibilityType, this.vertexVisibility, this.edgeVisibility)
         this.renderer.updateMesh(mesh)
     }
 
     setEdgeVisibility(edgeVisibility: boolean): void {
         this.edgeVisibility = edgeVisibility
         if (!this.polyhedron) return
-        const mesh = buildPolyhedronMesh(this.polyhedron, this.faceVisibility, this.verfView, this.vertexVisibility, this.edgeVisibility)
+        const mesh = buildPolyhedronMesh(this.polyhedron, this.faceVisibility, this.visibilityType, this.vertexVisibility, this.edgeVisibility)
         this.renderer.updateMesh(mesh)
     }
 
     setVertexVisibility(vertexVisibility: boolean): void {
         this.vertexVisibility = vertexVisibility
         if (!this.polyhedron) return
-        const mesh = buildPolyhedronMesh(this.polyhedron, this.faceVisibility, this.verfView, this.vertexVisibility, this.edgeVisibility)
+        const mesh = buildPolyhedronMesh(this.polyhedron, this.faceVisibility, this.visibilityType, this.vertexVisibility, this.edgeVisibility)
         this.renderer.updateMesh(mesh)
     }
 
-    setVerfView(verfView: boolean): void {
-        this.verfView = verfView
+    setVisibilityType(visibilityType: VisibilityType): void {
+        this.visibilityType = visibilityType
         if (!this.polyhedron) return
-        const mesh = buildPolyhedronMesh(this.polyhedron, this.faceVisibility, this.verfView, this.vertexVisibility, this.edgeVisibility)
+        const mesh = buildPolyhedronMesh(this.polyhedron, this.faceVisibility, this.visibilityType, this.vertexVisibility, this.edgeVisibility)
         this.renderer.updateMesh(mesh)
     }
 
@@ -595,6 +595,7 @@ window.addEventListener("load", async () => {
     const originBack = document.getElementById("origin_back") as HTMLCanvasElement | null
     const select = document.getElementById("select_coxeter_group") as HTMLSelectElement | null
     const selectFace = document.getElementById("select_face_selector") as HTMLSelectElement | null
+    const selectVisibility = document.getElementById("select_visibility_type") as HTMLSelectElement | null
     const autoRotateCheckbox = document.getElementById("checkbox_auto_rotate") as HTMLInputElement | null
     const originControlSvg = document.getElementById("origin_control") as unknown as SVGSVGElement | null
     const originPoint = document.getElementById("origin_point") as unknown as SVGCircleElement | null
@@ -604,7 +605,6 @@ window.addEventListener("load", async () => {
     const checkColor2 = document.getElementById("checkbox_color_2") as HTMLInputElement | null
     const checkColor3 = document.getElementById("checkbox_color_3") as HTMLInputElement | null
     const checkColor4 = document.getElementById("checkbox_color_4") as HTMLInputElement | null
-    const checkVerf = document.getElementById("checkbox_verf") as HTMLInputElement | null
     const checkVertex = document.getElementById("checkbox_vertex") as HTMLInputElement | null
     const checkEdge = document.getElementById("checkbox_edge") as HTMLInputElement | null
 
@@ -668,8 +668,8 @@ window.addEventListener("load", async () => {
         viewer.setVertexVisibility(checkVertex.checked)
     })
 
-    checkVerf?.addEventListener("change", () => {
-        viewer.setVerfView(checkVerf.checked)
+    selectVisibility?.addEventListener("change", () => {
+        viewer.setVisibilityType(selectVisibility.value as VisibilityType)
     })
 
     const colorCheckChangeHandler = () => {
