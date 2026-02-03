@@ -485,18 +485,25 @@ function addPolygon(triangles, cv, nv, mv, vertexes, indexes, colorIndex) {
         triangles.push(v0[0], v0[1], v0[2], nx, ny, nz, r, g, b, v1[0], v1[1], v1[2], nx, ny, nz, r, g, b, v2[0], v2[1], v2[2], nx, ny, nz, r, g, b);
     }
 }
-export function buildPolyhedronMesh(polyhedron, faceVisibility, verfView, vertexVisibility, edgeVisibility) {
+export function buildPolyhedronMesh(polyhedron, faceVisibility, visibilityType, vertexVisibility, edgeVisibility) {
     const triangles = [];
     const cv = [0, 0, 0];
     const nv = [0, 0, 0];
     const mv = [0, 0, 0];
     const ov = [0, 0, 0];
+    const verfView = visibilityType === "VertexFigure";
+    const eachForOne = visibilityType === "OneForEach";
     const refPointIndexes = [];
-    polyhedron.vertexes.forEach((vertex, i) => {
-        if (Vectors.distanceSquared(vertex, polyhedron.vertexes[0]) < 0.005) {
-            refPointIndexes.push(i);
-        }
-    });
+    if (verfView) {
+        polyhedron.vertexes.forEach((vertex, i) => {
+            if (Vectors.distanceSquared(vertex, polyhedron.vertexes[0]) < 0.005) {
+                refPointIndexes.push(i);
+            }
+        });
+    }
+    else if (eachForOne) {
+        refPointIndexes.push(0);
+    }
     if (vertexVisibility) {
         if (verfView) {
             addVertex(triangles, polyhedron.vertexes[0]);
@@ -515,11 +522,18 @@ export function buildPolyhedronMesh(polyhedron, faceVisibility, verfView, vertex
             addEdge(triangles, cv, nv, mv, ov, polyhedron.vertexes[index1], polyhedron.vertexes[index2]);
         }
     }
+    const colorDrawn = eachForOne ? new Set() : null;
     for (const face of polyhedron.faces) {
         const indexes = face.VertexIndexes;
         const colorIndex = Math.min(face.ColorIndex, faceColors.length - 1);
         if (!faceVisibility[colorIndex]) {
             continue;
+        }
+        if (colorDrawn) {
+            if (colorDrawn.has(colorIndex)) {
+                continue;
+            }
+            colorDrawn.add(colorIndex);
         }
         if (verfView && face.VertexIndexes.every(i => !refPointIndexes.includes(i))) {
             continue;

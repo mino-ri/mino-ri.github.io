@@ -79,10 +79,11 @@
             <input type="checkbox" id="checkbox_edge" name="checkbox_edge" />
             <span data-ls-en="edge">辺</span>
           </label>
-          <label>
-            <input type="checkbox" id="checkbox_verf" name="checkbox_verf" />
-            <span data-ls-en="vertex figure">頂点形状</span>
-          </label>
+          <select id="select_visibility_type" name="select_visibility_type">
+            <option value="All" data-ls-en="all">すべて</option>
+            <option value="VertexFigure" data-ls-en="vertex figure">頂点形状</option>
+            <option value="OneForEach" data-ls-en="one for each">各1枚</option>
+          </select>
         </div>
         <div>
           <svg id="origin_control" width="300" height="300" viewBox="-1.125 -1.125 2.25 2.25"
