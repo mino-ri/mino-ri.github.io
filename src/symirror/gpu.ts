@@ -271,7 +271,7 @@ class PolyhedronRendererImpl implements PolyhedronRenderer {
         const writeDepthStencilState: GPUDepthStencilState = {
             format: "depth24plus-stencil8",
             depthWriteEnabled: false,
-            depthCompare: "always",
+            depthCompare: "less",
             stencilFront: {
                 compare: "always",
                 passOp: "invert",
@@ -744,6 +744,14 @@ export interface IPolyhedron {
 
 export type VisibilityType = "All" | "VertexFigure" | "OneForEach"
 
+type PlainIdentifier = {
+    normal: Vector | null
+    distance: number
+}
+
+const maxNormalError = 1.0 / 1024.0
+const maxError = 1.0 / 128.0
+
 // 多面体データから描画用メッシュを生成するユーティリティ
 export function buildPolyhedronMesh(
     polyhedron: IPolyhedron,
@@ -792,19 +800,89 @@ export function buildPolyhedronMesh(
             continue
         }
         drawIndexes.push(i)
-
     }
 
-    for (const i of drawIndexes) {
-        const face = polyhedron.faces[i]!
-        const colorIndex = Math.min(face.ColorIndex, faceColors.length - 1)
-        addPolygon(triangles, cv, nv, mv, polyhedron.vertexes, face.VertexIndexes, colorIndex)
-        if (evenOddFilling) {
-            const vertexCount = triangles.length / 9 - addedVertexCount
-            if (vertexCount > 0) {
-                polygons.push({ vertexCount: triangles.length / 9 - addedVertexCount, stencilEnabled: true })
-                addedVertexCount = triangles.length / 9
+    if (evenOddFilling) {
+        const plains = new Array<PlainIdentifier>(drawIndexes.length)
+        // 各面の法線ベクトルと中心からの距離を求める
+        for (let i = 0; i < drawIndexes.length; i++) {
+            const face = polyhedron.faces[drawIndexes[i]!]!
+            const normal = [0, 0, 0]
+            const vertex0 = polyhedron.vertexes[face.VertexIndexes[0]!]!
+            if (face.VertexIndexes.length <= 4) {
+                Vectors.sub(polyhedron.vertexes[face.VertexIndexes[1]!]!, vertex0, nv)
+                Vectors.sub(polyhedron.vertexes[face.VertexIndexes[2]!]!, vertex0, mv)
+            } else {
+                Vectors.sub(polyhedron.vertexes[face.VertexIndexes[2]!]!, vertex0, nv)
+                Vectors.sub(polyhedron.vertexes[face.VertexIndexes[4]!]!, vertex0, mv)
             }
+            Vectors.cross(nv, mv, normal)
+            if (Math.abs(normal[0]!) < 0.0001 && Math.abs(normal[1]!) < 0.0001 && Math.abs(normal[2]!) < 0.0001) {
+                plains[i] = { normal: null, distance: 0 }
+            } else {
+                Vectors.normalizeSelf(normal)
+                const distance = Vectors.dot(normal, vertex0)
+                if (distance < 0) {
+                    Vectors.negateSelf(normal)
+                    plains[i] = { normal, distance: -distance }
+                } else {
+                    plains[i] = { normal, distance }
+                }
+            }
+        }
+
+        const drawnIndexSet = new Set<number>()
+        for (let i = 0; i < drawIndexes.length; i++) {
+            const currentPlain = plains[i]!
+            if (drawnIndexSet.has(i) || !currentPlain.normal) continue
+
+            const face = polyhedron.faces[drawIndexes[i]!]!
+            // 自己交差の可能性がある5角形以上、または同一平面に複数の面がある場合、ステンシルバッファを使って描画する
+            let drawWithStencil = face.VertexIndexes.length >= 5
+            const isNearlyZero = Math.abs(currentPlain.distance) < maxError
+            for (let j = i + 1; j < drawIndexes.length; j++) {
+                const targetPlain = plains[j]!
+                if (drawnIndexSet.has(j) || !targetPlain.normal) continue
+                if (Math.abs(currentPlain.distance - targetPlain.distance) < maxError && (
+                    Math.abs(currentPlain.normal[0]! - targetPlain.normal[0]!) < maxNormalError &&
+                    Math.abs(currentPlain.normal[1]! - targetPlain.normal[1]!) < maxNormalError &&
+                    Math.abs(currentPlain.normal[2]! - targetPlain.normal[2]!) < maxNormalError ||
+                    isNearlyZero &&
+                    Math.abs(currentPlain.normal[0]! + targetPlain.normal[0]!) < maxNormalError &&
+                    Math.abs(currentPlain.normal[1]! + targetPlain.normal[1]!) < maxNormalError &&
+                    Math.abs(currentPlain.normal[2]! + targetPlain.normal[2]!) < maxNormalError)) {
+                    drawWithStencil = true
+                    drawnIndexSet.add(j)
+                    const otherFace = polyhedron.faces[drawIndexes[j]!]!
+                    const colorIndex = Math.min(otherFace.ColorIndex, faceColors.length - 1)
+                    addPolygon(triangles, cv, nv, mv, polyhedron.vertexes, otherFace.VertexIndexes, colorIndex)
+                }
+            }
+
+            if (drawWithStencil) {
+                const face = polyhedron.faces[drawIndexes[i]!]!
+                const colorIndex = Math.min(face.ColorIndex, faceColors.length - 1)
+                addPolygon(triangles, cv, nv, mv, polyhedron.vertexes, face.VertexIndexes, colorIndex)
+
+                drawnIndexSet.add(i)
+                const vertexCount = triangles.length / 9 - addedVertexCount
+                if (vertexCount > 0) {
+                    polygons.push({ vertexCount: triangles.length / 9 - addedVertexCount, stencilEnabled: true })
+                    addedVertexCount = triangles.length / 9
+                }
+            }
+        }
+        for (let i = 0; i < drawIndexes.length; i++) {
+            if (drawnIndexSet.has(i)) continue
+            const face = polyhedron.faces[drawIndexes[i]!]!
+            const colorIndex = Math.min(face.ColorIndex, faceColors.length - 1)
+            addPolygon(triangles, cv, nv, mv, polyhedron.vertexes, face.VertexIndexes, colorIndex)
+        }
+    } else {
+        for (const i of drawIndexes) {
+            const face = polyhedron.faces[i]!
+            const colorIndex = Math.min(face.ColorIndex, faceColors.length - 1)
+            addPolygon(triangles, cv, nv, mv, polyhedron.vertexes, face.VertexIndexes, colorIndex)
         }
     }
 

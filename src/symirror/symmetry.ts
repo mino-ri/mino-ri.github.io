@@ -130,21 +130,21 @@ export const faceSelectorMap = new Map<string, FaceSelectorFunction>([
         const cac = c.mul(a).mul(c)
         const bc = b.mul(c)
         const cb = c.mul(b)
-        return [[a, bab], [bc], [a, cac], [bc, cac, cb, bab]]
+        return [[a, bab], [bc], [a, cac], [cac, cb, bab, bc]]
     }],
     ["oxo", (a, b, c) => {
         const aba = a.mul(b).mul(a)
         const cbc = c.mul(b).mul(c)
         const ac = a.mul(c)
         const ca = c.mul(a)
-        return [[b, aba], [b, cbc], [ac], [ac, cbc, ca, aba]]
+        return [[b, aba], [b, cbc], [ac], [cbc, ca, aba, ac]]
     }],
     ["oox", (a, b, c) => {
         const aca = a.mul(c).mul(a)
         const bcb = b.mul(c).mul(b)
         const ab = a.mul(b)
         const ba = b.mul(a)
-        return [[ab], [c, bcb], [c, aca], [ab, bcb, ba, aca]]
+        return [[ab], [c, bcb], [c, aca], [bcb, ba, aca, ab]]
     }],
     ["ooo", (a, b, c) => {
         const ab = a.mul(b)
@@ -237,7 +237,8 @@ export class NormalPolyhedron {
         // 面の生成
         const usedVertexSet = new Set<number>()
         const faces: PolyhedronFace[] = []
-        faceDefinitions.forEach((faceDef, mirrorA) => {
+        for (let mirrorA = 0; mirrorA < faceDefinitions.length; mirrorA++) {
+            const faceDef = faceDefinitions[mirrorA]!
             usedVertexSet.clear()
             const isReflectable = faceDef[0]!.period === 2 && faceDef[0]!.rank % 2 === 1
             for (const currentIndex of vertexIndexes) {
@@ -248,11 +249,11 @@ export class NormalPolyhedron {
 
                 let targetElement = element
                 const faceVertexIndexes: number[] = []
-                usedVertexSet.add(currentIndex)
-                if (isReflectable) {
-                    usedVertexSet.add(element.mul(faceDef[0]!).index)
-                }
                 while (true) {
+                    usedVertexSet.add(targetElement.index)
+                    if (isReflectable) {
+                        usedVertexSet.add(targetElement.mul(faceDef[0]!).index)
+                    }
                     for (const edgeElement of faceDef) {
                         targetElement = targetElement.mul(edgeElement)
                         faceVertexIndexes.push(targetElement.index)
@@ -269,7 +270,7 @@ export class NormalPolyhedron {
                     })
                 }
             }
-        })
+        }
 
         this.lineIndexes = lines
         this.faces = faces
