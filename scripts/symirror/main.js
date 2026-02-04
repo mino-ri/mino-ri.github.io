@@ -375,7 +375,7 @@ class PolyhedronViewer {
     autoRotate = false;
     faceVisibility = [true, true, true, true, true];
     visibilityType = "All";
-    evenOddFilling = false;
+    fillType = "Fill";
     vertexVisibility = false;
     edgeVisibility = false;
     constructor(canvas, gpuContext, originController) {
@@ -465,14 +465,14 @@ class PolyhedronViewer {
         this.visibilityType = visibilityType;
         this.#updateMesh();
     }
-    setEvenOddFilling(evenOddFilling) {
-        this.evenOddFilling = evenOddFilling;
+    setFillType(fillType) {
+        this.fillType = fillType;
         this.#updateMesh();
     }
     #updateMesh() {
         if (!this.polyhedron)
             return;
-        const mesh = buildPolyhedronMesh(this.polyhedron, this.faceVisibility, this.visibilityType, this.vertexVisibility, this.edgeVisibility, this.evenOddFilling);
+        const mesh = buildPolyhedronMesh(this.polyhedron, this.faceVisibility, this.visibilityType, this.vertexVisibility, this.edgeVisibility, this.fillType);
         this.renderer.updateMesh(mesh);
     }
     startRenderLoop() {
@@ -518,6 +518,7 @@ window.addEventListener("load", async () => {
     const select = document.getElementById("select_coxeter_group");
     const selectFace = document.getElementById("select_face_selector");
     const selectVisibility = document.getElementById("select_visibility_type");
+    const selectFillType = document.getElementById("select_fill_type");
     const autoRotateCheckbox = document.getElementById("checkbox_auto_rotate");
     const originControlSvg = document.getElementById("origin_control");
     const originPoint = document.getElementById("origin_point");
@@ -529,9 +530,8 @@ window.addEventListener("load", async () => {
     const checkColor4 = document.getElementById("checkbox_color_4");
     const checkVertex = document.getElementById("checkbox_vertex");
     const checkEdge = document.getElementById("checkbox_edge");
-    const checkEvenOdd = document.getElementById("checkbox_even_odd");
     if (!canvas || !select || !selectFace || !checkColor0 || !checkColor1 || !checkColor2 || !checkColor3 || !checkColor4 ||
-        !circleGroup || !originBack || !originControlSvg || !originPoint || !checkEvenOdd) {
+        !circleGroup || !originBack || !originControlSvg || !originPoint) {
         console.error("Required elements not found");
         return;
     }
@@ -584,17 +584,15 @@ window.addEventListener("load", async () => {
             checkColor4.checked,
         ]);
     };
-    checkColor0?.addEventListener("change", colorCheckChangeHandler);
-    checkColor1?.addEventListener("change", colorCheckChangeHandler);
-    checkColor2?.addEventListener("change", colorCheckChangeHandler);
-    checkColor3?.addEventListener("change", colorCheckChangeHandler);
-    checkColor4?.addEventListener("change", colorCheckChangeHandler);
-    checkEvenOdd.addEventListener("change", () => {
-        viewer.setEvenOddFilling(checkEvenOdd.checked);
+    checkColor0.addEventListener("change", colorCheckChangeHandler);
+    checkColor1.addEventListener("change", colorCheckChangeHandler);
+    checkColor2.addEventListener("change", colorCheckChangeHandler);
+    checkColor3.addEventListener("change", colorCheckChangeHandler);
+    checkColor4.addEventListener("change", colorCheckChangeHandler);
+    selectFillType?.addEventListener("change", () => {
+        viewer.setFillType(selectFillType.value);
     });
-    if (autoRotateCheckbox) {
-        autoRotateCheckbox.addEventListener("change", () => {
-            viewer.setAutoRotate(autoRotateCheckbox.checked);
-        });
-    }
+    autoRotateCheckbox?.addEventListener("change", () => {
+        viewer.setAutoRotate(autoRotateCheckbox.checked);
+    });
 });
