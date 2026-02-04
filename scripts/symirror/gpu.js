@@ -61,6 +61,10 @@ fn fragmentMain(input: VertexOutput, @builtin(front_facing) isFront : bool) -> @
     let brightness = (ambient + diffuse * shadow);
     return vec4<f32>(input.color * brightness + vec3<f32>(specula, specula, specula) * shadow, 1.0);
 }
+  
+@fragment
+fn fragmentEmpty() {
+}  
 `;
 const faceColors = [
     [1.00, 0.85, 0.00],
@@ -123,13 +127,16 @@ class PolyhedronRendererImpl {
     context;
     format;
     pipeline;
+    stencilPipeline;
     shadowPipeline;
+    shadowStencilPipeline;
     uniformBuffer;
     shadowBindGroup;
     bindGroupLayout;
     bindGroup;
     vertexBuffer = null;
-    vertexCount = 0;
+    polygons = [];
+    totalVertexCount = 0;
     depthTexture = null;
     shadowTexture;
     shadowSampler;
@@ -169,24 +176,6 @@ class PolyhedronRendererImpl {
                 { binding: 0, resource: { buffer: this.uniformBuffer } },
             ],
         });
-        this.shadowPipeline = device.createRenderPipeline({
-            layout: device.createPipelineLayout({
-                bindGroupLayouts: [shadowBindGroupLayout],
-            }),
-            vertex: {
-                module: shaderModule,
-                entryPoint: "vertexShadow",
-                buffers: [vertexBuferLayout],
-            },
-            primitive: {
-                topology: "triangle-list",
-            },
-            depthStencil: {
-                depthWriteEnabled: true,
-                depthCompare: 'less',
-                format: 'depth32float',
-            },
-        });
         this.bindGroupLayout = device.createBindGroupLayout({
             entries: [
                 { binding: 0, visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT, buffer: { type: "uniform" } },
@@ -196,41 +185,97 @@ class PolyhedronRendererImpl {
         });
         this.shadowTexture = this.device.createTexture({
             size: [2048, 2048],
-            format: 'depth32float',
+            format: 'depth24plus-stencil8',
             usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING,
         });
         this.bindGroup = this.device.createBindGroup({
             layout: this.bindGroupLayout,
             entries: [
                 { binding: 0, resource: { buffer: this.uniformBuffer } },
-                { binding: 1, resource: this.shadowTexture.createView() },
+                { binding: 1, resource: this.shadowTexture.createView({ aspect: "depth-only" }) },
                 { binding: 2, resource: this.shadowSampler },
             ],
         });
-        this.pipeline = device.createRenderPipeline({
-            layout: device.createPipelineLayout({
-                bindGroupLayouts: [this.bindGroupLayout],
-            }),
-            vertex: {
-                module: shaderModule,
-                entryPoint: "vertexMain",
-                buffers: [vertexBuferLayout],
+        const premitiveState = {
+            topology: "triangle-list",
+            cullMode: "none",
+            frontFace: "ccw",
+        };
+        const shadowLayout = device.createPipelineLayout({
+            bindGroupLayouts: [shadowBindGroupLayout],
+        });
+        const shadowVertexState = {
+            module: shaderModule,
+            entryPoint: "vertexShadow",
+            buffers: [vertexBuferLayout],
+        };
+        const readDepthStencilState = {
+            format: "depth24plus-stencil8",
+            depthWriteEnabled: true,
+            depthCompare: "less",
+            stencilFront: {
+                compare: "not-equal",
+                passOp: "keep",
             },
+            stencilBack: {
+                compare: "not-equal",
+                passOp: "keep",
+            },
+        };
+        const writeDepthStencilState = {
+            format: "depth24plus-stencil8",
+            depthWriteEnabled: false,
+            depthCompare: "always",
+            stencilFront: {
+                compare: "always",
+                passOp: "invert",
+            },
+            stencilBack: {
+                compare: "always",
+                passOp: "invert",
+            },
+        };
+        this.shadowPipeline = device.createRenderPipeline({
+            layout: shadowLayout,
+            vertex: shadowVertexState,
+            primitive: premitiveState,
+            depthStencil: readDepthStencilState,
+        });
+        this.shadowStencilPipeline = device.createRenderPipeline({
+            layout: shadowLayout,
+            vertex: shadowVertexState,
+            primitive: premitiveState,
+            depthStencil: writeDepthStencilState,
+        });
+        const layout = device.createPipelineLayout({
+            bindGroupLayouts: [this.bindGroupLayout],
+        });
+        const vertexState = {
+            module: shaderModule,
+            entryPoint: "vertexMain",
+            buffers: [vertexBuferLayout],
+        };
+        this.pipeline = device.createRenderPipeline({
+            layout: layout,
+            vertex: vertexState,
             fragment: {
                 module: shaderModule,
                 entryPoint: "fragmentMain",
                 targets: [{ format: this.format }],
             },
-            primitive: {
-                topology: "triangle-list",
-                cullMode: "none",
-                frontFace: "ccw",
+            primitive: premitiveState,
+            depthStencil: readDepthStencilState,
+        });
+        this.stencilPipeline = device.createRenderPipeline({
+            layout: layout,
+            vertex: vertexState,
+            fragment: {
+                module: shaderModule,
+                entryPoint: "fragmentEmpty",
+                targets: [{ format: this.format, writeMask: 0 }],
             },
-            depthStencil: {
-                format: "depth24plus",
-                depthWriteEnabled: true,
-                depthCompare: "less",
-            },
+            primitive: premitiveState,
+            depthStencil: writeDepthStencilState,
         });
     }
     updateMesh(mesh) {
@@ -243,7 +288,11 @@ class PolyhedronRendererImpl {
             this.byteLength = mesh.vertexData.byteLength;
         }
         this.device.queue.writeBuffer(this.vertexBuffer, 0, mesh.vertexData.buffer, mesh.vertexData.byteOffset, mesh.vertexData.byteLength);
-        this.vertexCount = mesh.vertexCount;
+        this.polygons = mesh.polygons;
+        this.totalVertexCount = 0;
+        for (const polygon of mesh.polygons) {
+            this.totalVertexCount += polygon.vertexCount;
+        }
     }
     render(modelMatrix) {
         if (!this.vertexBuffer) {
@@ -258,7 +307,7 @@ class PolyhedronRendererImpl {
             }
             this.depthTexture = this.device.createTexture({
                 size: [width, height],
-                format: "depth24plus",
+                format: "depth24plus-stencil8",
                 usage: GPUTextureUsage.RENDER_ATTACHMENT,
             });
             this.lastWidth = width;
@@ -269,39 +318,67 @@ class PolyhedronRendererImpl {
         this.device.queue.writeBuffer(this.uniformBuffer, 128, lightViewProjectionMatrix.buffer, lightViewProjectionMatrix.byteOffset, lightViewProjectionMatrix.byteLength);
         const commandEncoder = this.device.createCommandEncoder();
         const textureView = this.context.getCurrentTexture().createView();
-        const shadowPass = commandEncoder.beginRenderPass({
-            colorAttachments: [],
-            depthStencilAttachment: {
-                view: this.shadowTexture.createView(),
-                depthClearValue: 1.0,
-                depthLoadOp: 'clear',
-                depthStoreOp: 'store',
-            },
-        });
-        shadowPass.setPipeline(this.shadowPipeline);
-        shadowPass.setBindGroup(0, this.shadowBindGroup);
-        shadowPass.setVertexBuffer(0, this.vertexBuffer);
-        shadowPass.draw(this.vertexCount);
-        shadowPass.end();
-        const mainPass = commandEncoder.beginRenderPass({
-            colorAttachments: [{
-                    view: textureView,
-                    clearValue: { r: 1.0, g: 1.0, b: 1.0, a: 1.0 },
-                    loadOp: "clear",
-                    storeOp: "store",
-                }],
-            depthStencilAttachment: {
-                view: this.depthTexture.createView(),
-                depthClearValue: 1.0,
-                depthLoadOp: "clear",
-                depthStoreOp: "store",
-            },
-        });
-        mainPass.setPipeline(this.pipeline);
-        mainPass.setBindGroup(0, this.bindGroup);
-        mainPass.setVertexBuffer(0, this.vertexBuffer);
-        mainPass.draw(this.vertexCount);
-        mainPass.end();
+        let vertexIndex = 0;
+        for (let i = 0; i < this.polygons.length; i++) {
+            const polygon = this.polygons[i];
+            const shadowPass = commandEncoder.beginRenderPass({
+                colorAttachments: [],
+                depthStencilAttachment: {
+                    view: this.shadowTexture.createView(),
+                    depthClearValue: 1.0,
+                    depthLoadOp: i === 0 ? "clear" : "load",
+                    depthStoreOp: "store",
+                    stencilClearValue: polygon.stencilEnabled ? 0 : 1,
+                    stencilLoadOp: "clear",
+                    stencilStoreOp: polygon.stencilEnabled ? "store" : "discard",
+                },
+            });
+            if (polygon.stencilEnabled) {
+                shadowPass.setPipeline(this.shadowStencilPipeline);
+                shadowPass.setBindGroup(0, this.shadowBindGroup);
+                shadowPass.setVertexBuffer(0, this.vertexBuffer);
+                shadowPass.draw(polygon.vertexCount, 1, vertexIndex);
+            }
+            shadowPass.setPipeline(this.shadowPipeline);
+            shadowPass.setBindGroup(0, this.shadowBindGroup);
+            shadowPass.setVertexBuffer(0, this.vertexBuffer);
+            shadowPass.draw(polygon.vertexCount, 1, vertexIndex);
+            shadowPass.end();
+            vertexIndex += polygon.vertexCount;
+        }
+        vertexIndex = 0;
+        for (let i = 0; i < this.polygons.length; i++) {
+            const polygon = this.polygons[i];
+            const mainPass = commandEncoder.beginRenderPass({
+                colorAttachments: [{
+                        view: textureView,
+                        clearValue: { r: 1.0, g: 1.0, b: 1.0, a: 1.0 },
+                        loadOp: i === 0 ? "clear" : "load",
+                        storeOp: "store",
+                    }],
+                depthStencilAttachment: {
+                    view: this.depthTexture.createView(),
+                    depthClearValue: 1.0,
+                    depthLoadOp: i === 0 ? "clear" : "load",
+                    depthStoreOp: "store",
+                    stencilClearValue: polygon.stencilEnabled ? 0 : 1,
+                    stencilLoadOp: "clear",
+                    stencilStoreOp: polygon.stencilEnabled ? "store" : "discard",
+                },
+            });
+            if (polygon.stencilEnabled) {
+                mainPass.setPipeline(this.stencilPipeline);
+                mainPass.setBindGroup(0, this.bindGroup);
+                mainPass.setVertexBuffer(0, this.vertexBuffer);
+                mainPass.draw(polygon.vertexCount, 1, vertexIndex);
+            }
+            mainPass.setPipeline(this.pipeline);
+            mainPass.setBindGroup(0, this.bindGroup);
+            mainPass.setVertexBuffer(0, this.vertexBuffer);
+            mainPass.draw(polygon.vertexCount, 1, vertexIndex);
+            mainPass.end();
+            vertexIndex += polygon.vertexCount;
+        }
         this.device.queue.submit([commandEncoder.finish()]);
     }
     destroy() {
@@ -485,7 +562,7 @@ function addPolygon(triangles, cv, nv, mv, vertexes, indexes, colorIndex) {
         triangles.push(v0[0], v0[1], v0[2], nx, ny, nz, r, g, b, v1[0], v1[1], v1[2], nx, ny, nz, r, g, b, v2[0], v2[1], v2[2], nx, ny, nz, r, g, b);
     }
 }
-export function buildPolyhedronMesh(polyhedron, faceVisibility, visibilityType, vertexVisibility, edgeVisibility) {
+export function buildPolyhedronMesh(polyhedron, faceVisibility, visibilityType, vertexVisibility, edgeVisibility, evenOddFilling) {
     const triangles = [];
     const cv = [0, 0, 0];
     const nv = [0, 0, 0];
@@ -503,6 +580,39 @@ export function buildPolyhedronMesh(polyhedron, faceVisibility, visibilityType, 
     }
     else if (eachForOne) {
         refPointIndexes.push(0);
+    }
+    const colorDrawn = eachForOne ? new Set() : null;
+    const polygons = [];
+    const drawIndexes = [];
+    let addedVertexCount = 0;
+    for (let i = 0; i < polyhedron.faces.length; i++) {
+        const face = polyhedron.faces[i];
+        const colorIndex = Math.min(face.ColorIndex, faceColors.length - 1);
+        if (!faceVisibility[colorIndex]) {
+            continue;
+        }
+        if (colorDrawn) {
+            if (colorDrawn.has(colorIndex)) {
+                continue;
+            }
+            colorDrawn.add(colorIndex);
+        }
+        if (verfView && face.VertexIndexes.every(i => !refPointIndexes.includes(i))) {
+            continue;
+        }
+        drawIndexes.push(i);
+    }
+    for (const i of drawIndexes) {
+        const face = polyhedron.faces[i];
+        const colorIndex = Math.min(face.ColorIndex, faceColors.length - 1);
+        addPolygon(triangles, cv, nv, mv, polyhedron.vertexes, face.VertexIndexes, colorIndex);
+        if (evenOddFilling) {
+            const vertexCount = triangles.length / 9 - addedVertexCount;
+            if (vertexCount > 0) {
+                polygons.push({ vertexCount: triangles.length / 9 - addedVertexCount, stencilEnabled: true });
+                addedVertexCount = triangles.length / 9;
+            }
+        }
     }
     if (vertexVisibility) {
         if (verfView) {
@@ -522,27 +632,13 @@ export function buildPolyhedronMesh(polyhedron, faceVisibility, visibilityType, 
             addEdge(triangles, cv, nv, mv, ov, polyhedron.vertexes[index1], polyhedron.vertexes[index2]);
         }
     }
-    const colorDrawn = eachForOne ? new Set() : null;
-    for (const face of polyhedron.faces) {
-        const indexes = face.VertexIndexes;
-        const colorIndex = Math.min(face.ColorIndex, faceColors.length - 1);
-        if (!faceVisibility[colorIndex]) {
-            continue;
-        }
-        if (colorDrawn) {
-            if (colorDrawn.has(colorIndex)) {
-                continue;
-            }
-            colorDrawn.add(colorIndex);
-        }
-        if (verfView && face.VertexIndexes.every(i => !refPointIndexes.includes(i))) {
-            continue;
-        }
-        addPolygon(triangles, cv, nv, mv, polyhedron.vertexes, indexes, colorIndex);
+    const remainingVertexCount = triangles.length / 9 - addedVertexCount;
+    if (remainingVertexCount > 0) {
+        polygons.push({ vertexCount: triangles.length / 9 - addedVertexCount, stencilEnabled: false });
     }
     return {
         vertexData: new Float32Array(triangles),
-        vertexCount: triangles.length / 9,
+        polygons,
     };
 }
 export function quaternionToMatrix(w, x, y, z) {
