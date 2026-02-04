@@ -424,6 +424,7 @@ class PolyhedronViewer {
     private autoRotate = false
     private faceVisibility: boolean[] = [true, true, true, true, true]
     private visibilityType: VisibilityType = "All"
+    private evenOddFilling = false
     private vertexVisibility = false
     private edgeVisibility = false
 
@@ -502,46 +503,46 @@ class PolyhedronViewer {
         const { unit, snubPoints } = unitTriangles.find((source) => source.id === selectValue)!
         const selector = faceSelectorMap.get(faceSelector) || faceSelectorMap.get("xxx")!
         this.polyhedron = new NormalPolyhedron(unit, snubPoints, selector)
-
-        const mesh = buildPolyhedronMesh(this.polyhedron, this.faceVisibility, this.visibilityType, this.vertexVisibility, this.edgeVisibility)
-        this.renderer.updateMesh(mesh)
+        this.#updateMesh()
         return this.polyhedron
     }
 
     setOrigin(origin: Vector): void {
         if (!this.polyhedron) return
         this.polyhedron.setOrigin(origin)
-        const mesh = buildPolyhedronMesh(this.polyhedron, this.faceVisibility, this.visibilityType, this.vertexVisibility, this.edgeVisibility)
-        this.renderer.updateMesh(mesh)
+        this.#updateMesh()
     }
 
     setFaceVisibility(faceVisibility: boolean[]): void {
         for (let i = 0; i < faceVisibility.length; i++) {
             this.faceVisibility[i] = faceVisibility[i]!
         }
-        if (!this.polyhedron) return
-        const mesh = buildPolyhedronMesh(this.polyhedron, this.faceVisibility, this.visibilityType, this.vertexVisibility, this.edgeVisibility)
-        this.renderer.updateMesh(mesh)
+        this.#updateMesh()
     }
 
     setEdgeVisibility(edgeVisibility: boolean): void {
         this.edgeVisibility = edgeVisibility
-        if (!this.polyhedron) return
-        const mesh = buildPolyhedronMesh(this.polyhedron, this.faceVisibility, this.visibilityType, this.vertexVisibility, this.edgeVisibility)
-        this.renderer.updateMesh(mesh)
+        this.#updateMesh()
     }
 
     setVertexVisibility(vertexVisibility: boolean): void {
         this.vertexVisibility = vertexVisibility
-        if (!this.polyhedron) return
-        const mesh = buildPolyhedronMesh(this.polyhedron, this.faceVisibility, this.visibilityType, this.vertexVisibility, this.edgeVisibility)
-        this.renderer.updateMesh(mesh)
+        this.#updateMesh()
     }
 
     setVisibilityType(visibilityType: VisibilityType): void {
         this.visibilityType = visibilityType
+        this.#updateMesh()
+    }
+
+    setEvenOddFilling(evenOddFilling: boolean): void {
+        this.evenOddFilling = evenOddFilling
+        this.#updateMesh()
+    }
+
+    #updateMesh(): void {
         if (!this.polyhedron) return
-        const mesh = buildPolyhedronMesh(this.polyhedron, this.faceVisibility, this.visibilityType, this.vertexVisibility, this.edgeVisibility)
+        const mesh = buildPolyhedronMesh(this.polyhedron, this.faceVisibility, this.visibilityType, this.vertexVisibility, this.edgeVisibility, this.evenOddFilling)
         this.renderer.updateMesh(mesh)
     }
 
@@ -607,9 +608,10 @@ window.addEventListener("load", async () => {
     const checkColor4 = document.getElementById("checkbox_color_4") as HTMLInputElement | null
     const checkVertex = document.getElementById("checkbox_vertex") as HTMLInputElement | null
     const checkEdge = document.getElementById("checkbox_edge") as HTMLInputElement | null
+    const checkEvenOdd = document.getElementById("checkbox_even_odd") as HTMLInputElement | null
 
     if (!canvas || !select || !selectFace || !checkColor0 || !checkColor1 || !checkColor2 || !checkColor3 || !checkColor4 ||
-        !circleGroup || !originBack || !originControlSvg || !originPoint) {
+        !circleGroup || !originBack || !originControlSvg || !originPoint || !checkEvenOdd) {
         console.error("Required elements not found")
         return
     }
@@ -687,6 +689,10 @@ window.addEventListener("load", async () => {
     checkColor2?.addEventListener("change", colorCheckChangeHandler)
     checkColor3?.addEventListener("change", colorCheckChangeHandler)
     checkColor4?.addEventListener("change", colorCheckChangeHandler)
+
+    checkEvenOdd.addEventListener("change", () => {
+        viewer.setEvenOddFilling(checkEvenOdd.checked)
+    })
 
     if (autoRotateCheckbox) {
         autoRotateCheckbox.addEventListener("change", () => {

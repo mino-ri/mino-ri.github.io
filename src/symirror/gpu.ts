@@ -404,6 +404,8 @@ class PolyhedronRendererImpl implements PolyhedronRenderer {
             shadowPass.setVertexBuffer(0, this.vertexBuffer)
             shadowPass.draw(polygon.vertexCount, 1, vertexIndex)
             shadowPass.end()
+
+            vertexIndex += polygon.vertexCount
         }
 
         vertexIndex = 0
@@ -413,7 +415,7 @@ class PolyhedronRendererImpl implements PolyhedronRenderer {
                 colorAttachments: [{
                     view: textureView,
                     clearValue: { r: 1.0, g: 1.0, b: 1.0, a: 1.0 },
-                    loadOp: "clear",
+                    loadOp: i === 0 ? "clear" : "load",
                     storeOp: "store",
                 }],
                 depthStencilAttachment: {
@@ -749,6 +751,7 @@ export function buildPolyhedronMesh(
     visibilityType: VisibilityType,
     vertexVisibility: boolean,
     edgeVisibility: boolean,
+    evenOddFilling: boolean,
 ): PolyhedronMesh {
     const triangles: number[] = []
     const cv = [0, 0, 0]
@@ -768,6 +771,42 @@ export function buildPolyhedronMesh(
         refPointIndexes.push(0)
     }
 
+    const colorDrawn = eachForOne ? new Set<number>() : null
+    const polygons: PolygonDefinition[] = []
+    const drawIndexes: number[] = []
+    let addedVertexCount = 0
+    for (let i = 0; i < polyhedron.faces.length; i++) {
+        const face = polyhedron.faces[i]!
+        const colorIndex = Math.min(face.ColorIndex, faceColors.length - 1)
+        if (!faceVisibility[colorIndex]) {
+            continue
+        }
+        if (colorDrawn) {
+            if (colorDrawn.has(colorIndex)) {
+                continue
+            }
+            colorDrawn.add(colorIndex)
+        }
+
+        if (verfView && face.VertexIndexes.every(i => !refPointIndexes.includes(i))) {
+            continue
+        }
+        drawIndexes.push(i)
+
+    }
+
+    for (const i of drawIndexes) {
+        const face = polyhedron.faces[i]!
+        const colorIndex = Math.min(face.ColorIndex, faceColors.length - 1)
+        addPolygon(triangles, cv, nv, mv, polyhedron.vertexes, face.VertexIndexes, colorIndex)
+        if (evenOddFilling) {
+            const vertexCount = triangles.length / 9 - addedVertexCount
+            if (vertexCount > 0) {
+                polygons.push({ vertexCount: triangles.length / 9 - addedVertexCount, stencilEnabled: true })
+                addedVertexCount = triangles.length / 9
+            }
+        }
+    }
 
     if (vertexVisibility) {
         if (verfView) {
@@ -788,30 +827,14 @@ export function buildPolyhedronMesh(
         }
     }
 
-    const colorDrawn = eachForOne ? new Set<number>() : null
-    for (const face of polyhedron.faces) {
-        const indexes = face.VertexIndexes
-        const colorIndex = Math.min(face.ColorIndex, faceColors.length - 1)
-        if (!faceVisibility[colorIndex]) {
-            continue
-        }
-        if (colorDrawn) {
-            if (colorDrawn.has(colorIndex)) {
-                continue
-            }
-            colorDrawn.add(colorIndex)
-        }
-
-        if (verfView && face.VertexIndexes.every(i => !refPointIndexes.includes(i))) {
-            continue
-        }
-
-        addPolygon(triangles, cv, nv, mv, polyhedron.vertexes, indexes, colorIndex)
+    const remainingVertexCount = triangles.length / 9 - addedVertexCount
+    if (remainingVertexCount > 0) {
+        polygons.push({ vertexCount: triangles.length / 9 - addedVertexCount, stencilEnabled: false })
     }
 
     return {
         vertexData: new Float32Array(triangles),
-        polygons: [{ vertexCount: triangles.length / 9, stencilEnabled: false }],
+        polygons,
     }
 }
 
