@@ -522,8 +522,41 @@ function addEdge(triangles, cv, nv, mv, ov, vertex1, vertex2) {
     Vectors.negateSelf(nv);
     addEdgeSurface(triangles, vertex1, vertex2, ov, nv);
 }
+function addTriangle(triangles, v0, v1, v2, nv, mv, r, g, b) {
+    Vectors.sub(v1, v0, nv);
+    Vectors.sub(v2, v0, mv);
+    Vectors.cross(nv, mv, nv);
+    Vectors.normalizeSelf(nv);
+    const nx = nv[0];
+    const ny = nv[1];
+    const nz = nv[2];
+    triangles.push(v0[0], v0[1], v0[2], nx, ny, nz, r, g, b, v1[0], v1[1], v1[2], nx, ny, nz, r, g, b, v2[0], v2[1], v2[2], nx, ny, nz, r, g, b);
+}
 function addPolygon(triangles, cv, nv, mv, vertexes, indexes, colorIndex) {
     const [r, g, b] = faceColors[colorIndex];
+    if (indexes.length === 3) {
+        addTriangle(triangles, vertexes[indexes[0]], vertexes[indexes[1]], vertexes[indexes[2]], nv, mv, r, g, b);
+        return;
+    }
+    else if (indexes.length === 4) {
+        const v0 = vertexes[indexes[0]];
+        const v1 = vertexes[indexes[1]];
+        const v2 = vertexes[indexes[2]];
+        const v3 = vertexes[indexes[3]];
+        if (Vectors.getCrossPoint(v0, v1, v2, v3, cv)) {
+            addTriangle(triangles, v0, v1, cv, nv, mv, r, g, b);
+            addTriangle(triangles, v2, v3, cv, nv, mv, r, g, b);
+        }
+        else if (Vectors.getCrossPoint(v1, v2, v3, v0, cv)) {
+            addTriangle(triangles, v1, v2, cv, nv, mv, r, g, b);
+            addTriangle(triangles, v3, v0, cv, nv, mv, r, g, b);
+        }
+        else {
+            addTriangle(triangles, v0, v1, v2, nv, mv, r, g, b);
+            addTriangle(triangles, v2, v3, v0, nv, mv, r, g, b);
+        }
+        return;
+    }
     cv[0] = 0;
     cv[1] = 0;
     cv[2] = 0;
@@ -552,19 +585,25 @@ function addPolygon(triangles, cv, nv, mv, vertexes, indexes, colorIndex) {
         const v0 = crosses[i].value ?? cv;
         const v1 = crosses[beforeIndex].value ?? vertexes[indexes[i]];
         const v2 = crosses[afterIndex].value ?? vertexes[indexes[afterIndex]];
-        Vectors.sub(v1, v0, nv);
-        Vectors.sub(v2, v0, mv);
-        Vectors.cross(nv, mv, nv);
-        Vectors.normalizeSelf(nv);
-        const nx = nv[0];
-        const ny = nv[1];
-        const nz = nv[2];
-        triangles.push(v0[0], v0[1], v0[2], nx, ny, nz, r, g, b, v1[0], v1[1], v1[2], nx, ny, nz, r, g, b, v2[0], v2[1], v2[2], nx, ny, nz, r, g, b);
+        addTriangle(triangles, v0, v1, v2, nv, mv, r, g, b);
     }
+}
+function hasSelfIntersection(vertexes, face, cv) {
+    const v0 = vertexes[face.VertexIndexes[0]];
+    const v1 = vertexes[face.VertexIndexes[1]];
+    const v2 = vertexes[face.VertexIndexes[2]];
+    for (let i = 2; i < face.VertexIndexes.length - 1; i++) {
+        const va = vertexes[face.VertexIndexes[i]];
+        const vb = vertexes[face.VertexIndexes[i + 1]];
+        if (Vectors.getCrossPoint(va, vb, v0, v1, cv) || Vectors.getCrossPoint(va, vb, v1, v2, cv)) {
+            return true;
+        }
+    }
+    return false;
 }
 const maxNormalError = 1.0 / 1024.0;
 const maxError = 1.0 / 128.0;
-export function buildPolyhedronMesh(polyhedron, faceVisibility, visibilityType, vertexVisibility, edgeVisibility, evenOddFilling) {
+export function buildPolyhedronMesh(polyhedron, faceVisibility, visibilityType, vertexVisibility, edgeVisibility, fillType) {
     const triangles = [];
     const cv = [0, 0, 0];
     const nv = [0, 0, 0];
@@ -604,7 +643,7 @@ export function buildPolyhedronMesh(polyhedron, faceVisibility, visibilityType, 
         }
         drawIndexes.push(i);
     }
-    if (evenOddFilling) {
+    if (fillType === "GlobalEvenOdd") {
         const plains = new Array(drawIndexes.length);
         for (let i = 0; i < drawIndexes.length; i++) {
             const face = polyhedron.faces[drawIndexes[i]];
@@ -640,7 +679,7 @@ export function buildPolyhedronMesh(polyhedron, faceVisibility, visibilityType, 
             if (drawnIndexSet.has(i) || !currentPlain.normal)
                 continue;
             const face = polyhedron.faces[drawIndexes[i]];
-            let drawWithStencil = face.VertexIndexes.length >= 5;
+            let drawWithStencil = face.VertexIndexes.length >= 5 && hasSelfIntersection(polyhedron.vertexes, face, cv);
             const isNearlyZero = Math.abs(currentPlain.distance) < maxError;
             for (let j = i + 1; j < drawIndexes.length; j++) {
                 const targetPlain = plains[j];
@@ -670,6 +709,29 @@ export function buildPolyhedronMesh(polyhedron, faceVisibility, visibilityType, 
                     polygons.push({ vertexCount: triangles.length / 9 - addedVertexCount, stencilEnabled: true });
                     addedVertexCount = triangles.length / 9;
                 }
+            }
+        }
+        for (let i = 0; i < drawIndexes.length; i++) {
+            if (drawnIndexSet.has(i))
+                continue;
+            const face = polyhedron.faces[drawIndexes[i]];
+            const colorIndex = Math.min(face.ColorIndex, faceColors.length - 1);
+            addPolygon(triangles, cv, nv, mv, polyhedron.vertexes, face.VertexIndexes, colorIndex);
+        }
+    }
+    else if (fillType === "EvenOdd") {
+        const drawnIndexSet = new Set();
+        for (let i = 0; i < drawIndexes.length; i++) {
+            const face = polyhedron.faces[drawIndexes[i]];
+            if (face.VertexIndexes.length < 5 || !hasSelfIntersection(polyhedron.vertexes, face, cv))
+                continue;
+            const colorIndex = Math.min(face.ColorIndex, faceColors.length - 1);
+            addPolygon(triangles, cv, nv, mv, polyhedron.vertexes, face.VertexIndexes, colorIndex);
+            drawnIndexSet.add(i);
+            const vertexCount = triangles.length / 9 - addedVertexCount;
+            if (vertexCount > 0) {
+                polygons.push({ vertexCount: triangles.length / 9 - addedVertexCount, stencilEnabled: true });
+                addedVertexCount = triangles.length / 9;
             }
         }
         for (let i = 0; i < drawIndexes.length; i++) {
