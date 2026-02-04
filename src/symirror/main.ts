@@ -1,5 +1,5 @@
 import { NormalPolyhedron, unitTriangles, faceSelectorMap } from "./symmetry.js"
-import { initGpu, buildPolyhedronMesh, quaternionToMatrix, type GpuContext, VisibilityType } from "./gpu.js"
+import { initGpu, buildPolyhedronMesh, quaternionToMatrix, type GpuContext, VisibilityType, FillType } from "./gpu.js"
 import { type Vector, Vectors } from "./vector.js"
 import { setCenter, createCircle, createPath, createLine, clearChildren } from "../svg_generator.js"
 import { Quaternion, Quaternions } from "./quaternion.js"
@@ -424,7 +424,7 @@ class PolyhedronViewer {
     private autoRotate = false
     private faceVisibility: boolean[] = [true, true, true, true, true]
     private visibilityType: VisibilityType = "All"
-    private evenOddFilling = false
+    private fillType: FillType = "Fill"
     private vertexVisibility = false
     private edgeVisibility = false
 
@@ -535,14 +535,14 @@ class PolyhedronViewer {
         this.#updateMesh()
     }
 
-    setEvenOddFilling(evenOddFilling: boolean): void {
-        this.evenOddFilling = evenOddFilling
+    setFillType(fillType: FillType): void {
+        this.fillType = fillType
         this.#updateMesh()
     }
 
     #updateMesh(): void {
         if (!this.polyhedron) return
-        const mesh = buildPolyhedronMesh(this.polyhedron, this.faceVisibility, this.visibilityType, this.vertexVisibility, this.edgeVisibility, this.evenOddFilling)
+        const mesh = buildPolyhedronMesh(this.polyhedron, this.faceVisibility, this.visibilityType, this.vertexVisibility, this.edgeVisibility, this.fillType)
         this.renderer.updateMesh(mesh)
     }
 
@@ -597,6 +597,7 @@ window.addEventListener("load", async () => {
     const select = document.getElementById("select_coxeter_group") as HTMLSelectElement | null
     const selectFace = document.getElementById("select_face_selector") as HTMLSelectElement | null
     const selectVisibility = document.getElementById("select_visibility_type") as HTMLSelectElement | null
+    const selectFillType = document.getElementById("select_fill_type") as HTMLSelectElement | null
     const autoRotateCheckbox = document.getElementById("checkbox_auto_rotate") as HTMLInputElement | null
     const originControlSvg = document.getElementById("origin_control") as unknown as SVGSVGElement | null
     const originPoint = document.getElementById("origin_point") as unknown as SVGCircleElement | null
@@ -608,10 +609,9 @@ window.addEventListener("load", async () => {
     const checkColor4 = document.getElementById("checkbox_color_4") as HTMLInputElement | null
     const checkVertex = document.getElementById("checkbox_vertex") as HTMLInputElement | null
     const checkEdge = document.getElementById("checkbox_edge") as HTMLInputElement | null
-    const checkEvenOdd = document.getElementById("checkbox_even_odd") as HTMLInputElement | null
 
     if (!canvas || !select || !selectFace || !checkColor0 || !checkColor1 || !checkColor2 || !checkColor3 || !checkColor4 ||
-        !circleGroup || !originBack || !originControlSvg || !originPoint || !checkEvenOdd) {
+        !circleGroup || !originBack || !originControlSvg || !originPoint) {
         console.error("Required elements not found")
         return
     }
@@ -684,19 +684,17 @@ window.addEventListener("load", async () => {
         ])
     }
 
-    checkColor0?.addEventListener("change", colorCheckChangeHandler)
-    checkColor1?.addEventListener("change", colorCheckChangeHandler)
-    checkColor2?.addEventListener("change", colorCheckChangeHandler)
-    checkColor3?.addEventListener("change", colorCheckChangeHandler)
-    checkColor4?.addEventListener("change", colorCheckChangeHandler)
+    checkColor0.addEventListener("change", colorCheckChangeHandler)
+    checkColor1.addEventListener("change", colorCheckChangeHandler)
+    checkColor2.addEventListener("change", colorCheckChangeHandler)
+    checkColor3.addEventListener("change", colorCheckChangeHandler)
+    checkColor4.addEventListener("change", colorCheckChangeHandler)
 
-    checkEvenOdd.addEventListener("change", () => {
-        viewer.setEvenOddFilling(checkEvenOdd.checked)
+    selectFillType?.addEventListener("change", () => {
+        viewer.setFillType(selectFillType.value as FillType)
     })
 
-    if (autoRotateCheckbox) {
-        autoRotateCheckbox.addEventListener("change", () => {
-            viewer.setAutoRotate(autoRotateCheckbox.checked)
-        })
-    }
+    autoRotateCheckbox?.addEventListener("change", () => {
+        viewer.setAutoRotate(autoRotateCheckbox.checked)
+    })
 })
