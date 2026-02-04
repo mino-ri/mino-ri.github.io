@@ -65,6 +65,10 @@ fn fragmentMain(input: VertexOutput, @builtin(front_facing) isFront : bool) -> @
     let brightness = (ambient + diffuse * shadow);
     return vec4<f32>(input.color * brightness + vec3<f32>(specula, specula, specula) * shadow, 1.0);
 }
+  
+@fragment
+fn fragmentEmpty() {
+}  
 `
 
 // カラーマッピング: colorIndex -> RGB
@@ -76,10 +80,15 @@ const faceColors: [number, number, number][] = [
     [0.25, 0.88, 1.00], // 4: 空
 ]
 
+export type PolygonDefinition = {
+    vertexCount: number
+    stencilEnabled: boolean
+}
+
 export interface PolyhedronMesh {
     // インターリーブ頂点データ: [x, y, z, nx, ny, nz, r, g, b] × 頂点数
     vertexData: Float32Array
-    vertexCount: number
+    polygons: PolygonDefinition[]
 }
 
 export interface PolyhedronRenderer {
@@ -153,13 +162,16 @@ const lightViewProjectionMatrix = new Float32Array([
 
 class PolyhedronRendererImpl implements PolyhedronRenderer {
     private pipeline: GPURenderPipeline
+    private stencilPipeline: GPURenderPipeline
     private shadowPipeline: GPURenderPipeline
+    private shadowStencilPipeline: GPURenderPipeline
     private uniformBuffer: GPUBuffer
     private shadowBindGroup: GPUBindGroup
     private bindGroupLayout: GPUBindGroupLayout
     private bindGroup: GPUBindGroup
     private vertexBuffer: GPUBuffer | null = null
-    private vertexCount = 0
+    private polygons: PolygonDefinition[] = []
+    private totalVertexCount = 0
     private depthTexture: GPUTexture | null = null
     private shadowTexture: GPUTexture
     private shadowSampler: GPUSampler
@@ -206,24 +218,6 @@ class PolyhedronRendererImpl implements PolyhedronRenderer {
                 { binding: 0, resource: { buffer: this.uniformBuffer } },
             ],
         })
-        this.shadowPipeline = device.createRenderPipeline({
-            layout: device.createPipelineLayout({
-                bindGroupLayouts: [shadowBindGroupLayout],
-            }),
-            vertex: {
-                module: shaderModule,
-                entryPoint: "vertexShadow",
-                buffers: [vertexBuferLayout],
-            },
-            primitive: {
-                topology: "triangle-list",
-            },
-            depthStencil: {
-                depthWriteEnabled: true,
-                depthCompare: 'less',
-                format: 'depth32float',
-            },
-        })
 
         this.bindGroupLayout = device.createBindGroupLayout({
             entries: [
@@ -235,7 +229,7 @@ class PolyhedronRendererImpl implements PolyhedronRenderer {
 
         this.shadowTexture = this.device.createTexture({
             size: [2048, 2048],
-            format: 'depth32float',
+            format: 'depth24plus-stencil8',
             usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING,
         })
 
@@ -243,35 +237,92 @@ class PolyhedronRendererImpl implements PolyhedronRenderer {
             layout: this.bindGroupLayout,
             entries: [
                 { binding: 0, resource: { buffer: this.uniformBuffer } },
-                { binding: 1, resource: this.shadowTexture.createView() },
+                { binding: 1, resource: this.shadowTexture.createView({ aspect: "depth-only" }) },
                 { binding: 2, resource: this.shadowSampler },
             ],
         })
 
-        this.pipeline = device.createRenderPipeline({
-            layout: device.createPipelineLayout({
-                bindGroupLayouts: [this.bindGroupLayout],
-            }),
-            vertex: {
-                module: shaderModule,
-                entryPoint: "vertexMain",
-                buffers: [vertexBuferLayout],
+        const premitiveState: GPUPrimitiveState = {
+            topology: "triangle-list",
+            cullMode: "none",
+            frontFace: "ccw",
+        }
+        const shadowLayout = device.createPipelineLayout({
+            bindGroupLayouts: [shadowBindGroupLayout],
+        })
+        const shadowVertexState: GPUVertexState = {
+            module: shaderModule,
+            entryPoint: "vertexShadow",
+            buffers: [vertexBuferLayout],
+        }
+        const readDepthStencilState: GPUDepthStencilState = {
+            format: "depth24plus-stencil8",
+            depthWriteEnabled: true,
+            depthCompare: "less",
+            stencilFront: {
+                compare: "not-equal",
+                passOp: "keep",
             },
+            stencilBack: {
+                compare: "not-equal",
+                passOp: "keep",
+            },
+        }
+        const writeDepthStencilState: GPUDepthStencilState = {
+            format: "depth24plus-stencil8",
+            depthWriteEnabled: false,
+            depthCompare: "always",
+            stencilFront: {
+                compare: "always",
+                passOp: "invert",
+            },
+            stencilBack: {
+                compare: "always",
+                passOp: "invert",
+            },
+        }
+        this.shadowPipeline = device.createRenderPipeline({
+            layout: shadowLayout,
+            vertex: shadowVertexState,
+            primitive: premitiveState,
+            depthStencil: readDepthStencilState,
+        })
+        this.shadowStencilPipeline = device.createRenderPipeline({
+            layout: shadowLayout,
+            vertex: shadowVertexState,
+            primitive: premitiveState,
+            depthStencil: writeDepthStencilState,
+        })
+
+        const layout = device.createPipelineLayout({
+            bindGroupLayouts: [this.bindGroupLayout],
+        })
+        const vertexState: GPUVertexState = {
+            module: shaderModule,
+            entryPoint: "vertexMain",
+            buffers: [vertexBuferLayout],
+        }
+        this.pipeline = device.createRenderPipeline({
+            layout: layout,
+            vertex: vertexState,
             fragment: {
                 module: shaderModule,
                 entryPoint: "fragmentMain",
                 targets: [{ format: this.format }],
             },
-            primitive: {
-                topology: "triangle-list",
-                cullMode: "none",
-                frontFace: "ccw",
+            primitive: premitiveState,
+            depthStencil: readDepthStencilState,
+        })
+        this.stencilPipeline = device.createRenderPipeline({
+            layout: layout,
+            vertex: vertexState,
+            fragment: {
+                module: shaderModule,
+                entryPoint: "fragmentEmpty",
+                targets: [{ format: this.format, writeMask: 0 }],
             },
-            depthStencil: {
-                format: "depth24plus",
-                depthWriteEnabled: true,
-                depthCompare: "less",
-            },
+            primitive: premitiveState,
+            depthStencil: writeDepthStencilState,
         })
     }
 
@@ -285,7 +336,11 @@ class PolyhedronRendererImpl implements PolyhedronRenderer {
             this.byteLength = mesh.vertexData.byteLength
         }
         this.device.queue.writeBuffer(this.vertexBuffer, 0, mesh.vertexData.buffer, mesh.vertexData.byteOffset, mesh.vertexData.byteLength)
-        this.vertexCount = mesh.vertexCount
+        this.polygons = mesh.polygons
+        this.totalVertexCount = 0
+        for (const polygon of mesh.polygons) {
+            this.totalVertexCount += polygon.vertexCount
+        }
     }
 
     render(modelMatrix: Float32Array): void {
@@ -304,7 +359,7 @@ class PolyhedronRendererImpl implements PolyhedronRenderer {
             }
             this.depthTexture = this.device.createTexture({
                 size: [width, height],
-                format: "depth24plus",
+                format: "depth24plus-stencil8",
                 usage: GPUTextureUsage.RENDER_ATTACHMENT,
             })
 
@@ -320,40 +375,77 @@ class PolyhedronRendererImpl implements PolyhedronRenderer {
         const commandEncoder = this.device.createCommandEncoder()
         const textureView = this.context.getCurrentTexture().createView()
 
-        const shadowPass = commandEncoder.beginRenderPass({
-            colorAttachments: [], // カラー出力なし
-            depthStencilAttachment: {
-                view: this.shadowTexture.createView(),
-                depthClearValue: 1.0,
-                depthLoadOp: 'clear',
-                depthStoreOp: 'store',
-            },
-        })
-        shadowPass.setPipeline(this.shadowPipeline)
-        shadowPass.setBindGroup(0, this.shadowBindGroup)
-        shadowPass.setVertexBuffer(0, this.vertexBuffer)
-        shadowPass.draw(this.vertexCount)
-        shadowPass.end()
+        let vertexIndex = 0
+        for (let i = 0; i < this.polygons.length; i++) {
+            const polygon = this.polygons[i]!
+            const shadowPass = commandEncoder.beginRenderPass({
+                colorAttachments: [], // カラー出力なし
+                depthStencilAttachment: {
+                    view: this.shadowTexture.createView(),
+                    depthClearValue: 1.0,
+                    depthLoadOp: i === 0 ? "clear" : "load",
+                    depthStoreOp: "store",
+                    stencilClearValue: polygon.stencilEnabled ? 0 : 1,
+                    stencilLoadOp: "clear",
+                    stencilStoreOp: polygon.stencilEnabled ? "store" : "discard",
+                },
+            })
+            if (polygon.stencilEnabled) {
+                // ステンシル更新
+                shadowPass.setPipeline(this.shadowStencilPipeline)
+                shadowPass.setBindGroup(0, this.shadowBindGroup)
+                shadowPass.setVertexBuffer(0, this.vertexBuffer)
+                shadowPass.draw(polygon.vertexCount, 1, vertexIndex)
+            }
 
-        const mainPass = commandEncoder.beginRenderPass({
-            colorAttachments: [{
-                view: textureView,
-                clearValue: { r: 1.0, g: 1.0, b: 1.0, a: 1.0 },
-                loadOp: "clear",
-                storeOp: "store",
-            }],
-            depthStencilAttachment: {
-                view: this.depthTexture!.createView(),
-                depthClearValue: 1.0,
-                depthLoadOp: "clear",
-                depthStoreOp: "store",
-            },
-        })
-        mainPass.setPipeline(this.pipeline)
-        mainPass.setBindGroup(0, this.bindGroup)
-        mainPass.setVertexBuffer(0, this.vertexBuffer)
-        mainPass.draw(this.vertexCount)
-        mainPass.end()
+            // 描画
+            shadowPass.setPipeline(this.shadowPipeline)
+            shadowPass.setBindGroup(0, this.shadowBindGroup)
+            shadowPass.setVertexBuffer(0, this.vertexBuffer)
+            shadowPass.draw(polygon.vertexCount, 1, vertexIndex)
+            shadowPass.end()
+
+            vertexIndex += polygon.vertexCount
+        }
+
+        vertexIndex = 0
+        for (let i = 0; i < this.polygons.length; i++) {
+            const polygon = this.polygons[i]!
+            const mainPass = commandEncoder.beginRenderPass({
+                colorAttachments: [{
+                    view: textureView,
+                    clearValue: { r: 1.0, g: 1.0, b: 1.0, a: 1.0 },
+                    loadOp: i === 0 ? "clear" : "load",
+                    storeOp: "store",
+                }],
+                depthStencilAttachment: {
+                    view: this.depthTexture!.createView(),
+                    depthClearValue: 1.0,
+                    depthLoadOp: i === 0 ? "clear" : "load",
+                    depthStoreOp: "store",
+                    stencilClearValue: polygon.stencilEnabled ? 0 : 1,
+                    stencilLoadOp: "clear",
+                    stencilStoreOp: polygon.stencilEnabled ? "store" : "discard",
+                },
+            })
+
+            if (polygon.stencilEnabled) {
+                // ステンシル更新
+                mainPass.setPipeline(this.stencilPipeline)
+                mainPass.setBindGroup(0, this.bindGroup)
+                mainPass.setVertexBuffer(0, this.vertexBuffer)
+                mainPass.draw(polygon.vertexCount, 1, vertexIndex)
+            }
+
+            // 描画
+            mainPass.setPipeline(this.pipeline)
+            mainPass.setBindGroup(0, this.bindGroup)
+            mainPass.setVertexBuffer(0, this.vertexBuffer)
+            mainPass.draw(polygon.vertexCount, 1, vertexIndex)
+            mainPass.end()
+
+            vertexIndex += polygon.vertexCount
+        }
 
         this.device.queue.submit([commandEncoder.finish()])
     }
@@ -659,6 +751,7 @@ export function buildPolyhedronMesh(
     visibilityType: VisibilityType,
     vertexVisibility: boolean,
     edgeVisibility: boolean,
+    evenOddFilling: boolean,
 ): PolyhedronMesh {
     const triangles: number[] = []
     const cv = [0, 0, 0]
@@ -678,6 +771,42 @@ export function buildPolyhedronMesh(
         refPointIndexes.push(0)
     }
 
+    const colorDrawn = eachForOne ? new Set<number>() : null
+    const polygons: PolygonDefinition[] = []
+    const drawIndexes: number[] = []
+    let addedVertexCount = 0
+    for (let i = 0; i < polyhedron.faces.length; i++) {
+        const face = polyhedron.faces[i]!
+        const colorIndex = Math.min(face.ColorIndex, faceColors.length - 1)
+        if (!faceVisibility[colorIndex]) {
+            continue
+        }
+        if (colorDrawn) {
+            if (colorDrawn.has(colorIndex)) {
+                continue
+            }
+            colorDrawn.add(colorIndex)
+        }
+
+        if (verfView && face.VertexIndexes.every(i => !refPointIndexes.includes(i))) {
+            continue
+        }
+        drawIndexes.push(i)
+
+    }
+
+    for (const i of drawIndexes) {
+        const face = polyhedron.faces[i]!
+        const colorIndex = Math.min(face.ColorIndex, faceColors.length - 1)
+        addPolygon(triangles, cv, nv, mv, polyhedron.vertexes, face.VertexIndexes, colorIndex)
+        if (evenOddFilling) {
+            const vertexCount = triangles.length / 9 - addedVertexCount
+            if (vertexCount > 0) {
+                polygons.push({ vertexCount: triangles.length / 9 - addedVertexCount, stencilEnabled: true })
+                addedVertexCount = triangles.length / 9
+            }
+        }
+    }
 
     if (vertexVisibility) {
         if (verfView) {
@@ -698,30 +827,14 @@ export function buildPolyhedronMesh(
         }
     }
 
-    const colorDrawn = eachForOne ? new Set<number>() : null
-    for (const face of polyhedron.faces) {
-        const indexes = face.VertexIndexes
-        const colorIndex = Math.min(face.ColorIndex, faceColors.length - 1)
-        if (!faceVisibility[colorIndex]) {
-            continue
-        }
-        if (colorDrawn) {
-            if (colorDrawn.has(colorIndex)) {
-                continue
-            }
-            colorDrawn.add(colorIndex)
-        }
-
-        if (verfView && face.VertexIndexes.every(i => !refPointIndexes.includes(i))) {
-            continue
-        }
-
-        addPolygon(triangles, cv, nv, mv, polyhedron.vertexes, indexes, colorIndex)
+    const remainingVertexCount = triangles.length / 9 - addedVertexCount
+    if (remainingVertexCount > 0) {
+        polygons.push({ vertexCount: triangles.length / 9 - addedVertexCount, stencilEnabled: false })
     }
 
     return {
         vertexData: new Float32Array(triangles),
-        vertexCount: triangles.length / 9,
+        polygons,
     }
 }
 
