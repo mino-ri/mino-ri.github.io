@@ -70,15 +70,11 @@ fn fragmentEmpty() {
 }  
 `
 
-export type PolygonDefinition = {
-    vertexCount: number
-    stencilEnabled: boolean
-}
-
 export interface PolyhedronMesh {
     // インターリーブ頂点データ: [x, y, z, nx, ny, nz, r, g, b] × 頂点数
     vertexData: Float32Array
-    polygons: PolygonDefinition[]
+    stencilVertexCounts: number[]
+    normalVertexCount: number
 }
 
 export interface PolyhedronRenderer {
@@ -162,8 +158,8 @@ class PolyhedronRendererImpl implements PolyhedronRenderer {
     private bindGroupLayout: GPUBindGroupLayout
     private bindGroup: GPUBindGroup
     private vertexBuffer: GPUBuffer | null = null
-    private polygons: PolygonDefinition[] = []
-    private totalVertexCount = 0
+    private stencilVertexCounts: number[] = []
+    private normalVertexCount = 0
     private depthTexture: GPUTexture | null = null
     private shadowTexture: GPUTexture
     private shadowSampler: GPUSampler
@@ -251,40 +247,22 @@ class PolyhedronRendererImpl implements PolyhedronRenderer {
             format: "depth24plus-stencil8",
             depthWriteEnabled: true,
             depthCompare: "less",
-            stencilFront: {
-                compare: "always",
-                passOp: "keep",
-            },
-            stencilBack: {
-                compare: "always",
-                passOp: "keep",
-            },
+            stencilFront: { compare: "always", passOp: "keep" },
+            stencilBack: { compare: "always", passOp: "keep" },
         }
         const readDepthStencilState: GPUDepthStencilState = {
             format: "depth24plus-stencil8",
             depthWriteEnabled: true,
             depthCompare: "less",
-            stencilFront: {
-                compare: "not-equal",
-                passOp: "zero",
-            },
-            stencilBack: {
-                compare: "not-equal",
-                passOp: "zero",
-            },
+            stencilFront: { compare: "not-equal", passOp: "zero" },
+            stencilBack: { compare: "not-equal", passOp: "zero" },
         }
         const writeDepthStencilState: GPUDepthStencilState = {
             format: "depth24plus-stencil8",
             depthWriteEnabled: false,
             depthCompare: "less",
-            stencilFront: {
-                compare: "always",
-                passOp: "invert",
-            },
-            stencilBack: {
-                compare: "always",
-                passOp: "invert",
-            },
+            stencilFront: { compare: "always", passOp: "invert" },
+            stencilBack: { compare: "always", passOp: "invert" },
         }
         this.shadowPipeline = device.createRenderPipeline({
             layout: shadowLayout,
@@ -358,11 +336,8 @@ class PolyhedronRendererImpl implements PolyhedronRenderer {
             this.byteLength = mesh.vertexData.byteLength
         }
         this.device.queue.writeBuffer(this.vertexBuffer, 0, mesh.vertexData.buffer, mesh.vertexData.byteOffset, mesh.vertexData.byteLength)
-        this.polygons = mesh.polygons
-        this.totalVertexCount = 0
-        for (const polygon of mesh.polygons) {
-            this.totalVertexCount += polygon.vertexCount
-        }
+        this.stencilVertexCounts = mesh.stencilVertexCounts
+        this.normalVertexCount = mesh.normalVertexCount
     }
 
     render(modelMatrix: Float32Array): void {
@@ -398,82 +373,121 @@ class PolyhedronRendererImpl implements PolyhedronRenderer {
         const textureView = this.context.getCurrentTexture().createView()
 
         let vertexIndex = 0
-        for (let i = 0; i < this.polygons.length; i++) {
-            const polygon = this.polygons[i]!
+        if (this.stencilVertexCounts.length > 0) {
             const shadowPass = commandEncoder.beginRenderPass({
                 colorAttachments: [], // カラー出力なし
                 depthStencilAttachment: {
                     view: this.shadowTexture.createView(),
                     depthClearValue: 1.0,
-                    depthLoadOp: i === 0 ? "clear" : "load",
+                    depthLoadOp: "clear",
                     depthStoreOp: "store",
-                    stencilClearValue: polygon.stencilEnabled ? 0 : 1,
+                    stencilClearValue: 0,
                     stencilLoadOp: "clear",
-                    stencilStoreOp: polygon.stencilEnabled ? "store" : "discard",
+                    stencilStoreOp: "store",
                 },
             })
-            if (polygon.stencilEnabled) {
+
+            for (let i = 0; i < this.stencilVertexCounts.length; i++) {
+                const vertexCount = this.stencilVertexCounts[i]!
                 // ステンシル更新
                 shadowPass.setPipeline(this.shadowStencilWritePipeline)
                 shadowPass.setBindGroup(0, this.shadowBindGroup)
                 shadowPass.setVertexBuffer(0, this.vertexBuffer)
-                shadowPass.draw(polygon.vertexCount, 1, vertexIndex)
+                shadowPass.draw(vertexCount, 1, vertexIndex)
+
                 // 描画
                 shadowPass.setPipeline(this.shadowStencilMaskPipeline)
-            } else {
-                // 描画
-                shadowPass.setPipeline(this.shadowPipeline)
+                shadowPass.setBindGroup(0, this.shadowBindGroup)
+                shadowPass.setVertexBuffer(0, this.vertexBuffer)
+                shadowPass.draw(vertexCount, 1, vertexIndex)
+                vertexIndex += vertexCount
             }
-            
+
+            shadowPass.end()
+        }
+
+        if (this.normalVertexCount > 0) {
+            const shadowPass = commandEncoder.beginRenderPass({
+                colorAttachments: [], // カラー出力なし
+                depthStencilAttachment: {
+                    view: this.shadowTexture.createView(),
+                    depthClearValue: 1.0,
+                    depthLoadOp: this.stencilVertexCounts.length === 0 ? "clear" : "load",
+                    depthStoreOp: "store",
+                    stencilReadOnly: true,
+                },
+            })
+
+            // 描画
+            shadowPass.setPipeline(this.shadowPipeline)
             shadowPass.setBindGroup(0, this.shadowBindGroup)
             shadowPass.setVertexBuffer(0, this.vertexBuffer)
-            shadowPass.draw(polygon.vertexCount, 1, vertexIndex)
+            shadowPass.draw(this.normalVertexCount, 1, vertexIndex)
             shadowPass.end()
-
-            vertexIndex += polygon.vertexCount
         }
 
         vertexIndex = 0
-        for (let i = 0; i < this.polygons.length; i++) {
-            const polygon = this.polygons[i]!
+        if (this.stencilVertexCounts.length > 0) {
             const mainPass = commandEncoder.beginRenderPass({
                 colorAttachments: [{
                     view: textureView,
                     clearValue: { r: 1.0, g: 1.0, b: 1.0, a: 1.0 },
-                    loadOp: i === 0 ? "clear" : "load",
+                    loadOp: "clear",
                     storeOp: "store",
                 }],
                 depthStencilAttachment: {
                     view: this.depthTexture!.createView(),
                     depthClearValue: 1.0,
-                    depthLoadOp: i === 0 ? "clear" : "load",
+                    depthLoadOp: "clear",
                     depthStoreOp: "store",
-                    stencilClearValue: polygon.stencilEnabled ? 0 : 1,
+                    stencilClearValue: 0,
                     stencilLoadOp: "clear",
-                    stencilStoreOp: polygon.stencilEnabled ? "store" : "discard",
+                    stencilStoreOp: "store",
                 },
             })
 
-            if (polygon.stencilEnabled) {
+            for (let i = 0; i < this.stencilVertexCounts.length; i++) {
+                const vertexCount = this.stencilVertexCounts[i]!
                 // ステンシル更新
                 mainPass.setPipeline(this.stencilWritePipeline)
                 mainPass.setBindGroup(0, this.bindGroup)
                 mainPass.setVertexBuffer(0, this.vertexBuffer)
-                mainPass.draw(polygon.vertexCount, 1, vertexIndex)
+                mainPass.draw(vertexCount, 1, vertexIndex)
                 // 描画
                 mainPass.setPipeline(this.stencilMaskPipeline)
-            } else {
-                // 描画
-                mainPass.setPipeline(this.pipeline)
+                mainPass.setBindGroup(0, this.bindGroup)
+                mainPass.setVertexBuffer(0, this.vertexBuffer)
+                mainPass.draw(vertexCount, 1, vertexIndex)
+                vertexIndex += vertexCount
             }
 
+            mainPass.end()
+        }
+
+        const mainPass = commandEncoder.beginRenderPass({
+            colorAttachments: [{
+                view: textureView,
+                clearValue: { r: 1.0, g: 1.0, b: 1.0, a: 1.0 },
+                loadOp: this.stencilVertexCounts.length === 0 ? "clear" : "load",
+                storeOp: "store",
+            }],
+            depthStencilAttachment: {
+                view: this.depthTexture!.createView(),
+                depthClearValue: 1.0,
+                depthLoadOp: this.stencilVertexCounts.length === 0 ? "clear" : "load",
+                depthStoreOp: "store",
+                stencilReadOnly: true,
+            },
+        })
+
+        if (this.normalVertexCount > 0) {
+            // 描画
+            mainPass.setPipeline(this.pipeline)
             mainPass.setBindGroup(0, this.bindGroup)
             mainPass.setVertexBuffer(0, this.vertexBuffer)
-            mainPass.draw(polygon.vertexCount, 1, vertexIndex)
-            mainPass.end()
-
-            vertexIndex += polygon.vertexCount
+            mainPass.draw(this.normalVertexCount, 1, vertexIndex)
         }
+        mainPass.end()
 
         this.device.queue.submit([commandEncoder.finish()])
     }
@@ -487,18 +501,4 @@ class PolyhedronRendererImpl implements PolyhedronRenderer {
         }
         this.uniformBuffer.destroy()
     }
-}
-
-// クォータニオンから回転行列を生成
-export function quaternionToMatrix(w: number, x: number, y: number, z: number): Float32Array {
-    const xx = x * x, yy = y * y, zz = z * z
-    const xy = x * y, xz = x * z, yz = y * z
-    const wx = w * x, wy = w * y, wz = w * z
-
-    return new Float32Array([
-        1 - 2 * (yy + zz), 2 * (xy + wz), 2 * (xz - wy), 0,
-        2 * (xy - wz), 1 - 2 * (xx + zz), 2 * (yz + wx), 0,
-        2 * (xz + wy), 2 * (yz - wx), 1 - 2 * (xx + yy), 0,
-        0, 0, 0, 1,
-    ])
 }

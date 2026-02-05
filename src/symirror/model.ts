@@ -1,5 +1,5 @@
 import { Vector, Vectors } from "./vector.js"
-import { PolygonDefinition, PolyhedronMesh } from "./gpu.js"
+import { PolyhedronMesh } from "./gpu.js"
 
 // カラーマッピング: colorIndex -> RGB
 const faceColors: [number, number, number][] = [
@@ -184,7 +184,16 @@ function addEdge(
     }
 
     Vectors.normalizeSelf(cv)
-    Vectors.cross(vertex1, cv, nv)
+    if (Math.abs(cv[0]!) >= 0.9) {
+        mv[0] = 0
+        mv[1] = 1
+        mv[2] = 0
+    } else {
+        mv[0] = 1
+        mv[1] = 0
+        mv[2] = 0
+    }
+    Vectors.cross(mv, cv, nv)
     Vectors.normalizeSelf(nv)
     Vectors.cross(cv, nv, mv)
     Vectors.normalizeSelf(mv)
@@ -312,18 +321,19 @@ function addPolygon(
         addTriangle(triangles, v0, v1, v2, nv, mv, r, g, b)
     }
 }
-function hasSelfIntersection(vertexes: Vector[], face: IPolyhedronFace, cv: Vector) {
+
+function hasSelfIntersection(vertexes: Vector[], face: IPolyhedronFace) {
     const v0 = vertexes[face.VertexIndexes[0]!]!
     const v1 = vertexes[face.VertexIndexes[1]!]!
     const v2 = vertexes[face.VertexIndexes[2]!]!
-    if (Vectors.getCrossPoint(v2, vertexes[face.VertexIndexes[3]!]!, v0, v1, cv) ||
-        Vectors.getCrossPoint(vertexes[face.VertexIndexes[face.VertexIndexes.length - 1]!]!, v0, v1, v2, cv)) {
+    if (Vectors.hasIntersection(v2, vertexes[face.VertexIndexes[3]!]!, v0, v1) ||
+        Vectors.hasIntersection(vertexes[face.VertexIndexes[face.VertexIndexes.length - 1]!]!, v0, v1, v2)) {
         return true
     }
     for (let i = 3; i < face.VertexIndexes.length - 2; i++) {
         const va = vertexes[face.VertexIndexes[i]!]!
         const vb = vertexes[face.VertexIndexes[i + 1]!]!
-        if (Vectors.getCrossPoint(va, vb, v0, v1, cv) || Vectors.getCrossPoint(va, vb, v1, v2, cv)) {
+        if (Vectors.hasIntersection(va, vb, v0, v1) || Vectors.hasIntersection(va, vb, v1, v2)) {
             return true
         }
     }
@@ -382,7 +392,7 @@ export function buildPolyhedronMesh(
     }
 
     const colorDrawn = eachForOne ? new Set<number>() : null
-    const polygons: PolygonDefinition[] = []
+    const stencilVertexCounts: number[] = []
     const drawIndexes: number[] = []
     let addedVertexCount = 0
     for (let i = 0; i < polyhedron.faces.length; i++) {
@@ -440,7 +450,7 @@ export function buildPolyhedronMesh(
 
             const face = polyhedron.faces[drawIndexes[i]!]!
             // 自己交差の可能性がある5角形以上、または同一平面に複数の面がある場合、ステンシルバッファを使って描画する
-            let drawWithStencil = face.VertexIndexes.length >= 5 && hasSelfIntersection(polyhedron.vertexes, face, cv)
+            let drawWithStencil = face.VertexIndexes.length >= 5 && hasSelfIntersection(polyhedron.vertexes, face)
             const isNearlyZero = Math.abs(currentPlain.distance) < maxError
             for (let j = i + 1; j < drawIndexes.length; j++) {
                 const targetPlain = plains[j]!
@@ -469,8 +479,8 @@ export function buildPolyhedronMesh(
                 drawnIndexSet.add(i)
                 const vertexCount = triangles.length / 9 - addedVertexCount
                 if (vertexCount > 0) {
-                    polygons.push({ vertexCount: triangles.length / 9 - addedVertexCount, stencilEnabled: true })
-                    addedVertexCount = triangles.length / 9
+                    stencilVertexCounts.push(vertexCount)
+                    addedVertexCount += vertexCount
                 }
             }
         }
@@ -484,15 +494,15 @@ export function buildPolyhedronMesh(
         const drawnIndexSet = new Set<number>()
         for (let i = 0; i < drawIndexes.length; i++) {
             const face = polyhedron.faces[drawIndexes[i]!]!
-            if (face.VertexIndexes.length < 5 || !hasSelfIntersection(polyhedron.vertexes, face, cv)) continue
+            if (face.VertexIndexes.length < 5 || !hasSelfIntersection(polyhedron.vertexes, face)) continue
 
             const colorIndex = Math.min(face.ColorIndex, faceColors.length - 1)
             addPolygon(triangles, cv, nv, mv, polyhedron.vertexes, face.VertexIndexes, colorIndex)
             drawnIndexSet.add(i)
             const vertexCount = triangles.length / 9 - addedVertexCount
             if (vertexCount > 0) {
-                polygons.push({ vertexCount: triangles.length / 9 - addedVertexCount, stencilEnabled: true })
-                addedVertexCount = triangles.length / 9
+                stencilVertexCounts.push(vertexCount)
+                addedVertexCount += vertexCount
             }
         }
 
@@ -529,13 +539,11 @@ export function buildPolyhedronMesh(
         }
     }
 
-    const remainingVertexCount = triangles.length / 9 - addedVertexCount
-    if (remainingVertexCount > 0) {
-        polygons.push({ vertexCount: triangles.length / 9 - addedVertexCount, stencilEnabled: false })
-    }
+    const normalVertexCount = triangles.length / 9 - addedVertexCount
 
     return {
         vertexData: new Float32Array(triangles),
-        polygons,
+        stencilVertexCounts,
+        normalVertexCount,
     }
 }
