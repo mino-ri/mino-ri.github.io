@@ -50,10 +50,18 @@
             <option value="ooo">〇 p 〇 q 〇 r</option>
             <option value="oooo">★Dirhombic</option>
           </select>
-          <label>
-            <input type="checkbox" id="checkbox_auto_rotate" name="checkbox_auto_rotate" />
-            <span data-ls-en="auto rotation">自動回転</span>
-          </label>
+        </div>
+        <div>
+          <svg id="origin_control" width="300" height="300" viewBox="-1.125 -1.125 2.25 2.25"
+            style="cursor: move; position: absolute; width: 300px; height: 300px;">
+            <g id="g_circles"></g>
+            <circle cx="0" cy="0" r="1" fill="#fff" stroke="#fff" fill-opacity="0" stroke-width="0.02"
+              style="cursor: crosshair;" />
+            <circle id="origin_point" cx="0" cy="0" r="0.03" fill="#fff" stroke="#000" stroke-width="0.01"
+              style="cursor: crosshair;" />
+          </svg>
+          <canvas id="origin_back" width="600" height="600"
+            style="width: 300px; height: 300px; background-color: #35A16B;"></canvas>
         </div>
         <div class="control-list">
           <label style="background-color: #03AD58; padding: 0px 5px;">
@@ -90,17 +98,12 @@
             <option value="OneForEach" data-ls-en="one for each">各1枚</option>
           </select>
         </div>
-        <div>
-          <svg id="origin_control" width="300" height="300" viewBox="-1.125 -1.125 2.25 2.25"
-            style="cursor: move; position: absolute; width: 300px; height: 300px;">
-            <g id="g_circles"></g>
-            <circle cx="0" cy="0" r="1" fill="#fff" stroke="#fff" fill-opacity="0" stroke-width="0.02"
-              style="cursor: crosshair;" />
-            <circle id="origin_point" cx="0" cy="0" r="0.03" fill="#fff" stroke="#000" stroke-width="0.01"
-              style="cursor: crosshair;" />
-          </svg>
-          <canvas id="origin_back" width="600" height="600"
-            style="width: 300px; height: 300px; background-color: #35A16B;"></canvas>
+        <div class="control-list">
+          <label>
+            <input type="checkbox" id="checkbox_auto_rotate" name="checkbox_auto_rotate" />
+            <span data-ls-en="auto rotation">自動回転</span>
+          </label>
+          <input type="button" id="button_reset_rotation" value="回転リセット" data-ls-value-en="reset rotation" />
         </div>
       </div>
     </article>
