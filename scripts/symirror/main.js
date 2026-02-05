@@ -1,6 +1,7 @@
 var _a;
 import { NormalPolyhedron, unitTriangles, faceSelectorMap } from "./symmetry.js";
-import { initGpu, buildPolyhedronMesh, quaternionToMatrix } from "./gpu.js";
+import { initGpu } from "./gpu.js";
+import { buildPolyhedronMesh } from "./model.js";
 import { Vectors } from "./vector.js";
 import { setCenter, createCircle, createPath, createLine, clearChildren } from "../svg_generator.js";
 import { Quaternions } from "./quaternion.js";
@@ -38,8 +39,22 @@ class RotationState {
         this.y = ny / len;
         this.z = nz / len;
     }
+    reset() {
+        this.w = 1;
+        this.x = 0;
+        this.y = 0;
+        this.z = 0;
+    }
     getMatrix() {
-        return quaternionToMatrix(this.w, this.x, this.y, this.z);
+        const xx = this.x * this.x, yy = this.y * this.y, zz = this.z * this.z;
+        const xy = this.x * this.y, xz = this.x * this.z, yz = this.y * this.z;
+        const wx = this.w * this.x, wy = this.w * this.y, wz = this.w * this.z;
+        return new Float32Array([
+            1 - 2 * (yy + zz), 2 * (xy + wz), 2 * (xz - wy), 0,
+            2 * (xy - wz), 1 - 2 * (xx + zz), 2 * (yz + wx), 0,
+            2 * (xz + wy), 2 * (yz - wx), 1 - 2 * (xx + yy), 0,
+            0, 0, 0, 1,
+        ]);
     }
 }
 class OriginController {
@@ -388,6 +403,9 @@ class PolyhedronViewer {
     setAutoRotate(enabled) {
         this.autoRotate = enabled;
     }
+    resetRotation() {
+        this.rotation.reset();
+    }
     setupEventListeners() {
         this.canvas.addEventListener("mousedown", this.onMouseDown.bind(this));
         document.addEventListener("mousemove", this.onMouseMove.bind(this));
@@ -530,6 +548,7 @@ window.addEventListener("load", async () => {
     const checkColor4 = document.getElementById("checkbox_color_4");
     const checkVertex = document.getElementById("checkbox_vertex");
     const checkEdge = document.getElementById("checkbox_edge");
+    const buttonResetRotation = document.getElementById("button_reset_rotation");
     if (!canvas || !select || !selectFace || !checkColor0 || !checkColor1 || !checkColor2 || !checkColor3 || !checkColor4 ||
         !circleGroup || !originBack || !originControlSvg || !originPoint) {
         console.error("Required elements not found");
@@ -594,5 +613,8 @@ window.addEventListener("load", async () => {
     });
     autoRotateCheckbox?.addEventListener("change", () => {
         viewer.setAutoRotate(autoRotateCheckbox.checked);
+    });
+    buttonResetRotation?.addEventListener("click", () => {
+        viewer.resetRotation();
     });
 });
