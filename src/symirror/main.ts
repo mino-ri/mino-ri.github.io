@@ -1,5 +1,6 @@
 import { NormalPolyhedron, unitTriangles, faceSelectorMap } from "./symmetry.js"
-import { initGpu, buildPolyhedronMesh, quaternionToMatrix, type GpuContext, VisibilityType, FillType } from "./gpu.js"
+import { initGpu, quaternionToMatrix, type GpuContext } from "./gpu.js"
+import { buildPolyhedronMesh, type VisibilityType, FillType } from "./model.js"
 import { type Vector, Vectors } from "./vector.js"
 import { setCenter, createCircle, createPath, createLine, clearChildren } from "../svg_generator.js"
 import { Quaternion, Quaternions } from "./quaternion.js"
