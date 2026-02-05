@@ -171,10 +171,6 @@ function addEdgeSurface(
 
 function addEdge(
     triangles: number[],
-    cv: Vector,
-    nv: Vector,
-    mv: Vector,
-    ov: Vector,
     vertex1: Vector,
     vertex2: Vector,
 ) {
@@ -222,8 +218,6 @@ function addTriangle(
     v0: Vector,
     v1: Vector,
     v2: Vector,
-    nv: Vector,
-    mv: Vector,
     r: number,
     g: number,
     b: number,
@@ -248,16 +242,14 @@ function addTriangle(
 
 function addPolygon(
     triangles: number[],
-    cv: Vector,
-    nv: Vector,
-    mv: Vector,
     vertexes: Vector[],
     indexes: number[],
     colorIndex: number,
+    evenOdd: boolean,
 ) {
     const [r, g, b] = faceColors[colorIndex]!
     if (indexes.length === 3) {
-        addTriangle(triangles, vertexes[indexes[0]!]!, vertexes[indexes[1]!]!, vertexes[indexes[2]!]!, nv, mv, r, g, b)
+        addTriangle(triangles, vertexes[indexes[0]!]!, vertexes[indexes[1]!]!, vertexes[indexes[2]!]!, r, g, b)
         return
     } else if (indexes.length === 4) {
         const v0 = vertexes[indexes[0]!]!
@@ -265,14 +257,44 @@ function addPolygon(
         const v2 = vertexes[indexes[2]!]!
         const v3 = vertexes[indexes[3]!]!
         if (Vectors.getCrossPoint(v0, v1, v2, v3, cv)) {
-            addTriangle(triangles, v0, v1, cv, nv, mv, r, g, b)
-            addTriangle(triangles, v2, v3, cv, nv, mv, r, g, b)
+            addTriangle(triangles, v0, v1, cv, r, g, b)
+            addTriangle(triangles, v2, v3, cv, r, g, b)
         } else if (Vectors.getCrossPoint(v1, v2, v3, v0, cv)) {
-            addTriangle(triangles, v1, v2, cv, nv, mv, r, g, b)
-            addTriangle(triangles, v3, v0, cv, nv, mv, r, g, b)
+            addTriangle(triangles, v1, v2, cv, r, g, b)
+            addTriangle(triangles, v3, v0, cv, r, g, b)
         } else {
-            addTriangle(triangles, v0, v1, v2, nv, mv, r, g, b)
-            addTriangle(triangles, v2, v3, v0, nv, mv, r, g, b)
+            addTriangle(triangles, v0, v1, v2, r, g, b)
+            addTriangle(triangles, v2, v3, v0, r, g, b)
+        }
+        return
+    } else if (evenOdd && indexes.length === 5) {
+        let hasCross = false
+        for (let i = 0; i < indexes.length; i++) {
+            const crossPoint = Vectors.getCrossPoint(
+                vertexes[indexes[(i + 1) % indexes.length]!]!,
+                vertexes[indexes[(i + 2) % indexes.length]!]!,
+                vertexes[indexes[(i + 3) % indexes.length]!]!,
+                vertexes[indexes[(i + 4) % indexes.length]!]!,
+                crosses[i]!.source,
+            )
+            if (crossPoint) {
+                hasCross = true
+            }
+            crosses[i]!.value = crossPoint
+        }
+
+        if (hasCross) {
+            for (let i = 0; i < indexes.length; i++) {
+                addTriangle(triangles,
+                    vertexes[indexes[i]!]!,
+                    crosses[(i + 4) % indexes.length]!.value ?? vertexes[indexes[(i + 4) % indexes.length]!]!,
+                    crosses[(i + 1) % indexes.length]!.value ?? vertexes[indexes[(i + 1) % indexes.length]!]!,
+                    r, g, b)
+            }
+        } else {
+            addTriangle(triangles, vertexes[indexes[0]!]!, vertexes[indexes[1]!]!, vertexes[indexes[2]!]!, r, g, b)
+            addTriangle(triangles, vertexes[indexes[0]!]!, vertexes[indexes[2]!]!, vertexes[indexes[3]!]!, r, g, b)
+            addTriangle(triangles, vertexes[indexes[0]!]!, vertexes[indexes[3]!]!, vertexes[indexes[4]!]!, r, g, b)
         }
         return
     }
@@ -318,11 +340,16 @@ function addPolygon(
         const v0 = crosses[i]!.value ?? cv
         const v1 = crosses[beforeIndex]!.value ?? vertexes[indexes[i]!]!
         const v2 = crosses[afterIndex]!.value ?? vertexes[indexes[afterIndex]!]!
-        addTriangle(triangles, v0, v1, v2, nv, mv, r, g, b)
+        addTriangle(triangles, v0, v1, v2, r, g, b)
     }
 }
 
-function hasSelfIntersection(vertexes: Vector[], face: IPolyhedronFace) {
+function hasSelfIntersection(vertexes: Vector[], face: IPolyhedronFace): boolean {
+    // 4～5角形は自己交差する可能性があるが、レンダリングにおいては自己交差が起こらないように処理するため false を返す
+    if (face.VertexIndexes.length <= 5) {
+        return false
+    }
+
     const v0 = vertexes[face.VertexIndexes[0]!]!
     const v1 = vertexes[face.VertexIndexes[1]!]!
     const v2 = vertexes[face.VertexIndexes[2]!]!
@@ -361,8 +388,49 @@ type PlainIdentifier = {
     distance: number
 }
 
+function getPlain(vertexes: Vector[], face: IPolyhedronFace): PlainIdentifier {
+    const normal = [0, 0, 0]
+    const vertex0 = vertexes[face.VertexIndexes[0]!]!
+    if (face.VertexIndexes.length <= 4) {
+        Vectors.sub(vertexes[face.VertexIndexes[1]!]!, vertex0, nv)
+        Vectors.sub(vertexes[face.VertexIndexes[2]!]!, vertex0, mv)
+    } else {
+        Vectors.sub(vertexes[face.VertexIndexes[2]!]!, vertex0, nv)
+        Vectors.sub(vertexes[face.VertexIndexes[4]!]!, vertex0, mv)
+    }
+    Vectors.cross(nv, mv, normal)
+    if (Math.abs(normal[0]!) < 0.0001 && Math.abs(normal[1]!) < 0.0001 && Math.abs(normal[2]!) < 0.0001) {
+        return { normal: null, distance: 0 }
+    } else {
+        Vectors.normalizeSelf(normal)
+        const distance = Vectors.dot(normal, vertex0)
+        if (distance < 0) {
+            Vectors.negateSelf(normal)
+            return { normal, distance: -distance }
+        } else {
+            return { normal, distance }
+        }
+    }
+}
+
+function isSamePlain(currentPlain: PlainIdentifier, targetPlain: PlainIdentifier, isNearlyZero: boolean): boolean {
+    return !!currentPlain.normal && !!targetPlain.normal &&
+        Math.abs(currentPlain.distance - targetPlain.distance) < maxError && (
+            Math.abs(currentPlain.normal[0]! - targetPlain.normal[0]!) < maxNormalError &&
+            Math.abs(currentPlain.normal[1]! - targetPlain.normal[1]!) < maxNormalError &&
+            Math.abs(currentPlain.normal[2]! - targetPlain.normal[2]!) < maxNormalError ||
+            isNearlyZero &&
+            Math.abs(currentPlain.normal[0]! + targetPlain.normal[0]!) < maxNormalError &&
+            Math.abs(currentPlain.normal[1]! + targetPlain.normal[1]!) < maxNormalError &&
+            Math.abs(currentPlain.normal[2]! + targetPlain.normal[2]!) < maxNormalError)
+}
+
 const maxNormalError = 1.0 / 1024.0
 const maxError = 1.0 / 128.0
+const cv = [0, 0, 0]
+const nv = [0, 0, 0]
+const mv = [0, 0, 0]
+const ov = [0, 0, 0]
 
 // 多面体データから描画用メッシュを生成するユーティリティ
 export function buildPolyhedronMesh(
@@ -374,10 +442,6 @@ export function buildPolyhedronMesh(
     fillType: FillType,
 ): PolyhedronMesh {
     const triangles: number[] = []
-    const cv = [0, 0, 0]
-    const nv = [0, 0, 0]
-    const mv = [0, 0, 0]
-    const ov = [0, 0, 0]
     const verfView = visibilityType === "VertexFigure"
     const eachForOne = visibilityType === "OneForEach"
     const refPointIndexes: number[] = []
@@ -419,30 +483,10 @@ export function buildPolyhedronMesh(
         // 各面の法線ベクトルと中心からの距離を求める
         for (let i = 0; i < drawIndexes.length; i++) {
             const face = polyhedron.faces[drawIndexes[i]!]!
-            const normal = [0, 0, 0]
-            const vertex0 = polyhedron.vertexes[face.VertexIndexes[0]!]!
-            if (face.VertexIndexes.length <= 4) {
-                Vectors.sub(polyhedron.vertexes[face.VertexIndexes[1]!]!, vertex0, nv)
-                Vectors.sub(polyhedron.vertexes[face.VertexIndexes[2]!]!, vertex0, mv)
-            } else {
-                Vectors.sub(polyhedron.vertexes[face.VertexIndexes[2]!]!, vertex0, nv)
-                Vectors.sub(polyhedron.vertexes[face.VertexIndexes[4]!]!, vertex0, mv)
-            }
-            Vectors.cross(nv, mv, normal)
-            if (Math.abs(normal[0]!) < 0.0001 && Math.abs(normal[1]!) < 0.0001 && Math.abs(normal[2]!) < 0.0001) {
-                plains[i] = { normal: null, distance: 0 }
-            } else {
-                Vectors.normalizeSelf(normal)
-                const distance = Vectors.dot(normal, vertex0)
-                if (distance < 0) {
-                    Vectors.negateSelf(normal)
-                    plains[i] = { normal, distance: -distance }
-                } else {
-                    plains[i] = { normal, distance }
-                }
-            }
+            plains[i] = getPlain(polyhedron.vertexes, face)
         }
 
+        // ステンシルバッファを使って偶奇塗りする面を登録
         const drawnIndexSet = new Set<number>()
         for (let i = 0; i < drawIndexes.length; i++) {
             const currentPlain = plains[i]!
@@ -450,31 +494,24 @@ export function buildPolyhedronMesh(
 
             const face = polyhedron.faces[drawIndexes[i]!]!
             // 自己交差の可能性がある5角形以上、または同一平面に複数の面がある場合、ステンシルバッファを使って描画する
-            let drawWithStencil = face.VertexIndexes.length >= 5 && hasSelfIntersection(polyhedron.vertexes, face)
+            let drawWithStencil = hasSelfIntersection(polyhedron.vertexes, face)
             const isNearlyZero = Math.abs(currentPlain.distance) < maxError
             for (let j = i + 1; j < drawIndexes.length; j++) {
                 const targetPlain = plains[j]!
                 if (drawnIndexSet.has(j) || !targetPlain.normal) continue
-                if (Math.abs(currentPlain.distance - targetPlain.distance) < maxError && (
-                    Math.abs(currentPlain.normal[0]! - targetPlain.normal[0]!) < maxNormalError &&
-                    Math.abs(currentPlain.normal[1]! - targetPlain.normal[1]!) < maxNormalError &&
-                    Math.abs(currentPlain.normal[2]! - targetPlain.normal[2]!) < maxNormalError ||
-                    isNearlyZero &&
-                    Math.abs(currentPlain.normal[0]! + targetPlain.normal[0]!) < maxNormalError &&
-                    Math.abs(currentPlain.normal[1]! + targetPlain.normal[1]!) < maxNormalError &&
-                    Math.abs(currentPlain.normal[2]! + targetPlain.normal[2]!) < maxNormalError)) {
+                if (isSamePlain(currentPlain, targetPlain, isNearlyZero)) {
                     drawWithStencil = true
                     drawnIndexSet.add(j)
                     const otherFace = polyhedron.faces[drawIndexes[j]!]!
                     const colorIndex = Math.min(otherFace.ColorIndex, faceColors.length - 1)
-                    addPolygon(triangles, cv, nv, mv, polyhedron.vertexes, otherFace.VertexIndexes, colorIndex)
+                    addPolygon(triangles, polyhedron.vertexes, otherFace.VertexIndexes, colorIndex, true)
                 }
             }
 
             if (drawWithStencil) {
                 const face = polyhedron.faces[drawIndexes[i]!]!
                 const colorIndex = Math.min(face.ColorIndex, faceColors.length - 1)
-                addPolygon(triangles, cv, nv, mv, polyhedron.vertexes, face.VertexIndexes, colorIndex)
+                addPolygon(triangles, polyhedron.vertexes, face.VertexIndexes, colorIndex, true)
 
                 drawnIndexSet.add(i)
                 const vertexCount = triangles.length / 9 - addedVertexCount
@@ -484,20 +521,23 @@ export function buildPolyhedronMesh(
                 }
             }
         }
+
+        // 通常のレンダリングで描画する面を登録
         for (let i = 0; i < drawIndexes.length; i++) {
             if (drawnIndexSet.has(i)) continue
             const face = polyhedron.faces[drawIndexes[i]!]!
             const colorIndex = Math.min(face.ColorIndex, faceColors.length - 1)
-            addPolygon(triangles, cv, nv, mv, polyhedron.vertexes, face.VertexIndexes, colorIndex)
+            addPolygon(triangles, polyhedron.vertexes, face.VertexIndexes, colorIndex, true)
         }
     } else if (fillType === "EvenOdd") {
+        // ステンシルバッファを使って偶奇塗りする面を登録
         const drawnIndexSet = new Set<number>()
         for (let i = 0; i < drawIndexes.length; i++) {
             const face = polyhedron.faces[drawIndexes[i]!]!
-            if (face.VertexIndexes.length < 5 || !hasSelfIntersection(polyhedron.vertexes, face)) continue
+            if (!hasSelfIntersection(polyhedron.vertexes, face)) continue
 
             const colorIndex = Math.min(face.ColorIndex, faceColors.length - 1)
-            addPolygon(triangles, cv, nv, mv, polyhedron.vertexes, face.VertexIndexes, colorIndex)
+            addPolygon(triangles, polyhedron.vertexes, face.VertexIndexes, colorIndex, true)
             drawnIndexSet.add(i)
             const vertexCount = triangles.length / 9 - addedVertexCount
             if (vertexCount > 0) {
@@ -506,17 +546,19 @@ export function buildPolyhedronMesh(
             }
         }
 
+        // 通常のレンダリングで描画する面を登録
         for (let i = 0; i < drawIndexes.length; i++) {
             if (drawnIndexSet.has(i)) continue
             const face = polyhedron.faces[drawIndexes[i]!]!
             const colorIndex = Math.min(face.ColorIndex, faceColors.length - 1)
-            addPolygon(triangles, cv, nv, mv, polyhedron.vertexes, face.VertexIndexes, colorIndex)
+            addPolygon(triangles, polyhedron.vertexes, face.VertexIndexes, colorIndex, true)
         }
     } else {
+        // 塗りつぶし
         for (const i of drawIndexes) {
             const face = polyhedron.faces[i]!
             const colorIndex = Math.min(face.ColorIndex, faceColors.length - 1)
-            addPolygon(triangles, cv, nv, mv, polyhedron.vertexes, face.VertexIndexes, colorIndex)
+            addPolygon(triangles, polyhedron.vertexes, face.VertexIndexes, colorIndex, false)
         }
     }
 
@@ -535,7 +577,7 @@ export function buildPolyhedronMesh(
             if (verfView && !refPointIndexes.includes(index1) && !refPointIndexes.includes(index2)) {
                 continue
             }
-            addEdge(triangles, cv, nv, mv, ov, polyhedron.vertexes[index1]!, polyhedron.vertexes[index2]!)
+            addEdge(triangles, polyhedron.vertexes[index1]!, polyhedron.vertexes[index2]!)
         }
     }
 
