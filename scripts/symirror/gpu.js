@@ -592,7 +592,11 @@ function hasSelfIntersection(vertexes, face, cv) {
     const v0 = vertexes[face.VertexIndexes[0]];
     const v1 = vertexes[face.VertexIndexes[1]];
     const v2 = vertexes[face.VertexIndexes[2]];
-    for (let i = 2; i < face.VertexIndexes.length - 1; i++) {
+    if (Vectors.getCrossPoint(v2, vertexes[face.VertexIndexes[3]], v0, v1, cv) ||
+        Vectors.getCrossPoint(vertexes[face.VertexIndexes[face.VertexIndexes.length - 1]], v0, v1, v2, cv)) {
+        return true;
+    }
+    for (let i = 3; i < face.VertexIndexes.length - 2; i++) {
         const va = vertexes[face.VertexIndexes[i]];
         const vb = vertexes[face.VertexIndexes[i + 1]];
         if (Vectors.getCrossPoint(va, vb, v0, v1, cv) || Vectors.getCrossPoint(va, vb, v1, v2, cv)) {
