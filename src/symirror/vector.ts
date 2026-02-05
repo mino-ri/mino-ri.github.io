@@ -144,6 +144,30 @@ export class Vectors {
     static #w = [0, 0, 0]
     static #epsilon = 1e-6
 
+    static hasIntersection(a: Vector, b: Vector, c: Vector, d: Vector): boolean {
+        Vectors.sub(b, a, Vectors.#u)
+        Vectors.sub(d, c, Vectors.#v)
+        Vectors.sub(a, c, Vectors.#w)
+
+        const nrm2U = Vectors.dot(Vectors.#u, Vectors.#u)
+        const dotUv = Vectors.dot(Vectors.#u, Vectors.#v)
+        const nrm2V = Vectors.dot(Vectors.#v, Vectors.#v)
+        const dotUw = Vectors.dot(Vectors.#u, Vectors.#w)
+        const dotVw = Vectors.dot(Vectors.#v, Vectors.#w)
+        const delta = nrm2U * nrm2V - dotUv * dotUv
+
+        // 2線分が平行か
+        if (Math.abs(delta) < Vectors.#epsilon) {
+            const nrm2W = Vectors.dot(Vectors.#w, Vectors.#w)
+            // 2線分が同一直線上にあるか
+            return nrm2U * nrm2W - dotUw * dotUw < Vectors.#epsilon
+        }
+
+        const s = (dotUv * dotVw - nrm2V * dotUw) / delta
+        const t = (nrm2U * dotVw - dotUv * dotUw) / delta
+        // 2線分が、各線分内の領域で最接近するか
+        return 0 <= s && s <= 1 && 0 <= t && t <= 1
+    }
 
     static getCrossPoint(a: Vector, b: Vector, c: Vector, d: Vector, resultTo: Vector): Vector | null {
         Vectors.sub(b, a, Vectors.#u)
