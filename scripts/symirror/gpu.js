@@ -214,13 +214,13 @@ class PolyhedronRendererImpl {
             format: "depth24plus-stencil8",
             depthWriteEnabled: true,
             depthCompare: "less",
-            stencilFront: { compare: "not-equal", passOp: "zero" },
-            stencilBack: { compare: "not-equal", passOp: "zero" },
+            stencilFront: { compare: "not-equal", passOp: "zero", depthFailOp: "zero" },
+            stencilBack: { compare: "not-equal", passOp: "zero", depthFailOp: "zero" },
         };
         const writeDepthStencilState = {
             format: "depth24plus-stencil8",
             depthWriteEnabled: false,
-            depthCompare: "less",
+            depthCompare: "always",
             stencilFront: { compare: "always", passOp: "invert" },
             stencilBack: { compare: "always", passOp: "invert" },
         };
@@ -283,6 +283,8 @@ class PolyhedronRendererImpl {
             primitive: premitiveState,
             depthStencil: readDepthStencilState,
         });
+        this.device.queue.writeBuffer(this.uniformBuffer, 64, viewProjectionMatrix.buffer, viewProjectionMatrix.byteOffset, viewProjectionMatrix.byteLength);
+        this.device.queue.writeBuffer(this.uniformBuffer, 128, lightViewProjectionMatrix.buffer, lightViewProjectionMatrix.byteOffset, lightViewProjectionMatrix.byteLength);
     }
     updateMesh(mesh) {
         if (!this.vertexBuffer || this.byteLength < mesh.vertexData.byteLength) {
@@ -317,16 +319,15 @@ class PolyhedronRendererImpl {
             this.lastHeight = height;
         }
         this.device.queue.writeBuffer(this.uniformBuffer, 0, modelMatrix.buffer, modelMatrix.byteOffset, modelMatrix.byteLength);
-        this.device.queue.writeBuffer(this.uniformBuffer, 64, viewProjectionMatrix.buffer, viewProjectionMatrix.byteOffset, viewProjectionMatrix.byteLength);
-        this.device.queue.writeBuffer(this.uniformBuffer, 128, lightViewProjectionMatrix.buffer, lightViewProjectionMatrix.byteOffset, lightViewProjectionMatrix.byteLength);
         const commandEncoder = this.device.createCommandEncoder();
+        const shadowTextureView = this.shadowTexture.createView();
         const textureView = this.context.getCurrentTexture().createView();
         let vertexIndex = 0;
         if (this.stencilVertexCounts.length > 0) {
             const shadowPass = commandEncoder.beginRenderPass({
                 colorAttachments: [],
                 depthStencilAttachment: {
-                    view: this.shadowTexture.createView(),
+                    view: shadowTextureView,
                     depthClearValue: 1.0,
                     depthLoadOp: "clear",
                     depthStoreOp: "store",
@@ -353,7 +354,7 @@ class PolyhedronRendererImpl {
             const shadowPass = commandEncoder.beginRenderPass({
                 colorAttachments: [],
                 depthStencilAttachment: {
-                    view: this.shadowTexture.createView(),
+                    view: shadowTextureView,
                     depthClearValue: 1.0,
                     depthLoadOp: this.stencilVertexCounts.length === 0 ? "clear" : "load",
                     depthStoreOp: "store",
