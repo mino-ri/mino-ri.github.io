@@ -157,7 +157,9 @@ function addTriangle(triangles, v0, v1, v2, r, g, b) {
     const nz = nv[2];
     triangles.push(v0[0], v0[1], v0[2], nx, ny, nz, r, g, b, v1[0], v1[1], v1[2], nx, ny, nz, r, g, b, v2[0], v2[1], v2[2], nx, ny, nz, r, g, b);
 }
-function addPolygon(triangles, vertexes, indexes, colorIndex, evenOdd) {
+function addPolygon(triangles, vertexes, face, colorByConnected, evenOdd) {
+    const indexes = face.vertexIndexes;
+    const colorIndex = (colorByConnected ? face.connectedIndex : face.colorIndex) % (faceColors.length);
     const [r, g, b] = faceColors[colorIndex];
     if (indexes.length === 3) {
         addTriangle(triangles, vertexes[indexes[0]], vertexes[indexes[1]], vertexes[indexes[2]], r, g, b);
@@ -235,19 +237,19 @@ function addPolygon(triangles, vertexes, indexes, colorIndex, evenOdd) {
     }
 }
 function hasSelfIntersection(vertexes, face) {
-    if (face.VertexIndexes.length <= 5) {
+    if (face.vertexIndexes.length <= 5) {
         return false;
     }
-    const v0 = vertexes[face.VertexIndexes[0]];
-    const v1 = vertexes[face.VertexIndexes[1]];
-    const v2 = vertexes[face.VertexIndexes[2]];
-    if (Vectors.hasIntersection(v2, vertexes[face.VertexIndexes[3]], v0, v1) ||
-        Vectors.hasIntersection(vertexes[face.VertexIndexes[face.VertexIndexes.length - 1]], v0, v1, v2)) {
+    const v0 = vertexes[face.vertexIndexes[0]];
+    const v1 = vertexes[face.vertexIndexes[1]];
+    const v2 = vertexes[face.vertexIndexes[2]];
+    if (Vectors.hasIntersection(v2, vertexes[face.vertexIndexes[3]], v0, v1) ||
+        Vectors.hasIntersection(vertexes[face.vertexIndexes[face.vertexIndexes.length - 1]], v0, v1, v2)) {
         return true;
     }
-    for (let i = 3; i < face.VertexIndexes.length - 2; i++) {
-        const va = vertexes[face.VertexIndexes[i]];
-        const vb = vertexes[face.VertexIndexes[i + 1]];
+    for (let i = 3; i < face.vertexIndexes.length - 2; i++) {
+        const va = vertexes[face.vertexIndexes[i]];
+        const vb = vertexes[face.vertexIndexes[i + 1]];
         if (Vectors.hasIntersection(va, vb, v0, v1) || Vectors.hasIntersection(va, vb, v1, v2)) {
             return true;
         }
@@ -256,14 +258,14 @@ function hasSelfIntersection(vertexes, face) {
 }
 function getPlain(vertexes, face) {
     const normal = [0, 0, 0];
-    const vertex0 = vertexes[face.VertexIndexes[0]];
-    if (face.VertexIndexes.length <= 4) {
-        Vectors.sub(vertexes[face.VertexIndexes[1]], vertex0, nv);
-        Vectors.sub(vertexes[face.VertexIndexes[2]], vertex0, mv);
+    const vertex0 = vertexes[face.vertexIndexes[0]];
+    if (face.vertexIndexes.length <= 4) {
+        Vectors.sub(vertexes[face.vertexIndexes[1]], vertex0, nv);
+        Vectors.sub(vertexes[face.vertexIndexes[2]], vertex0, mv);
     }
     else {
-        Vectors.sub(vertexes[face.VertexIndexes[2]], vertex0, nv);
-        Vectors.sub(vertexes[face.VertexIndexes[4]], vertex0, mv);
+        Vectors.sub(vertexes[face.vertexIndexes[2]], vertex0, nv);
+        Vectors.sub(vertexes[face.vertexIndexes[4]], vertex0, mv);
     }
     Vectors.cross(nv, mv, normal);
     if (Math.abs(normal[0]) < 0.0001 && Math.abs(normal[1]) < 0.0001 && Math.abs(normal[2]) < 0.0001) {
@@ -297,7 +299,7 @@ const cv = [0, 0, 0];
 const nv = [0, 0, 0];
 const mv = [0, 0, 0];
 const ov = [0, 0, 0];
-export function buildPolyhedronMesh(polyhedron, faceVisibility, visibilityType, vertexVisibility, edgeVisibility, fillType) {
+export function buildPolyhedronMesh(polyhedron, faceVisibility, visibilityType, vertexVisibility, edgeVisibility, colorByConnected, fillType) {
     const triangles = [];
     const verfView = visibilityType === "VertexFigure";
     const eachForOne = visibilityType === "OneForEach";
@@ -318,7 +320,7 @@ export function buildPolyhedronMesh(polyhedron, faceVisibility, visibilityType, 
     let addedVertexCount = 0;
     for (let i = 0; i < polyhedron.faces.length; i++) {
         const face = polyhedron.faces[i];
-        const colorIndex = Math.min(face.ColorIndex, faceColors.length - 1);
+        const colorIndex = (colorByConnected ? face.connectedIndex : face.colorIndex) % (faceColors.length);
         if (!faceVisibility[colorIndex]) {
             continue;
         }
@@ -328,7 +330,7 @@ export function buildPolyhedronMesh(polyhedron, faceVisibility, visibilityType, 
             }
             colorDrawn.add(colorIndex);
         }
-        if (verfView && face.VertexIndexes.every(i => !refPointIndexes.includes(i))) {
+        if (verfView && face.vertexIndexes.every(i => !refPointIndexes.includes(i))) {
             continue;
         }
         drawIndexes.push(i);
@@ -355,14 +357,12 @@ export function buildPolyhedronMesh(polyhedron, faceVisibility, visibilityType, 
                     drawWithStencil = true;
                     drawnIndexSet.add(j);
                     const otherFace = polyhedron.faces[drawIndexes[j]];
-                    const colorIndex = Math.min(otherFace.ColorIndex, faceColors.length - 1);
-                    addPolygon(triangles, polyhedron.vertexes, otherFace.VertexIndexes, colorIndex, true);
+                    addPolygon(triangles, polyhedron.vertexes, otherFace, colorByConnected, true);
                 }
             }
             if (drawWithStencil) {
                 const face = polyhedron.faces[drawIndexes[i]];
-                const colorIndex = Math.min(face.ColorIndex, faceColors.length - 1);
-                addPolygon(triangles, polyhedron.vertexes, face.VertexIndexes, colorIndex, true);
+                addPolygon(triangles, polyhedron.vertexes, face, colorByConnected, true);
                 drawnIndexSet.add(i);
                 const vertexCount = triangles.length / 9 - addedVertexCount;
                 if (vertexCount > 0) {
@@ -375,8 +375,7 @@ export function buildPolyhedronMesh(polyhedron, faceVisibility, visibilityType, 
             if (drawnIndexSet.has(i))
                 continue;
             const face = polyhedron.faces[drawIndexes[i]];
-            const colorIndex = Math.min(face.ColorIndex, faceColors.length - 1);
-            addPolygon(triangles, polyhedron.vertexes, face.VertexIndexes, colorIndex, true);
+            addPolygon(triangles, polyhedron.vertexes, face, colorByConnected, true);
         }
     }
     else if (fillType === "EvenOdd") {
@@ -385,8 +384,7 @@ export function buildPolyhedronMesh(polyhedron, faceVisibility, visibilityType, 
             const face = polyhedron.faces[drawIndexes[i]];
             if (!hasSelfIntersection(polyhedron.vertexes, face))
                 continue;
-            const colorIndex = Math.min(face.ColorIndex, faceColors.length - 1);
-            addPolygon(triangles, polyhedron.vertexes, face.VertexIndexes, colorIndex, true);
+            addPolygon(triangles, polyhedron.vertexes, face, colorByConnected, true);
             drawnIndexSet.add(i);
             const vertexCount = triangles.length / 9 - addedVertexCount;
             if (vertexCount > 0) {
@@ -398,15 +396,13 @@ export function buildPolyhedronMesh(polyhedron, faceVisibility, visibilityType, 
             if (drawnIndexSet.has(i))
                 continue;
             const face = polyhedron.faces[drawIndexes[i]];
-            const colorIndex = Math.min(face.ColorIndex, faceColors.length - 1);
-            addPolygon(triangles, polyhedron.vertexes, face.VertexIndexes, colorIndex, true);
+            addPolygon(triangles, polyhedron.vertexes, face, colorByConnected, true);
         }
     }
     else {
         for (const i of drawIndexes) {
             const face = polyhedron.faces[i];
-            const colorIndex = Math.min(face.ColorIndex, faceColors.length - 1);
-            addPolygon(triangles, polyhedron.vertexes, face.VertexIndexes, colorIndex, false);
+            addPolygon(triangles, polyhedron.vertexes, face, colorByConnected, false);
         }
     }
     if (vertexVisibility) {

@@ -393,6 +393,7 @@ class PolyhedronViewer {
     fillType = "Fill";
     vertexVisibility = false;
     edgeVisibility = false;
+    colorByConnected = false;
     constructor(canvas, gpuContext, originController) {
         this.canvas = canvas;
         this.originController = originController;
@@ -453,9 +454,9 @@ class PolyhedronViewer {
         this.isDragging = false;
     }
     setPolyhedron(selectValue, faceSelector) {
-        const { unit, snubPoints } = unitTriangles.find((source) => source.id === selectValue);
+        const { unit, snubPoints, beginPointIndex } = unitTriangles.find((source) => source.id === selectValue);
         const selector = faceSelectorMap.get(faceSelector) || faceSelectorMap.get("xxx");
-        this.polyhedron = new NormalPolyhedron(unit, snubPoints, selector);
+        this.polyhedron = new NormalPolyhedron(unit, snubPoints, beginPointIndex, selector);
         this.#updateMesh();
         return this.polyhedron;
     }
@@ -479,6 +480,10 @@ class PolyhedronViewer {
         this.vertexVisibility = vertexVisibility;
         this.#updateMesh();
     }
+    setColorByConnected(colorByConnected) {
+        this.colorByConnected = colorByConnected;
+        this.#updateMesh();
+    }
     setVisibilityType(visibilityType) {
         this.visibilityType = visibilityType;
         this.#updateMesh();
@@ -490,7 +495,7 @@ class PolyhedronViewer {
     #updateMesh() {
         if (!this.polyhedron)
             return;
-        const mesh = buildPolyhedronMesh(this.polyhedron, this.faceVisibility, this.visibilityType, this.vertexVisibility, this.edgeVisibility, this.fillType);
+        const mesh = buildPolyhedronMesh(this.polyhedron, this.faceVisibility, this.visibilityType, this.vertexVisibility, this.edgeVisibility, this.colorByConnected, this.fillType);
         this.renderer.updateMesh(mesh);
     }
     startRenderLoop() {
@@ -548,6 +553,7 @@ window.addEventListener("load", async () => {
     const checkColor4 = document.getElementById("checkbox_color_4");
     const checkVertex = document.getElementById("checkbox_vertex");
     const checkEdge = document.getElementById("checkbox_edge");
+    const checkConnected = document.getElementById("checkbox_connected");
     const buttonResetRotation = document.getElementById("button_reset_rotation");
     if (!canvas || !select || !selectFace || !checkColor0 || !checkColor1 || !checkColor2 || !checkColor3 || !checkColor4 ||
         !circleGroup || !originBack || !originControlSvg || !originPoint) {
@@ -575,16 +581,13 @@ window.addEventListener("load", async () => {
         select.appendChild(option);
     }
     originController?.setMirrorCircles(viewer.setPolyhedron(select.value, selectFace.value));
-    select.addEventListener("change", () => {
+    const rebuildPolyhedron = () => {
         const polyhedron = viewer.setPolyhedron(select.value, selectFace.value);
         originController?.setMirrorCircles(polyhedron);
         originController?.reset();
-    });
-    selectFace.addEventListener("change", () => {
-        const polyhedron = viewer.setPolyhedron(select.value, selectFace.value);
-        originController?.setMirrorCircles(polyhedron);
-        originController?.reset();
-    });
+    };
+    select.addEventListener("change", rebuildPolyhedron);
+    selectFace.addEventListener("change", rebuildPolyhedron);
     checkEdge?.addEventListener("change", () => {
         viewer.setEdgeVisibility(checkEdge.checked);
     });
@@ -593,6 +596,9 @@ window.addEventListener("load", async () => {
     });
     selectVisibility?.addEventListener("change", () => {
         viewer.setVisibilityType(selectVisibility.value);
+    });
+    checkConnected?.addEventListener("change", () => {
+        viewer.setColorByConnected(checkConnected.checked);
     });
     const colorCheckChangeHandler = () => {
         viewer.setFaceVisibility([
