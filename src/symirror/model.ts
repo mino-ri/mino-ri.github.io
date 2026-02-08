@@ -8,6 +8,7 @@ const faceColors: [number, number, number][] = [
     [0.01, 0.68, 0.35], // 2: 緑
     [0.00, 0.44, 1.00], // 3: 青
     [0.25, 0.88, 1.00], // 4: 空
+    [0.75, 0.10, 0.95], // 5: 空
 ]
 
 const crosses: { value: Vector | null, source: Vector }[] = [
