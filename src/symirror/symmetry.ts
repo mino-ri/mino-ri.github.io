@@ -55,7 +55,7 @@ export class SymmetryGroup3 {
     }
 
     getDefaultGenerators(): UnitTriangle {
-        return this.getGenerators(1, 2, 3)
+        return this.getGenerators(3, 2, 1)
     }
 
     getGenerators(a: number, b: number, c: number): UnitTriangle {
@@ -120,9 +120,9 @@ export const unitTriangles: PolyhedronSource[] = function (): PolyhedronSource[]
         compoundTransforms: transforms,
     }))
 
-    const symmetry3 = createSymmetry(3, 3)
-    const symmetry4 = createSymmetry(3, 4)
-    const symmetry5 = createSymmetry(3, 5)
+    const symmetryA = createSymmetry(3, 3)
+    const symmetryB = createSymmetry(3, 4)
+    const symmetryH = createSymmetry(3, 5)
     const symmetryP2 = createSymmetry(2, 2)
     const symmetryP3 = createSymmetry(2, 3)
     const symmetryP4 = createSymmetry(2, 4)
@@ -131,30 +131,33 @@ export const unitTriangles: PolyhedronSource[] = function (): PolyhedronSource[]
     const symmetryP7 = createSymmetry(2, 7)
 
     const aSources: PolyhedronSource[] = [
-        { id: "a00", name: "2 3 3", unit: symmetry3.getDefaultGenerators(), snubPoints: [[0.3719739026214218, 0.3711063250059786, 0.8508322462795742], [-0.6016644209754163, -0.6013068195365014, 0.5257661393730243]] },
-        { id: "a01", name: "3 3 3'", unit: symmetry3.getGenerators(1, 2, 13) },
+        { id: "a00", name: "3 3 2", unit: symmetryA.getDefaultGenerators(), snubPoints: [[0.3719739026214218, 0.3711063250059786, 0.8508322462795742], [-0.6016644209754163, -0.6013068195365014, 0.5257661393730243]] },
+        { id: "a01", name: "3 3 3'", unit: symmetryA.getGenerators(13, 2, 1) },
     ]
     const bSources: PolyhedronSource[] = [
-        { id: "b00", name: "2 3 4", unit: symmetry4.getDefaultGenerators(), snubPoints: [[0.274529843297775, 0.2514828934900627, 0.9281108335865738]] },
-        { id: "b01", name: "3 4 4'", unit: symmetry4.getGenerators(1, 2, 13) },
+        { id: "b00", name: "4 3 2", unit: symmetryB.getDefaultGenerators(), snubPoints: [[0.274529843297775, 0.2514828934900627, 0.9281108335865738]] },
+        { id: "b01", name: "4 4 3'", unit: symmetryB.getGenerators(13, 2, 1) },
     ]
     const hSources: PolyhedronSource[] = [
-        { id: "h00", name: "2 3 5", unit: symmetry5.getDefaultGenerators(), snubPoints: [[0.17362276702464857, 0.1532781551762212, 0.9728108459081235]] },
-        { id: "h01", name: "2 3 5/2", unit: symmetry5.getGenerators(2, 1, 83), snubPoints: [[0.2934737350596348, -0.34884613790107505, 0.890044683654507], [-0.9062343791439471, -0.3502908195091824, 0.236718380835055], [-0.5879050866151723, 0.7896142609307613, 0.17571832023660608]] },
-        { id: "h02", name: "2 5 5/2", unit: symmetry5.getGenerators(1, 13, 3), snubPoints: [[0.2441220393050724, 0.30667128071226984, 0.919976714657403], [0.1868151186710511, -0.55662847504144, 0.8094843125156671]] },
+        { id: "h00", name: "5 3 2", unit: symmetryH.getDefaultGenerators(), snubPoints: [[0.17362276702464857, 0.1532781551762212, 0.9728108459081235]] },
+        { id: "h01", name: "5/2 3 2", unit: symmetryH.getGenerators(83, 1, 2), snubPoints: [[0.2934737350596348, -0.34884613790107505, 0.890044683654507], [-0.9062343791439471, -0.3502908195091824, 0.236718380835055], [-0.5879050866151723, 0.7896142609307613, 0.17571832023660608]] },
+        { id: "h02", name: "5 5/2 2", unit: symmetryH.getGenerators(3, 13, 1), snubPoints: [[0.2441220393050724, 0.30667128071226984, 0.919976714657403], [0.1868151186710511, -0.55662847504144, 0.8094843125156671]] },
     ]
     const p2Sources = [
         { id: "p21", name: "2 2 2", unit: symmetryP2.getDefaultGenerators() },
     ]
     const p3Sources = [
-        { id: "p31", name: "2 2 3", unit: symmetryP3.getDefaultGenerators(), snubPoints: [[-0.5771802530924266, 0.40832752047197346, 0.7071998242826227], [0.5771802530924266, 0.40832752047197346, 0.7071998242826227]] },
+        { id: "p31", name: "3 2 2", unit: symmetryP3.getDefaultGenerators(), snubPoints: [[-0.5771802530924266, 0.40832752047197346, 0.7071998242826227], [0.5771802530924266, 0.40832752047197346, 0.7071998242826227]] },
     ]
     const p4Sources = [
-        { id: "p41", name: "2 2 4", unit: symmetryP4.getDefaultGenerators(), snubPoints: [[-0.5111347434249403, 0.3286316758425271, 0.7941929839131373], [0.5111347434249403, 0.3286316758425271, 0.7941929839131373]] },
+        { id: "p41", name: "4 2 2", unit: symmetryP4.getDefaultGenerators(), snubPoints: [[-0.5111347434249403, 0.3286316758425271, 0.7941929839131373], [0.5111347434249403, 0.3286316758425271, 0.7941929839131373]] },
     ]
     const p5Sources = [
-        { id: "p51", name: "2 2 5", unit: symmetryP5.getDefaultGenerators(), snubPoints: [[-0.44660623733507715, 0.2765531581360969, 0.8509178688324484], [0.44660623733507715, 0.2765531581360969, 0.8509178688324484]] },
-        { id: "p52", name: "2 2 5/2", unit: symmetryP5.getGenerators(1, 2, 11), snubPoints: [[-0.5987426743493759, 0.0002110478231757374, 0.8009414244323824], [0.5987426743493759, 0.0002110478231757374, 0.8009414244323824], [-0.44711653107453697, -0.8944757166111083, 0.000005737334089724187], [0.44711653107453697, -0.8944757166111083, 0.000005737334089724187]] },
+        { id: "p51", name: "5 2 2", unit: symmetryP5.getDefaultGenerators(), snubPoints: [[-0.44660623733507715, 0.2765531581360969, 0.8509178688324484], [0.44660623733507715, 0.2765531581360969, 0.8509178688324484]] },
+        { id: "p52", name: "5/2 2 2", unit: symmetryP5.getGenerators(11, 2, 1), snubPoints: [[-0.5987426743493759, 0.0002110478231757374, 0.8009414244323824], [0.5987426743493759, 0.0002110478231757374, 0.8009414244323824], [-0.44711653107453697, -0.8944757166111083, 0.000005737334089724187], [0.44711653107453697, -0.8944757166111083, 0.000005737334089724187]] },
+    ]
+    const p6Sources = [
+        { id: "p61", name: "6 2 2", unit: symmetryP6.getDefaultGenerators(), snubPoints: [[-0.3931935908064074, 0.23786331464090538, 0.8881553038161767], [0.3931935908064074, 0.23786331464090538, 0.8881553038161767]] },
     ]
     const rotate90 = Quaternions.rotation([0, 0, 1], Math.PI / 2)
     const rotate45 = Quaternions.rotation([0, 0, 1], Math.PI / 4)
@@ -164,40 +167,44 @@ export const unitTriangles: PolyhedronSource[] = function (): PolyhedronSource[]
         ...aSources,
         ...bSources,
         ...hSources,
-        { id: "h03", name: "3 3 5'", unit: symmetry5.getGenerators(1, 2, 28) },
-        { id: "h04", name: "3 3 5/2", unit: symmetry5.getGenerators(1, 2, 15), snubPoints: [[0.1842680470996585, 0.0002323682813360037, 0.9828760007361356], [-0.9934037311234103, 0.0006531253985034092, 0.11466734677884965]] },
-        { id: "h05", name: "3 5 5'", unit: symmetry5.getGenerators(1, 13, 2) },
-        { id: "h06", name: "3 5 5/2'", unit: symmetry5.getGenerators(1, 33, 2), snubPoints: [[0.09453035692186709, -0.16374423004893354, 0.9819632573298791]] },
-        { id: "h07", name: "3 5/2 5/2'", unit: symmetry5.getGenerators(1, 99, 2), snubPoints: [[0.5839708202463768, -0.32701548905717087, 0.7429932375314551], [-0.20197213592544647, 0.9450410298772749, 0.25710835878713195]] },
-        { id: "h08", name: "5 5 5'", unit: symmetry5.getGenerators(2, 3, 28) },
-        { id: "h09", name: "5/2 5/2 5/2", unit: symmetry5.getGenerators(3, 13, 26) },
+        { id: "h03", name: "5 3 3'", unit: symmetryH.getGenerators(28, 2, 1) },
+        { id: "h04", name: "5/2 3 3", unit: symmetryH.getGenerators(15, 2, 1), snubPoints: [[0.1842680470996585, 0.0002323682813360037, 0.9828760007361356], [-0.9934037311234103, 0.0006531253985034092, 0.11466734677884965]] },
+        { id: "h05", name: "5 5 3'", unit: symmetryH.getGenerators(2, 13, 1) },
+        { id: "h06", name: "5 5/2 3'", unit: symmetryH.getGenerators(2, 33, 1), snubPoints: [[0.09453035692186709, -0.16374423004893354, 0.9819632573298791]] },
+        { id: "h07", name: "5/2 5/2 3'", unit: symmetryH.getGenerators(2, 99, 1), snubPoints: [[0.5839708202463768, -0.32701548905717087, 0.7429932375314551], [-0.20197213592544647, 0.9450410298772749, 0.25710835878713195]] },
+        { id: "h08", name: "5 5 5'", unit: symmetryH.getGenerators(28, 3, 2) },
+        { id: "h09", name: "5/2 5/2 5/2", unit: symmetryH.getGenerators(26, 13, 3) },
 
         ...p2Sources,
         ...p3Sources,
         ...p4Sources,
         ...p5Sources,
-        { id: "p61", name: "2 2 6", unit: symmetryP6.getDefaultGenerators(), snubPoints: [[-0.3931935908064074, 0.23786331464090538, 0.8881553038161767], [0.3931935908064074, 0.23786331464090538, 0.8881553038161767]] },
-        { id: "p71", name: "2 2 7", unit: symmetryP7.getDefaultGenerators(), snubPoints: [[-0.34915940259840533, 0.2083295343698897, 0.9136117975849204], [0.34915940259840533, 0.2083295343698897, 0.9136117975849204]] },
-        { id: "p72", name: "2 2 7/2", unit: symmetryP7.getGenerators(1, 2, 11), snubPoints: [[-0.5455983391838306, 0.0002153961070602594, 0.8380467802481928], [0.5455983391838306, 0.0002153961070602594, 0.8380467802481928]] },
-        { id: "p73", name: "2 2 7/3", unit: symmetryP7.getGenerators(1, 2, 19), snubPoints: [[-0.5994232712396262, -0.1779700836642542, 0.7803963039487846], [0.5994232712396262, -0.1779700836642542, 0.7803963039487846], [-0.5034145899510695, 0.8423776194324194, 0.19228545681815487], [0.5034145899510695, 0.8423776194324194, 0.19228545681815487]] },
+        ...p6Sources,
+        { id: "p71", name: "7 2 2", unit: symmetryP7.getDefaultGenerators(), snubPoints: [[-0.34915940259840533, 0.2083295343698897, 0.9136117975849204], [0.34915940259840533, 0.2083295343698897, 0.9136117975849204]] },
+        { id: "p72", name: "7/2 2 2", unit: symmetryP7.getGenerators(11, 2, 1), snubPoints: [[-0.5455983391838306, 0.0002153961070602594, 0.8380467802481928], [0.5455983391838306, 0.0002153961070602594, 0.8380467802481928]] },
+        { id: "p73", name: "7/3 2 2", unit: symmetryP7.getGenerators(19, 2, 1), snubPoints: [[-0.5994232712396262, -0.1779700836642542, 0.7803963039487846], [0.5994232712396262, -0.1779700836642542, 0.7803963039487846], [-0.5034145899510695, 0.8423776194324194, 0.19228545681815487], [0.5034145899510695, 0.8423776194324194, 0.19228545681815487]] },
 
         // 対象性は維持されるが、望む形ではなさそう
-        ...compound(p2Sources, symmetry3.getTransforms([0, 7, 8], rotate45)),
-        ...compound(aSources, symmetry4.getTransforms([0, 8], symmetry4.getMirrorRotator(2, 1))),
-        ...compound(hSources, symmetry4.getTransforms([0, 8], symmetry4.getMirrorRotator(2, 1))),
-        ...compound(p4Sources, symmetry4.getTransforms([0, 4, 6], Quaternions.mul(symmetry4.getMirrorRotator(2, 1), symmetryP4.getMirrorRotator(1, 2)))),
-        ...compound(p3Sources, symmetry4.getTransforms([0, 7, 8, 22], Quaternions.mul(symmetry4.getMirrorRotator(2, 3), symmetryP4.getMirrorRotator(1, 2)))),
-        ...compound(p2Sources, symmetry4.getTransforms([0, 4, 6, 8, 17, 20], symmetry4.getMirrorRotator(2, 1))),
-        ...compound(bSources, symmetry5.getTransforms([0, 7, 22, 24, 8], symmetry4.getMirrorRotator(1, 2))),
-        ...compound(aSources, symmetry5.getTransforms([0, 7, 22, 24, 8], rotate45)),
-        ...compound(hSources, symmetry5.getTransforms([0, 7, 22, 24, 8], rotate90)),
-        ...compound(p5Sources, symmetry5.getTransforms([0, 4, 6, 18, 21, 46], Quaternions.mul(symmetry5.getMirrorRotator(2, 1), Quaternions.mul(rotate90, symmetryP5.getMirrorRotator(1, 2))))),
-        ...compound(p3Sources, symmetry5.getTransforms([0, 5, 7, 16, 19, 22, 23, 37, 38, 42], Quaternions.mul(symmetry5.getMirrorRotator(2, 3), symmetryP4.getMirrorRotator(1, 2)))),
+        ...compound(p2Sources, symmetryA.getTransforms([0, 7, 8], rotate45)),
+        // 立方体対称の複合多面体
+        ...compound(aSources, symmetryB.getTransforms([0, 8], symmetryB.getMirrorRotator(2, 1))),
+        ...compound(hSources, symmetryB.getTransforms([0, 8], symmetryB.getMirrorRotator(2, 1))),
+        ...compound(p4Sources, symmetryB.getTransforms([0, 4, 6], Quaternions.mul(symmetryB.getMirrorRotator(2, 1), symmetryP4.getMirrorRotator(1, 2)))),
+        ...compound(p3Sources, symmetryB.getTransforms([0, 7, 8, 22], Quaternions.mul(symmetryB.getMirrorRotator(2, 3), symmetryP3.getMirrorRotator(1, 2)))),
+        ...compound(p6Sources, symmetryB.getTransforms([0, 7, 8, 22], Quaternions.mul(symmetryB.getMirrorRotator(2, 3), symmetryP6.getMirrorRotator(1, 2)))),
+        ...compound(p2Sources, symmetryB.getTransforms([0, 4, 6, 8, 17, 20], symmetryB.getMirrorRotator(2, 1))),
+        // 正12面体体対称の複合多面体
+        ...compound(aSources, symmetryH.getTransforms([0, 7, 22, 24, 8], rotate45)),
+        ...compound(bSources, symmetryH.getTransforms([0, 7, 22, 24, 8], symmetryB.getMirrorRotator(1, 2))),
+        ...compound(hSources, symmetryH.getTransforms([0, 7, 22, 24, 8], rotate90)),
+        ...compound(p5Sources, symmetryH.getTransforms([0, 4, 6, 18, 21, 46], Quaternions.mul(symmetryH.getMirrorRotator(2, 1), Quaternions.mul(rotate90, symmetryP5.getMirrorRotator(1, 2))))),
+        ...compound(p3Sources, symmetryH.getTransforms([0, 22, 23, 37, 38, 42, 19, 16, 5, 7], Quaternions.mul(symmetryH.getMirrorRotator(2, 3), symmetryP3.getMirrorRotator(1, 2)))),
+        ...compound(p6Sources, symmetryH.getTransforms([0, 22, 23, 37, 38, 42, 19, 16, 5, 7], Quaternions.mul(symmetryH.getMirrorRotator(2, 3), symmetryP6.getMirrorRotator(1, 2)))),
         ...compound(aSources, [
-            ...symmetry5.getTransforms([0, 7, 22, 24, 8], rotate45),
-            ...symmetry5.getTransforms([0, 7, 22, 24, 8], rotateN45),
+            ...symmetryH.getTransforms([0, 7, 22, 24, 8], rotate45),
+            ...symmetryH.getTransforms([0, 7, 22, 24, 8], rotateN45),
         ]),
-        ...compound(p2Sources, symmetry5.getTransforms([0, 4, 6, 8, 18, 43, 24, 39, 17, 21, 44, 40, 46, 20, 36])),
+        ...compound(p2Sources, symmetryH.getTransforms([0, 4, 6, 8, 18, 43, 24, 39, 17, 21, 44, 40, 46, 20, 36])),
     ]
 }()
 
@@ -248,10 +255,10 @@ export const faceSelectorMap = new Map<string, FaceSelectorFunction>([
         return [[ab], [bc], [ca], [ab, bc, ca]]
     }],
     ["oooo", (a, b, c) => {
-        const ab = a.mul(b)
-        const bc = b.mul(c)
-        const ac = a.mul(c)
-        const ca = c.mul(a)
+        const ab = c.mul(b)
+        const bc = b.mul(a)
+        const ac = c.mul(a)
+        const ca = a.mul(c)
         const abDash = ac.mul(ab).mul(ca)
         const bcDash = ca.mul(bc).mul(ac)
         return [[bc], [bcDash], [ab], [ab, bc, abDash, bcDash], [abDash]]
