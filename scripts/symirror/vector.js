@@ -74,15 +74,6 @@ export class Vectors {
             v[i] *= factor;
         }
     }
-    static reflect(target, mirrorNormal, resultTo) {
-        const length = Math.min(target.length, mirrorNormal.length);
-        const result = resultTo ?? new Array(length);
-        const r = -2 * Vectors.dot(target, mirrorNormal);
-        for (let i = 0; i < length; i++) {
-            result[i] = target[i] + mirrorNormal[i] * r;
-        }
-        return result;
-    }
     static distanceSquared(a, b) {
         const length = Math.min(a.length, b.length);
         let sum = 0;

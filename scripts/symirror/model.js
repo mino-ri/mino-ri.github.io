@@ -171,12 +171,12 @@ function addPolygon(triangles, vertexes, face, colorByConnected, evenOdd) {
         const v2 = vertexes[indexes[2]];
         const v3 = vertexes[indexes[3]];
         if (Vectors.getCrossPoint(v0, v1, v2, v3, cv)) {
-            addTriangle(triangles, v0, v1, cv, r, g, b);
-            addTriangle(triangles, v2, v3, cv, r, g, b);
-        }
-        else if (Vectors.getCrossPoint(v1, v2, v3, v0, cv)) {
             addTriangle(triangles, v1, v2, cv, r, g, b);
             addTriangle(triangles, v3, v0, cv, r, g, b);
+        }
+        else if (Vectors.getCrossPoint(v1, v2, v3, v0, cv)) {
+            addTriangle(triangles, v0, v1, cv, r, g, b);
+            addTriangle(triangles, v2, v3, cv, r, g, b);
         }
         else {
             addTriangle(triangles, v0, v1, v2, r, g, b);
