@@ -118,6 +118,9 @@ export const unitTriangles = function () {
         { id: "p51", name: "2 2 5", unit: symmetryP5.getDefaultGenerators(), snubPoints: [[-0.44660623733507715, 0.2765531581360969, 0.8509178688324484], [0.44660623733507715, 0.2765531581360969, 0.8509178688324484]] },
         { id: "p52", name: "2 2 5/2", unit: symmetryP5.getGenerators(1, 2, 11), snubPoints: [[-0.5987426743493759, 0.0002110478231757374, 0.8009414244323824], [0.5987426743493759, 0.0002110478231757374, 0.8009414244323824], [-0.44711653107453697, -0.8944757166111083, 0.000005737334089724187], [0.44711653107453697, -0.8944757166111083, 0.000005737334089724187]] },
     ];
+    const rotate90 = Quaternions.rotation([0, 0, 1], Math.PI / 2);
+    const rotate45 = Quaternions.rotation([0, 0, 1], Math.PI / 4);
+    const rotateN45 = Quaternions.rotation([0, 0, 1], Math.PI / -4);
     return [
         ...aSources,
         ...bSources,
@@ -137,16 +140,20 @@ export const unitTriangles = function () {
         { id: "p71", name: "2 2 7", unit: symmetryP7.getDefaultGenerators(), snubPoints: [[-0.34915940259840533, 0.2083295343698897, 0.9136117975849204], [0.34915940259840533, 0.2083295343698897, 0.9136117975849204]] },
         { id: "p72", name: "2 2 7/2", unit: symmetryP7.getGenerators(1, 2, 11), snubPoints: [[-0.5455983391838306, 0.0002153961070602594, 0.8380467802481928], [0.5455983391838306, 0.0002153961070602594, 0.8380467802481928]] },
         { id: "p73", name: "2 2 7/3", unit: symmetryP7.getGenerators(1, 2, 19), snubPoints: [[-0.5994232712396262, -0.1779700836642542, 0.7803963039487846], [0.5994232712396262, -0.1779700836642542, 0.7803963039487846], [-0.5034145899510695, 0.8423776194324194, 0.19228545681815487], [0.5034145899510695, 0.8423776194324194, 0.19228545681815487]] },
+        ...compound(p2Sources, symmetry3.getTransforms([0, 7, 8], rotate45)),
         ...compound(aSources, symmetry4.getTransforms([0, 8], symmetry4.getMirrorRotator(2, 1))),
         ...compound(hSources, symmetry4.getTransforms([0, 8], symmetry4.getMirrorRotator(2, 1))),
         ...compound(p4Sources, symmetry4.getTransforms([0, 4, 6], Quaternions.mul(symmetry4.getMirrorRotator(2, 1), symmetryP4.getMirrorRotator(1, 2)))),
         ...compound(p3Sources, symmetry4.getTransforms([0, 7, 8, 22], Quaternions.mul(symmetry4.getMirrorRotator(2, 3), symmetryP4.getMirrorRotator(1, 2)))),
-        ...compound(p2Sources, symmetry4.getTransforms([0, 4, 6, 8, 17, 20], Quaternions.mul(symmetry4.getMirrorRotator(2, 1), symmetryP2.getMirrorRotator(1, 2)))),
+        ...compound(p2Sources, symmetry4.getTransforms([0, 4, 6, 8, 17, 20], symmetry4.getMirrorRotator(2, 1))),
         ...compound(bSources, symmetry5.getTransforms([0, 7, 22, 24, 8], symmetry4.getMirrorRotator(1, 2))),
-        ...compound(aSources, symmetry5.getTransforms([0, 7, 22, 24, 8], Quaternions.rotation([0, 0, 1], Math.PI / 4))),
+        ...compound(aSources, symmetry5.getTransforms([0, 7, 22, 24, 8], rotate45)),
+        ...compound(hSources, symmetry5.getTransforms([0, 7, 22, 24, 8], rotate90)),
+        ...compound(p5Sources, symmetry5.getTransforms([0, 4, 6, 18, 21, 46], Quaternions.mul(symmetry5.getMirrorRotator(2, 1), Quaternions.mul(rotate90, symmetryP5.getMirrorRotator(1, 2))))),
+        ...compound(p3Sources, symmetry5.getTransforms([0, 5, 7, 16, 19, 22, 23, 37, 38, 42], Quaternions.mul(symmetry5.getMirrorRotator(2, 3), symmetryP4.getMirrorRotator(1, 2)))),
         ...compound(aSources, [
-            ...symmetry5.getTransforms([0, 7, 22, 24, 8], Quaternions.rotation([0, 0, 1], Math.PI / 4)),
-            ...symmetry5.getTransforms([0, 7, 22, 24, 8], Quaternions.rotation([0, 0, 1], Math.PI / -4)),
+            ...symmetry5.getTransforms([0, 7, 22, 24, 8], rotate45),
+            ...symmetry5.getTransforms([0, 7, 22, 24, 8], rotateN45),
         ]),
         ...compound(p2Sources, symmetry5.getTransforms([0, 4, 6, 8, 18, 43, 24, 39, 17, 21, 44, 40, 46, 20, 36])),
     ];
@@ -215,7 +222,7 @@ export class NormalPolyhedron {
     generators;
     faceDefinitions;
     snubPoints;
-    constructor(source, snubPoints, faceSelector, compoundTransforms) {
+    constructor(source, snubPoints, faceSelector, useAllVertex, compoundTransforms) {
         this.vertexes = new Array(source.symmetryGroup.order * (compoundTransforms?.length || 1));
         this.symmetryGroup = source.symmetryGroup;
         this.generators = source.generators;
@@ -223,23 +230,34 @@ export class NormalPolyhedron {
         this.snubPoints = snubPoints;
         const faceDefinitions = faceSelector(source.generators[0], source.generators[1], source.generators[2]);
         this.faceDefinitions = faceDefinitions;
-        const vertexIndexes = [0];
+        const vertexIndexes = [];
         const vertexColorMap = new Map();
         for (let i = 0; i < vertexIndexes.length; i++) {
             vertexColorMap.set(vertexIndexes[i], i % 5);
         }
-        for (let i = 0; i < vertexIndexes.length; i++) {
-            const currentIndex = vertexIndexes[i];
-            const currentElement = source.symmetryGroup.getElement(currentIndex);
-            for (const faceDef of faceDefinitions) {
-                for (const edgeElement of faceDef) {
-                    const otherIndex = currentElement.mul(edgeElement).index;
-                    if (!vertexColorMap.has(otherIndex)) {
-                        vertexColorMap.set(otherIndex, vertexColorMap.get(currentIndex) ?? 0);
-                        vertexIndexes.push(otherIndex);
+        let colorAdded = 0;
+        for (let i = 0; i < source.symmetryGroup.order; i++) {
+            if (vertexColorMap.has(i))
+                continue;
+            vertexIndexes.push(i);
+            vertexColorMap.set(i, colorAdded % 5);
+            if (!compoundTransforms)
+                colorAdded++;
+            for (let j = i; j < vertexIndexes.length; j++) {
+                const currentIndex = vertexIndexes[j];
+                const currentElement = source.symmetryGroup.getElement(currentIndex);
+                for (const faceDef of faceDefinitions) {
+                    for (const edgeElement of faceDef) {
+                        const otherIndex = currentElement.mul(edgeElement).index;
+                        if (!vertexColorMap.has(otherIndex)) {
+                            vertexColorMap.set(otherIndex, vertexColorMap.get(currentIndex) ?? 0);
+                            vertexIndexes.push(otherIndex);
+                        }
                     }
                 }
             }
+            if (!useAllVertex || vertexIndexes.length >= source.symmetryGroup.order)
+                break;
         }
         vertexIndexes.sort((a, b) => a - b);
         const lineSet = new Map();
@@ -291,7 +309,7 @@ export class NormalPolyhedron {
                 if (faceVertexIndexes.length >= 3) {
                     faces.push({
                         colorIndex: mirrorA,
-                        connectedIndex: 0,
+                        connectedIndex: vertexColorMap.get(currentIndex) ?? 0,
                         vertexIndexes: faceVertexIndexes,
                     });
                 }
@@ -306,6 +324,10 @@ export class NormalPolyhedron {
             vertexIndexes.length *= compoundCount;
             lines.length *= compoundCount;
             faces.length *= compoundCount;
+            const colorCount = compoundCount % 6 === 0 ? 6
+                : compoundCount % 5 === 0 ? 5
+                    : compoundCount % 4 === 0 ? 4
+                        : 6;
             for (let c = 1; c < compoundCount; c++) {
                 const baseIndex = baseOrder * c;
                 const baseVertexIndexIndex = vertexIndexCount * c;
@@ -322,7 +344,7 @@ export class NormalPolyhedron {
                     const face = faces[i];
                     faces[baseFaceIndex + i] = {
                         colorIndex: face.colorIndex,
-                        connectedIndex: c,
+                        connectedIndex: c % colorCount,
                         vertexIndexes: face.vertexIndexes.map(v => v + baseIndex),
                     };
                 }
