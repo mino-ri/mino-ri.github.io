@@ -1,4 +1,4 @@
-import { Vector } from "./vector.js";
+import { Vector, Vectors } from "./vector.js";
 
 export type Quaternion = {
     w: number
@@ -10,6 +10,16 @@ export type Quaternion = {
 
 export class Quaternions {
     static readonly identity: Quaternion = { w: 1, x: 0, y: 0, z: 0, negate: false }
+
+    static conjugateMul(a: Quaternion, bConj: Quaternion, resultTo?: Quaternion): Quaternion {
+        const result = resultTo ?? { w: 0, x: 0, y: 0, z: 0, negate: false }
+        result.w = -a.w * bConj.w - a.x * bConj.x - a.y * bConj.y - a.z * bConj.z
+        result.x = a.w * bConj.x - a.x * bConj.w + a.y * bConj.z - a.z * bConj.y
+        result.y = a.w * bConj.y - a.x * bConj.z - a.y * bConj.w + a.z * bConj.x
+        result.z = a.w * bConj.z + a.x * bConj.y - a.y * bConj.x - a.z * bConj.w
+        result.negate = a.negate !== bConj.negate
+        return result
+    }
 
     static mul(a: Quaternion, b: Quaternion, resultTo?: Quaternion): Quaternion {
         const result = resultTo ?? { w: 0, x: 0, y: 0, z: 0, negate: false }
@@ -56,6 +66,20 @@ export class Quaternions {
         result.y = v[1]!
         result.z = v[2]!
         result.negate = true
+        return result
+    }
+
+    static fromTo(from: Vector, to: Vector, resultTo?: Quaternion): Quaternion {
+        const result = resultTo ?? { w: 0, x: 0, y: 0, z: 0, negate: false }
+        const w = 1 + Vectors.dot(from, to)
+        const x = from[1]! * to[2]! - from[2]! * to[1]!
+        const y = from[2]! * to[0]! - from[0]! * to[2]!
+        const z = from[0]! * to[1]! - from[1]! * to[0]!
+        const length = Math.sqrt(w * w + x * x + y * y + z * z)
+        result.w = w / length
+        result.x = x / length
+        result.y = y / length
+        result.z = z / length
         return result
     }
 
