@@ -6,22 +6,22 @@ import { Vectors } from "./vector.js";
 import { setCenter, createCircle, createPath, createLine, clearChildren } from "../svg_generator.js";
 import { Quaternions } from "./quaternion.js";
 class RotationState {
-    w = 1;
-    x = 0;
-    y = 0;
-    z = 0;
+    #w = 1;
+    #x = 0;
+    #y = 0;
+    #z = 0;
     applyDrag(deltaX, deltaY) {
         const sensitivity = 0.005;
         const angleX = deltaY * sensitivity;
         const angleY = deltaX * sensitivity;
-        this.rotateByAxis(1, 0, 0, angleX);
-        this.rotateByAxis(0, -1, 0, angleY);
+        this.#rotateByAxis(1, 0, 0, angleX);
+        this.#rotateByAxis(0, -1, 0, angleY);
     }
     applyAutoRotate(deltaTime) {
         const rotationSpeed = 0.5;
-        this.rotateByAxis(0, -1, 0, rotationSpeed * deltaTime);
+        this.#rotateByAxis(0, -1, 0, rotationSpeed * deltaTime);
     }
-    rotateByAxis(ax, ay, az, angle) {
+    #rotateByAxis(ax, ay, az, angle) {
         const halfAngle = angle * 0.5;
         const s = Math.sin(halfAngle);
         const c = Math.cos(halfAngle);
@@ -29,26 +29,26 @@ class RotationState {
         const qx = ax * s;
         const qy = ay * s;
         const qz = az * s;
-        const nw = qw * this.w - qx * this.x - qy * this.y - qz * this.z;
-        const nx = qw * this.x + qx * this.w + qy * this.z - qz * this.y;
-        const ny = qw * this.y - qx * this.z + qy * this.w + qz * this.x;
-        const nz = qw * this.z + qx * this.y - qy * this.x + qz * this.w;
+        const nw = qw * this.#w - qx * this.#x - qy * this.#y - qz * this.#z;
+        const nx = qw * this.#x + qx * this.#w + qy * this.#z - qz * this.#y;
+        const ny = qw * this.#y - qx * this.#z + qy * this.#w + qz * this.#x;
+        const nz = qw * this.#z + qx * this.#y - qy * this.#x + qz * this.#w;
         const len = Math.sqrt(nw * nw + nx * nx + ny * ny + nz * nz);
-        this.w = nw / len;
-        this.x = nx / len;
-        this.y = ny / len;
-        this.z = nz / len;
+        this.#w = nw / len;
+        this.#x = nx / len;
+        this.#y = ny / len;
+        this.#z = nz / len;
     }
     reset() {
-        this.w = 1;
-        this.x = 0;
-        this.y = 0;
-        this.z = 0;
+        this.#w = 1;
+        this.#x = 0;
+        this.#y = 0;
+        this.#z = 0;
     }
     getMatrix() {
-        const xx = this.x * this.x, yy = this.y * this.y, zz = this.z * this.z;
-        const xy = this.x * this.y, xz = this.x * this.z, yz = this.y * this.z;
-        const wx = this.w * this.x, wy = this.w * this.y, wz = this.w * this.z;
+        const xx = this.#x * this.#x, yy = this.#y * this.#y, zz = this.#z * this.#z;
+        const xy = this.#x * this.#y, xz = this.#x * this.#z, yz = this.#y * this.#z;
+        const wx = this.#w * this.#x, wy = this.#w * this.#y, wz = this.#w * this.#z;
         return new Float32Array([
             1 - 2 * (yy + zz), 2 * (xy + wz), 2 * (xz - wy), 0,
             2 * (xy - wz), 1 - 2 * (xx + zz), 2 * (yz + wx), 0,
@@ -58,45 +58,45 @@ class RotationState {
     }
 }
 class OriginController {
-    svg;
-    originPoint;
-    circleGroup;
-    canvas;
-    onOriginChange;
-    isSmallDragging = false;
-    isDragging = false;
-    isDragged = false;
-    touchX = 0;
-    touchY = 0;
-    specialPoints = [];
-    currentPoint = [0, 0, 1];
-    targetPoint = null;
-    axis = [0, 0, 0];
-    quaternion = { w: 1, x: 0, y: 0, z: 0, negate: false };
+    #isSmallDragging = false;
+    #isDragging = false;
+    #isDragged = false;
+    #touchX = 0;
+    #touchY = 0;
+    #specialPoints = [];
+    #currentPoint = [0, 0, 1];
+    #targetPoint = null;
+    #axis = [0, 0, 0];
+    #quaternion = { w: 1, x: 0, y: 0, z: 0, negate: false };
+    #svg;
+    #originPoint;
+    #circleGroup;
+    #canvas;
+    #onOriginChange;
     constructor(svg, originPoint, circleGroup, canvas, onOriginChange) {
-        this.svg = svg;
-        this.originPoint = originPoint;
-        this.circleGroup = circleGroup;
-        this.canvas = canvas;
-        this.onOriginChange = onOriginChange;
-        this.setupEventListeners();
+        this.#svg = svg;
+        this.#originPoint = originPoint;
+        this.#circleGroup = circleGroup;
+        this.#canvas = canvas;
+        this.#onOriginChange = onOriginChange;
+        this.#setupEventListeners();
     }
-    setupEventListeners() {
-        this.svg.addEventListener("mousedown", this.onMouseDown.bind(this));
-        document.addEventListener("mousemove", this.onMouseMove.bind(this));
-        document.addEventListener("mouseup", this.onMouseUp.bind(this));
-        this.svg.addEventListener("touchstart", this.onTouchStart.bind(this));
-        document.addEventListener("touchmove", this.onTouchMove.bind(this), { passive: false });
-        document.addEventListener("touchend", this.onTouchEnd.bind(this));
+    #setupEventListeners() {
+        this.#svg.addEventListener("mousedown", this.#onMouseDown.bind(this));
+        document.addEventListener("mousemove", this.#onMouseMove.bind(this));
+        document.addEventListener("mouseup", this.#onMouseUp.bind(this));
+        this.#svg.addEventListener("touchstart", this.#onTouchStart.bind(this));
+        document.addEventListener("touchmove", this.#onTouchMove.bind(this), { passive: false });
+        document.addEventListener("touchend", this.#onTouchEnd.bind(this));
     }
-    getPositionFromEvent(clientX, clientY) {
-        const rect = this.svg.getBoundingClientRect();
+    #getPositionFromEvent(clientX, clientY) {
+        const rect = this.#svg.getBoundingClientRect();
         const x = ((clientX - rect.left) / rect.width) * 2.25 - 1.125;
         const y = ((clientY - rect.top) / rect.height) * 2.25 - 1.125;
         return { x, y };
     }
-    getLimitedPositionFromEvent(clientX, clientY) {
-        const rect = this.svg.getBoundingClientRect();
+    #getLimitedPositionFromEvent(clientX, clientY) {
+        const rect = this.#svg.getBoundingClientRect();
         const x = ((clientX - rect.left) / rect.width) * 2.25 - 1.125;
         const y = ((clientY - rect.top) / rect.height) * 2.25 - 1.125;
         const r = Math.sqrt(x * x + y * y);
@@ -107,7 +107,7 @@ class OriginController {
             return { x: x / r, y: y / r };
         }
     }
-    uiVectorToSphereVector(x, y, resultTo) {
+    #uiVectorToSphereVector(x, y, resultTo) {
         const scale = 1 / (x * x + y * y + 1);
         const xPrime = 2 * x * scale;
         const yPrime = 2 * y * scale;
@@ -122,146 +122,146 @@ class OriginController {
             return resultTo;
         }
     }
-    changeOrigin(vector) {
+    #changeOrigin(vector) {
         const x = vector[0] / (1 + vector[2]);
         const y = vector[1] / (1 + vector[2]);
-        this.originPoint.setAttribute("cx", x.toString());
-        this.originPoint.setAttribute("cy", y.toString());
-        Vectors.copy(vector, this.currentPoint);
-        this.onOriginChange(vector);
+        this.#originPoint.setAttribute("cx", x.toString());
+        this.#originPoint.setAttribute("cy", y.toString());
+        Vectors.copy(vector, this.#currentPoint);
+        this.#onOriginChange(vector);
     }
     applyAutoOriginMovement(deltaTime) {
-        if (!this.targetPoint) {
+        if (!this.#targetPoint) {
             return;
         }
         const anglePerSec = Math.PI * 0.25;
-        const cos = Vectors.dot(this.currentPoint, this.targetPoint);
+        const cos = Vectors.dot(this.#currentPoint, this.#targetPoint);
         const deltaAngle = anglePerSec * deltaTime;
         const deltaCos = Math.cos(deltaAngle);
         if (deltaCos <= cos) {
-            this.changeOrigin(this.targetPoint);
-            this.targetPoint = null;
+            this.#changeOrigin(this.#targetPoint);
+            this.#targetPoint = null;
         }
         else {
             if (cos < -0.995) {
-                this.axis[0] = 0;
-                this.axis[1] = 0;
-                this.axis[2] = 1;
-                Vectors.cross(this.axis, this.targetPoint, this.axis);
+                this.#axis[0] = 0;
+                this.#axis[1] = 0;
+                this.#axis[2] = 1;
+                Vectors.cross(this.#axis, this.#targetPoint, this.#axis);
             }
             else {
-                Vectors.cross(this.currentPoint, this.targetPoint, this.axis);
+                Vectors.cross(this.#currentPoint, this.#targetPoint, this.#axis);
             }
-            Vectors.normalizeSelf(this.axis);
-            Quaternions.rotation(this.axis, deltaAngle, this.quaternion);
-            Quaternions.transform(this.currentPoint, this.quaternion, this.currentPoint);
-            this.changeOrigin(this.currentPoint);
+            Vectors.normalizeSelf(this.#axis);
+            Quaternions.rotation(this.#axis, deltaAngle, this.#quaternion);
+            Quaternions.transform(this.#currentPoint, this.#quaternion, this.#currentPoint);
+            this.#changeOrigin(this.#currentPoint);
         }
     }
-    updateOrigin(x, y) {
-        this.changeOrigin(this.uiVectorToSphereVector(x, y));
+    #updateOrigin(x, y) {
+        this.#changeOrigin(this.#uiVectorToSphereVector(x, y));
     }
-    updateOriginWithSpecialPoints(x, y) {
-        const v = this.uiVectorToSphereVector(x, y);
-        for (const sp of this.specialPoints) {
+    #updateOriginWithSpecialPoints(x, y) {
+        const v = this.#uiVectorToSphereVector(x, y);
+        for (const sp of this.#specialPoints) {
             if (Math.abs(sp[0] - v[0]) < 0.1 && Math.abs(sp[1] - v[1]) < 0.1 && Math.abs(sp[2] - v[2]) < 0.1) {
-                this.targetPoint = sp;
+                this.#targetPoint = sp;
                 return;
             }
         }
-        this.targetPoint = v;
+        this.#targetPoint = v;
     }
-    beginOperation(clientX, clientY) {
-        this.isDragged = false;
-        const { x, y } = this.getPositionFromEvent(clientX, clientY);
+    #beginOperation(clientX, clientY) {
+        this.#isDragged = false;
+        const { x, y } = this.#getPositionFromEvent(clientX, clientY);
         const r = Math.sqrt(x * x + y * y);
         if (r <= 1) {
-            this.isDragging = true;
-            this.touchX = x;
-            this.touchY = y;
+            this.#isDragging = true;
+            this.#touchX = x;
+            this.#touchY = y;
         }
         else {
-            this.isSmallDragging = true;
-            this.touchX = x;
-            this.touchY = y;
+            this.#isSmallDragging = true;
+            this.#touchX = x;
+            this.#touchY = y;
         }
     }
-    moveOperation(clientX, clientY) {
-        if (this.isDragging) {
-            const { x, y } = this.getLimitedPositionFromEvent(clientX, clientY);
-            const dx = x - this.touchX;
-            const dy = y - this.touchY;
-            if (!this.isDragged && dx * dx + dy * dy > 0.0025) {
-                this.isDragged = true;
+    #moveOperation(clientX, clientY) {
+        if (this.#isDragging) {
+            const { x, y } = this.#getLimitedPositionFromEvent(clientX, clientY);
+            const dx = x - this.#touchX;
+            const dy = y - this.#touchY;
+            if (!this.#isDragged && dx * dx + dy * dy > 0.0025) {
+                this.#isDragged = true;
             }
-            if (this.isDragged) {
-                this.updateOrigin(x, y);
+            if (this.#isDragged) {
+                this.#updateOrigin(x, y);
                 return true;
             }
         }
-        else if (this.isSmallDragging) {
-            const { x, y } = this.getPositionFromEvent(clientX, clientY);
-            const dx = x - this.touchX;
-            const dy = y - this.touchY;
-            const cx = Number(this.originPoint.getAttribute("cx"));
-            const cy = Number(this.originPoint.getAttribute("cy"));
-            this.updateOrigin(cx + dx / 32, cy + dy / 32);
-            this.touchX = x;
-            this.touchY = y;
+        else if (this.#isSmallDragging) {
+            const { x, y } = this.#getPositionFromEvent(clientX, clientY);
+            const dx = x - this.#touchX;
+            const dy = y - this.#touchY;
+            const cx = Number(this.#originPoint.getAttribute("cx"));
+            const cy = Number(this.#originPoint.getAttribute("cy"));
+            this.#updateOrigin(cx + dx / 32, cy + dy / 32);
+            this.#touchX = x;
+            this.#touchY = y;
             return true;
         }
         return false;
     }
-    endOperation() {
-        if (this.isDragging && !this.isDragged) {
-            this.updateOriginWithSpecialPoints(this.touchX, this.touchY);
+    #endOperation() {
+        if (this.#isDragging && !this.#isDragged) {
+            this.#updateOriginWithSpecialPoints(this.#touchX, this.#touchY);
         }
-        this.isSmallDragging = false;
-        this.isDragging = false;
-        this.isDragged = false;
+        this.#isSmallDragging = false;
+        this.#isDragging = false;
+        this.#isDragged = false;
     }
-    onMouseDown(e) {
-        this.beginOperation(e.clientX, e.clientY);
+    #onMouseDown(e) {
+        this.#beginOperation(e.clientX, e.clientY);
         e.preventDefault();
     }
-    onMouseMove(e) {
-        if (this.moveOperation(e.clientX, e.clientY))
+    #onMouseMove(e) {
+        if (this.#moveOperation(e.clientX, e.clientY))
             e.preventDefault();
     }
-    onMouseUp() {
-        this.endOperation();
+    #onMouseUp() {
+        this.#endOperation();
     }
-    onTouchStart(e) {
+    #onTouchStart(e) {
         if (e.touches.length !== 1)
             return;
-        this.beginOperation(e.touches[0].clientX, e.touches[0].clientY);
+        this.#beginOperation(e.touches[0].clientX, e.touches[0].clientY);
         e.preventDefault();
     }
-    onTouchMove(e) {
+    #onTouchMove(e) {
         if (e.touches.length !== 1)
             return;
-        if (this.moveOperation(e.touches[0].clientX, e.touches[0].clientY))
+        if (this.#moveOperation(e.touches[0].clientX, e.touches[0].clientY))
             e.preventDefault();
     }
-    onTouchEnd() {
-        this.endOperation();
+    #onTouchEnd() {
+        this.#endOperation();
     }
-    addMirror(normal, color, stroke) {
+    #addMirror(normal, color, stroke) {
         const z = normal[2];
         if (Math.abs(z) >= 0.9999) {
-            this.circleGroup.appendChild(createCircle(0, 0, 1, "none", color, stroke));
+            this.#circleGroup.appendChild(createCircle(0, 0, 1, "none", color, stroke));
         }
         else {
             const top = [0, 0, 0];
             Vectors.cross(normal, [0, 0, 1], top);
             Vectors.normalizeSelf(top);
             if (Math.abs(z) < 0.0001) {
-                this.circleGroup.appendChild(createLine(top[0], top[1], -top[0], -top[1], color, stroke));
+                this.#circleGroup.appendChild(createLine(top[0], top[1], -top[0], -top[1], color, stroke));
             }
             else {
                 const r = Math.abs(1 / z);
                 const sweep = z > 0 ? 0 : 1;
-                this.circleGroup.appendChild(createPath(`M ${top[0]} ${top[1]} A ${r} ${r} 0 0 ${sweep} ${-top[0]} ${-top[1]}`, "none", color, stroke));
+                this.#circleGroup.appendChild(createPath(`M ${top[0]} ${top[1]} A ${r} ${r} 0 0 ${sweep} ${-top[0]} ${-top[1]}`, "none", color, stroke));
             }
         }
     }
@@ -276,11 +276,11 @@ class OriginController {
         { r: 255, g: 255, b: 255 },
     ];
     #setCanvas(polyhedron) {
-        const ctx = this.canvas.getContext("2d");
+        const ctx = this.#canvas.getContext("2d");
         if (!ctx)
             return;
-        const width = this.canvas.width;
-        const height = this.canvas.height;
+        const width = this.#canvas.width;
+        const height = this.#canvas.height;
         const imageData = ctx.createImageData(width, height);
         const edgeGenerators = polyhedron.getEdgeGenerators();
         const vector0 = [0, 0, 0];
@@ -293,7 +293,7 @@ class OriginController {
                 if (x * x + y * y > 1) {
                     continue;
                 }
-                this.uiVectorToSphereVector(x, y, vector0);
+                this.#uiVectorToSphereVector(x, y, vector0);
                 for (let i = 0; i < edgeGenerators.length; i++) {
                     Quaternions.transform(vector0, edgeGenerators[i], vector1);
                     distances[i] = Vectors.distanceSquared(vector0, vector1);
@@ -322,16 +322,16 @@ class OriginController {
         if (sp[2] < 0) {
             Vectors.negateSelf(sp);
         }
-        this.specialPoints.push(sp);
+        this.#specialPoints.push(sp);
         if (Math.abs(sp[2]) <= 0.001) {
-            this.specialPoints.push([-sp[0], -sp[1], -sp[2]]);
+            this.#specialPoints.push([-sp[0], -sp[1], -sp[2]]);
         }
     }
     setMirrorCircles(polyhedron) {
-        clearChildren(this.circleGroup);
+        clearChildren(this.#circleGroup);
         const mirrors = [];
         const normals = [];
-        this.specialPoints.splice(0);
+        this.#specialPoints.splice(0);
         const length = polyhedron.generators.length;
         for (let i = 0; i < length; i++) {
             for (let j = i + 1; j < length; j++) {
@@ -347,14 +347,14 @@ class OriginController {
         for (const generator of polyhedron.generators) {
             const q = polyhedron.symmetryGroup.transforms[generator.index];
             const normal = [q.x, q.y, q.z];
-            this.addMirror(normal, "#fff", "0.02");
+            this.#addMirror(normal, "#fff", "0.02");
             mirrors.push(normal);
         }
         if (polyhedron.snubPoints && polyhedron.faceDefinitions.length === 4 &&
             polyhedron.faceDefinitions[0].length === 1 && polyhedron.faceDefinitions[1].length === 1 &&
             polyhedron.faceDefinitions[2].length === 1 && polyhedron.faceDefinitions[3].length === 3) {
             for (const sp of polyhedron.snubPoints) {
-                this.specialPoints.push(sp);
+                this.#specialPoints.push(sp);
             }
         }
         else {
@@ -372,150 +372,150 @@ class OriginController {
         this.#setCanvas(polyhedron);
     }
     reset() {
-        this.updateOrigin(0, 0);
+        this.#updateOrigin(0, 0);
     }
 }
 _a = OriginController;
 class PolyhedronViewer {
-    canvas;
-    originController;
-    renderer;
-    rotation = new RotationState();
-    isDragging = false;
-    lastMouseX = 0;
-    lastMouseY = 0;
-    animationFrameId = null;
-    lastTime = 0;
-    polyhedron = null;
-    autoRotate = false;
-    faceVisibility = [true, true, true, true, true];
-    visibilityType = "All";
-    fillType = "Fill";
-    vertexVisibility = false;
-    edgeVisibility = false;
-    colorByConnected = false;
+    #renderer;
+    #rotation = new RotationState();
+    #isDragging = false;
+    #lastMouseX = 0;
+    #lastMouseY = 0;
+    #animationFrameId = null;
+    #lastTime = 0;
+    #polyhedron = null;
+    #autoRotate = false;
+    #faceVisibility = [true, true, true, true, true];
+    #visibilityType = "All";
+    #fillType = "Fill";
+    #vertexVisibility = false;
+    #edgeVisibility = false;
+    #colorByConnected = false;
+    #canvas;
+    #originController;
     constructor(canvas, gpuContext, originController) {
-        this.canvas = canvas;
-        this.originController = originController;
-        this.renderer = gpuContext.createPolyhedronRenderer();
-        this.setupEventListeners();
-        this.startRenderLoop();
+        this.#canvas = canvas;
+        this.#renderer = gpuContext.createPolyhedronRenderer();
+        this.#originController = originController;
+        this.#setupEventListeners();
+        this.#startRenderLoop();
     }
     setAutoRotate(enabled) {
-        this.autoRotate = enabled;
+        this.#autoRotate = enabled;
     }
     resetRotation() {
-        this.rotation.reset();
+        this.#rotation.reset();
     }
-    setupEventListeners() {
-        this.canvas.addEventListener("mousedown", this.onMouseDown.bind(this));
-        document.addEventListener("mousemove", this.onMouseMove.bind(this));
-        document.addEventListener("mouseup", this.onMouseUp.bind(this));
-        this.canvas.addEventListener("touchstart", this.onTouchStart.bind(this));
-        document.addEventListener("touchmove", this.onTouchMove.bind(this), { passive: false });
-        document.addEventListener("touchend", this.onTouchEnd.bind(this));
+    #setupEventListeners() {
+        this.#canvas.addEventListener("mousedown", this.#onMouseDown.bind(this));
+        document.addEventListener("mousemove", this.#onMouseMove.bind(this));
+        document.addEventListener("mouseup", this.#onMouseUp.bind(this));
+        this.#canvas.addEventListener("touchstart", this.#onTouchStart.bind(this));
+        document.addEventListener("touchmove", this.#onTouchMove.bind(this), { passive: false });
+        document.addEventListener("touchend", this.#onTouchEnd.bind(this));
     }
-    onMouseDown(e) {
-        this.isDragging = true;
-        this.lastMouseX = e.clientX;
-        this.lastMouseY = e.clientY;
+    #onMouseDown(e) {
+        this.#isDragging = true;
+        this.#lastMouseX = e.clientX;
+        this.#lastMouseY = e.clientY;
     }
-    onMouseMove(e) {
-        if (!this.isDragging)
+    #onMouseMove(e) {
+        if (!this.#isDragging)
             return;
-        const deltaX = e.clientX - this.lastMouseX;
-        const deltaY = e.clientY - this.lastMouseY;
-        this.rotation.applyDrag(deltaX, deltaY);
-        this.lastMouseX = e.clientX;
-        this.lastMouseY = e.clientY;
+        const deltaX = e.clientX - this.#lastMouseX;
+        const deltaY = e.clientY - this.#lastMouseY;
+        this.#rotation.applyDrag(deltaX, deltaY);
+        this.#lastMouseX = e.clientX;
+        this.#lastMouseY = e.clientY;
     }
-    onMouseUp() {
-        this.isDragging = false;
+    #onMouseUp() {
+        this.#isDragging = false;
     }
-    onTouchStart(e) {
+    #onTouchStart(e) {
         if (e.touches.length === 1) {
-            this.isDragging = true;
-            this.lastMouseX = e.touches[0].clientX;
-            this.lastMouseY = e.touches[0].clientY;
+            this.#isDragging = true;
+            this.#lastMouseX = e.touches[0].clientX;
+            this.#lastMouseY = e.touches[0].clientY;
             e.preventDefault();
         }
     }
-    onTouchMove(e) {
-        if (!this.isDragging || e.touches.length !== 1)
+    #onTouchMove(e) {
+        if (!this.#isDragging || e.touches.length !== 1)
             return;
-        const deltaX = e.touches[0].clientX - this.lastMouseX;
-        const deltaY = e.touches[0].clientY - this.lastMouseY;
-        this.rotation.applyDrag(deltaX, deltaY);
-        this.lastMouseX = e.touches[0].clientX;
-        this.lastMouseY = e.touches[0].clientY;
+        const deltaX = e.touches[0].clientX - this.#lastMouseX;
+        const deltaY = e.touches[0].clientY - this.#lastMouseY;
+        this.#rotation.applyDrag(deltaX, deltaY);
+        this.#lastMouseX = e.touches[0].clientX;
+        this.#lastMouseY = e.touches[0].clientY;
         e.preventDefault();
     }
-    onTouchEnd() {
-        this.isDragging = false;
+    #onTouchEnd() {
+        this.#isDragging = false;
     }
     setPolyhedron(selectValue, faceSelector) {
-        const { unit, snubPoints, beginPointIndex } = unitTriangles.find((source) => source.id === selectValue);
+        const { unit, snubPoints, compoundTransforms } = unitTriangles.find((source) => source.id === selectValue);
         const selector = faceSelectorMap.get(faceSelector) || faceSelectorMap.get("xxx");
-        this.polyhedron = new NormalPolyhedron(unit, snubPoints, beginPointIndex, selector);
+        this.#polyhedron = new NormalPolyhedron(unit, snubPoints, selector, compoundTransforms);
         this.#updateMesh();
-        return this.polyhedron;
+        return this.#polyhedron;
     }
     setOrigin(origin) {
-        if (!this.polyhedron)
+        if (!this.#polyhedron)
             return;
-        this.polyhedron.setOrigin(origin);
+        this.#polyhedron.setOrigin(origin);
         this.#updateMesh();
     }
     setFaceVisibility(faceVisibility) {
         for (let i = 0; i < faceVisibility.length; i++) {
-            this.faceVisibility[i] = faceVisibility[i];
+            this.#faceVisibility[i] = faceVisibility[i];
         }
         this.#updateMesh();
     }
     setEdgeVisibility(edgeVisibility) {
-        this.edgeVisibility = edgeVisibility;
+        this.#edgeVisibility = edgeVisibility;
         this.#updateMesh();
     }
     setVertexVisibility(vertexVisibility) {
-        this.vertexVisibility = vertexVisibility;
+        this.#vertexVisibility = vertexVisibility;
         this.#updateMesh();
     }
     setColorByConnected(colorByConnected) {
-        this.colorByConnected = colorByConnected;
+        this.#colorByConnected = colorByConnected;
         this.#updateMesh();
     }
     setVisibilityType(visibilityType) {
-        this.visibilityType = visibilityType;
+        this.#visibilityType = visibilityType;
         this.#updateMesh();
     }
     setFillType(fillType) {
-        this.fillType = fillType;
+        this.#fillType = fillType;
         this.#updateMesh();
     }
     #updateMesh() {
-        if (!this.polyhedron)
+        if (!this.#polyhedron)
             return;
-        const mesh = buildPolyhedronMesh(this.polyhedron, this.faceVisibility, this.visibilityType, this.vertexVisibility, this.edgeVisibility, this.colorByConnected, this.fillType);
-        this.renderer.updateMesh(mesh);
+        const mesh = buildPolyhedronMesh(this.#polyhedron, this.#faceVisibility, this.#visibilityType, this.#vertexVisibility, this.#edgeVisibility, this.#colorByConnected, this.#fillType);
+        this.#renderer.updateMesh(mesh);
     }
-    startRenderLoop() {
+    #startRenderLoop() {
         const render = (time) => {
-            const deltaTime = this.lastTime > 0 ? (time - this.lastTime) / 1000 : 0;
-            this.lastTime = time;
-            if (this.autoRotate && !this.isDragging) {
-                this.rotation.applyAutoRotate(deltaTime);
+            const deltaTime = this.#lastTime > 0 ? (time - this.#lastTime) / 1000 : 0;
+            this.#lastTime = time;
+            if (this.#autoRotate && !this.#isDragging) {
+                this.#rotation.applyAutoRotate(deltaTime);
             }
-            this.originController.applyAutoOriginMovement(deltaTime);
-            this.renderer.render(this.rotation.getMatrix());
-            this.animationFrameId = requestAnimationFrame(render);
+            this.#originController.applyAutoOriginMovement(deltaTime);
+            this.#renderer.render(this.#rotation.getMatrix());
+            this.#animationFrameId = requestAnimationFrame(render);
         };
-        this.animationFrameId = requestAnimationFrame(render);
+        this.#animationFrameId = requestAnimationFrame(render);
     }
     destroy() {
-        if (this.animationFrameId !== null) {
-            cancelAnimationFrame(this.animationFrameId);
+        if (this.#animationFrameId !== null) {
+            cancelAnimationFrame(this.#animationFrameId);
         }
-        this.renderer.destroy();
+        this.#renderer.destroy();
     }
 }
 function resizeCanvas(canvas) {
