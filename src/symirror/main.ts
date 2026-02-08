@@ -1,5 +1,5 @@
 import { NormalPolyhedron, unitTriangles, faceSelectorMap } from "./symmetry.js"
-import { initGpu, type GpuContext } from "./gpu.js"
+import { initGpu, PolyhedronRenderer, type GpuContext } from "./gpu.js"
 import { buildPolyhedronMesh, type VisibilityType, FillType } from "./model.js"
 import { type Vector, Vectors } from "./vector.js"
 import { setCenter, createCircle, createPath, createLine, clearChildren } from "../svg_generator.js"
@@ -8,10 +8,10 @@ import { Quaternion, Quaternions } from "./quaternion.js"
 // 回転状態を管理するクォータニオン
 class RotationState {
     // 現在のクォータニオン (w, x, y, z)
-    private w = 1
-    private x = 0
-    private y = 0
-    private z = 0
+    #w = 1
+    #x = 0
+    #y = 0
+    #z = 0
 
     // ドラッグによる回転を適用
     applyDrag(deltaX: number, deltaY: number): void {
@@ -21,17 +21,17 @@ class RotationState {
         const angleY = deltaX * sensitivity // 左右ドラッグ → Y軸回転
 
         // 累積回転を適用
-        this.rotateByAxis(1, 0, 0, angleX)
-        this.rotateByAxis(0, -1, 0, angleY)
+        this.#rotateByAxis(1, 0, 0, angleX)
+        this.#rotateByAxis(0, -1, 0, angleY)
     }
 
     // 自動回転を適用 (Y軸周り)
     applyAutoRotate(deltaTime: number): void {
         const rotationSpeed = 0.5 // ラジアン/秒
-        this.rotateByAxis(0, -1, 0, rotationSpeed * deltaTime)
+        this.#rotateByAxis(0, -1, 0, rotationSpeed * deltaTime)
     }
 
-    private rotateByAxis(ax: number, ay: number, az: number, angle: number): void {
+    #rotateByAxis(ax: number, ay: number, az: number, angle: number): void {
         const halfAngle = angle * 0.5
         const s = Math.sin(halfAngle)
         const c = Math.cos(halfAngle)
@@ -43,30 +43,30 @@ class RotationState {
         const qz = az * s
 
         // 現在のクォータニオンに乗算: q * current
-        const nw = qw * this.w - qx * this.x - qy * this.y - qz * this.z
-        const nx = qw * this.x + qx * this.w + qy * this.z - qz * this.y
-        const ny = qw * this.y - qx * this.z + qy * this.w + qz * this.x
-        const nz = qw * this.z + qx * this.y - qy * this.x + qz * this.w
+        const nw = qw * this.#w - qx * this.#x - qy * this.#y - qz * this.#z
+        const nx = qw * this.#x + qx * this.#w + qy * this.#z - qz * this.#y
+        const ny = qw * this.#y - qx * this.#z + qy * this.#w + qz * this.#x
+        const nz = qw * this.#z + qx * this.#y - qy * this.#x + qz * this.#w
 
         // 正規化
         const len = Math.sqrt(nw * nw + nx * nx + ny * ny + nz * nz)
-        this.w = nw / len
-        this.x = nx / len
-        this.y = ny / len
-        this.z = nz / len
+        this.#w = nw / len
+        this.#x = nx / len
+        this.#y = ny / len
+        this.#z = nz / len
     }
 
     reset(): void {
-        this.w = 1
-        this.x = 0
-        this.y = 0
-        this.z = 0
+        this.#w = 1
+        this.#x = 0
+        this.#y = 0
+        this.#z = 0
     }
 
     getMatrix(): Float32Array {
-        const xx = this.x * this.x, yy = this.y * this.y, zz = this.z * this.z
-        const xy = this.x * this.y, xz = this.x * this.z, yz = this.y * this.z
-        const wx = this.w * this.x, wy = this.w * this.y, wz = this.w * this.z
+        const xx = this.#x * this.#x, yy = this.#y * this.#y, zz = this.#z * this.#z
+        const xy = this.#x * this.#y, xz = this.#x * this.#z, yz = this.#y * this.#z
+        const wx = this.#w * this.#x, wy = this.#w * this.#y, wz = this.#w * this.#z
 
         return new Float32Array([
             1 - 2 * (yy + zz), 2 * (xy + wz), 2 * (xz - wy), 0,
@@ -79,47 +79,57 @@ class RotationState {
 
 // origin 操作コントローラ
 class OriginController {
-    private isSmallDragging = false // 移動微調整中か
-    private isDragging = false // ドラッグ操作中か
-    private isDragged = false // クリック・タッチ後、ドラッグ操作が行われたか
-    private touchX = 0
-    private touchY = 0
-    private specialPoints: Vector[] = []
-    private currentPoint: Vector = [0, 0, 1]
-    private targetPoint: Vector | null = null
-    private axis: Vector = [0, 0, 0]
-    private quaternion: Quaternion = { w: 1, x: 0, y: 0, z: 0, negate: false }
+    #isSmallDragging = false // 移動微調整中か
+    #isDragging = false // ドラッグ操作中か
+    #isDragged = false // クリック・タッチ後、ドラッグ操作が行われたか
+    #touchX = 0
+    #touchY = 0
+    #specialPoints: Vector[] = []
+    #currentPoint: Vector = [0, 0, 1]
+    #targetPoint: Vector | null = null
+    #axis: Vector = [0, 0, 0]
+    #quaternion: Quaternion = { w: 1, x: 0, y: 0, z: 0, negate: false }
+    #svg: SVGSVGElement
+    #originPoint: SVGCircleElement
+    #circleGroup: SVGGElement
+    #canvas: HTMLCanvasElement
+    #onOriginChange: (origin: Vector) => void
 
     constructor(
-        private svg: SVGSVGElement,
-        private originPoint: SVGCircleElement,
-        private circleGroup: SVGGElement,
-        private canvas: HTMLCanvasElement,
-        private onOriginChange: (origin: Vector) => void,
+        svg: SVGSVGElement,
+        originPoint: SVGCircleElement,
+        circleGroup: SVGGElement,
+        canvas: HTMLCanvasElement,
+        onOriginChange: (origin: Vector) => void,
     ) {
-        this.setupEventListeners()
+        this.#svg = svg
+        this.#originPoint = originPoint
+        this.#circleGroup = circleGroup
+        this.#canvas = canvas
+        this.#onOriginChange = onOriginChange
+        this.#setupEventListeners()
     }
 
-    private setupEventListeners(): void {
-        this.svg.addEventListener("mousedown", this.onMouseDown.bind(this))
-        document.addEventListener("mousemove", this.onMouseMove.bind(this))
-        document.addEventListener("mouseup", this.onMouseUp.bind(this))
+    #setupEventListeners(): void {
+        this.#svg.addEventListener("mousedown", this.#onMouseDown.bind(this))
+        document.addEventListener("mousemove", this.#onMouseMove.bind(this))
+        document.addEventListener("mouseup", this.#onMouseUp.bind(this))
 
-        this.svg.addEventListener("touchstart", this.onTouchStart.bind(this))
-        document.addEventListener("touchmove", this.onTouchMove.bind(this), { passive: false })
-        document.addEventListener("touchend", this.onTouchEnd.bind(this))
+        this.#svg.addEventListener("touchstart", this.#onTouchStart.bind(this))
+        document.addEventListener("touchmove", this.#onTouchMove.bind(this), { passive: false })
+        document.addEventListener("touchend", this.#onTouchEnd.bind(this))
     }
 
-    private getPositionFromEvent(clientX: number, clientY: number): { x: number; y: number } {
-        const rect = this.svg.getBoundingClientRect()
+    #getPositionFromEvent(clientX: number, clientY: number): { x: number; y: number } {
+        const rect = this.#svg.getBoundingClientRect()
         const x = ((clientX - rect.left) / rect.width) * 2.25 - 1.125
         const y = ((clientY - rect.top) / rect.height) * 2.25 - 1.125
 
         return { x, y }
     }
 
-    private getLimitedPositionFromEvent(clientX: number, clientY: number): { x: number; y: number } {
-        const rect = this.svg.getBoundingClientRect()
+    #getLimitedPositionFromEvent(clientX: number, clientY: number): { x: number; y: number } {
+        const rect = this.#svg.getBoundingClientRect()
         const x = ((clientX - rect.left) / rect.width) * 2.25 - 1.125
         const y = ((clientY - rect.top) / rect.height) * 2.25 - 1.125
 
@@ -132,7 +142,7 @@ class OriginController {
         }
     }
 
-    private uiVectorToSphereVector(x: number, y: number, resultTo?: Vector): Vector {
+    #uiVectorToSphereVector(x: number, y: number, resultTo?: Vector): Vector {
         // UI座標から3Dベクトルへ変換
         const scale = 1 / (x * x + y * y + 1)
         const xPrime = 2 * x * scale
@@ -148,158 +158,158 @@ class OriginController {
         }
     }
 
-    private changeOrigin(vector: Vector): void {
+    #changeOrigin(vector: Vector): void {
         const x = vector[0]! / (1 + vector[2]!)
         const y = vector[1]! / (1 + vector[2]!)
-        this.originPoint.setAttribute("cx", x.toString())
-        this.originPoint.setAttribute("cy", y.toString())
-        Vectors.copy(vector, this.currentPoint)
-        this.onOriginChange(vector)
+        this.#originPoint.setAttribute("cx", x.toString())
+        this.#originPoint.setAttribute("cy", y.toString())
+        Vectors.copy(vector, this.#currentPoint)
+        this.#onOriginChange(vector)
     }
 
     applyAutoOriginMovement(deltaTime: number): void {
-        if (!this.targetPoint) {
+        if (!this.#targetPoint) {
             return
         }
 
         const anglePerSec = Math.PI * 0.25
-        const cos = Vectors.dot(this.currentPoint, this.targetPoint)
+        const cos = Vectors.dot(this.#currentPoint, this.#targetPoint)
         const deltaAngle = anglePerSec * deltaTime
         const deltaCos = Math.cos(deltaAngle)
         if (deltaCos <= cos) {
-            this.changeOrigin(this.targetPoint)
-            this.targetPoint = null
+            this.#changeOrigin(this.#targetPoint)
+            this.#targetPoint = null
         } else {
             if (cos < -0.995) {
-                this.axis[0] = 0
-                this.axis[1] = 0
-                this.axis[2] = 1
-                Vectors.cross(this.axis, this.targetPoint, this.axis)
+                this.#axis[0] = 0
+                this.#axis[1] = 0
+                this.#axis[2] = 1
+                Vectors.cross(this.#axis, this.#targetPoint, this.#axis)
             } else {
-                Vectors.cross(this.currentPoint, this.targetPoint, this.axis)
+                Vectors.cross(this.#currentPoint, this.#targetPoint, this.#axis)
             }
-            Vectors.normalizeSelf(this.axis)
-            Quaternions.rotation(this.axis, deltaAngle, this.quaternion)
-            Quaternions.transform(this.currentPoint, this.quaternion, this.currentPoint)
-            this.changeOrigin(this.currentPoint)
+            Vectors.normalizeSelf(this.#axis)
+            Quaternions.rotation(this.#axis, deltaAngle, this.#quaternion)
+            Quaternions.transform(this.#currentPoint, this.#quaternion, this.#currentPoint)
+            this.#changeOrigin(this.#currentPoint)
         }
     }
 
-    private updateOrigin(x: number, y: number): void {
-        this.changeOrigin(this.uiVectorToSphereVector(x, y))
+    #updateOrigin(x: number, y: number): void {
+        this.#changeOrigin(this.#uiVectorToSphereVector(x, y))
     }
 
-    private updateOriginWithSpecialPoints(x: number, y: number): void {
-        const v = this.uiVectorToSphereVector(x, y)
-        for (const sp of this.specialPoints) {
+    #updateOriginWithSpecialPoints(x: number, y: number): void {
+        const v = this.#uiVectorToSphereVector(x, y)
+        for (const sp of this.#specialPoints) {
             if (Math.abs(sp[0]! - v[0]!) < 0.1 && Math.abs(sp[1]! - v[1]!) < 0.1 && Math.abs(sp[2]! - v[2]!) < 0.1) {
-                this.targetPoint = sp
+                this.#targetPoint = sp
                 return
             }
         }
 
-        this.targetPoint = v
+        this.#targetPoint = v
     }
 
-    private beginOperation(clientX: number, clientY: number): void {
-        this.isDragged = false
-        const { x, y } = this.getPositionFromEvent(clientX, clientY)
+    #beginOperation(clientX: number, clientY: number): void {
+        this.#isDragged = false
+        const { x, y } = this.#getPositionFromEvent(clientX, clientY)
         const r = Math.sqrt(x * x + y * y)
         if (r <= 1) {
-            this.isDragging = true
-            this.touchX = x
-            this.touchY = y
+            this.#isDragging = true
+            this.#touchX = x
+            this.#touchY = y
         } else {
-            this.isSmallDragging = true
-            this.touchX = x
-            this.touchY = y
+            this.#isSmallDragging = true
+            this.#touchX = x
+            this.#touchY = y
         }
     }
 
-    private moveOperation(clientX: number, clientY: number): boolean {
-        if (this.isDragging) {
-            const { x, y } = this.getLimitedPositionFromEvent(clientX, clientY)
-            const dx = x - this.touchX
-            const dy = y - this.touchY
-            if (!this.isDragged && dx * dx + dy * dy > 0.0025) {
-                this.isDragged = true
+    #moveOperation(clientX: number, clientY: number): boolean {
+        if (this.#isDragging) {
+            const { x, y } = this.#getLimitedPositionFromEvent(clientX, clientY)
+            const dx = x - this.#touchX
+            const dy = y - this.#touchY
+            if (!this.#isDragged && dx * dx + dy * dy > 0.0025) {
+                this.#isDragged = true
             }
-            if (this.isDragged) {
-                this.updateOrigin(x, y)
+            if (this.#isDragged) {
+                this.#updateOrigin(x, y)
                 return true
             }
-        } else if (this.isSmallDragging) {
-            const { x, y } = this.getPositionFromEvent(clientX, clientY)
-            const dx = x - this.touchX
-            const dy = y - this.touchY
-            const cx = Number(this.originPoint.getAttribute("cx"))
-            const cy = Number(this.originPoint.getAttribute("cy"))
-            this.updateOrigin(cx + dx / 32, cy + dy / 32)
-            this.touchX = x
-            this.touchY = y
+        } else if (this.#isSmallDragging) {
+            const { x, y } = this.#getPositionFromEvent(clientX, clientY)
+            const dx = x - this.#touchX
+            const dy = y - this.#touchY
+            const cx = Number(this.#originPoint.getAttribute("cx"))
+            const cy = Number(this.#originPoint.getAttribute("cy"))
+            this.#updateOrigin(cx + dx / 32, cy + dy / 32)
+            this.#touchX = x
+            this.#touchY = y
             return true
         }
 
         return false
     }
 
-    private endOperation(): void {
-        if (this.isDragging && !this.isDragged) {
-            this.updateOriginWithSpecialPoints(this.touchX, this.touchY)
+    #endOperation(): void {
+        if (this.#isDragging && !this.#isDragged) {
+            this.#updateOriginWithSpecialPoints(this.#touchX, this.#touchY)
         }
 
-        this.isSmallDragging = false
-        this.isDragging = false
-        this.isDragged = false
+        this.#isSmallDragging = false
+        this.#isDragging = false
+        this.#isDragged = false
     }
 
-    private onMouseDown(e: MouseEvent): void {
-        this.beginOperation(e.clientX, e.clientY)
+    #onMouseDown(e: MouseEvent): void {
+        this.#beginOperation(e.clientX, e.clientY)
         e.preventDefault()
     }
 
-    private onMouseMove(e: MouseEvent): void {
-        if (this.moveOperation(e.clientX, e.clientY))
+    #onMouseMove(e: MouseEvent): void {
+        if (this.#moveOperation(e.clientX, e.clientY))
             e.preventDefault()
     }
 
-    private onMouseUp(): void {
-        this.endOperation()
+    #onMouseUp(): void {
+        this.#endOperation()
     }
 
-    private onTouchStart(e: TouchEvent): void {
+    #onTouchStart(e: TouchEvent): void {
         if (e.touches.length !== 1) return
-        this.beginOperation(e.touches[0]!.clientX, e.touches[0]!.clientY)
+        this.#beginOperation(e.touches[0]!.clientX, e.touches[0]!.clientY)
         e.preventDefault()
     }
 
-    private onTouchMove(e: TouchEvent): void {
+    #onTouchMove(e: TouchEvent): void {
         if (e.touches.length !== 1) return
-        if (this.moveOperation(e.touches[0]!.clientX, e.touches[0]!.clientY))
+        if (this.#moveOperation(e.touches[0]!.clientX, e.touches[0]!.clientY))
             e.preventDefault()
     }
 
-    private onTouchEnd(): void {
-        this.endOperation()
+    #onTouchEnd(): void {
+        this.#endOperation()
     }
 
-    private addMirror(normal: Vector, color: string, stroke: string): void {
+    #addMirror(normal: Vector, color: string, stroke: string): void {
         const z = normal[2]!
         if (Math.abs(z) >= 0.9999) {
             // ステレオ投影後に円になる
-            this.circleGroup.appendChild(createCircle(0, 0, 1, "none", color, stroke))
+            this.#circleGroup.appendChild(createCircle(0, 0, 1, "none", color, stroke))
         } else {
             const top = [0, 0, 0]
             Vectors.cross(normal, [0, 0, 1], top)
             Vectors.normalizeSelf(top)
             if (Math.abs(z) < 0.0001) {
                 // ステレオ投影後に直線になる
-                this.circleGroup.appendChild(createLine(top[0]!, top[1]!, -top[0]!, -top[1]!, color, stroke))
+                this.#circleGroup.appendChild(createLine(top[0]!, top[1]!, -top[0]!, -top[1]!, color, stroke))
             } else {
                 // ステレオ投影後に円弧になる
                 const r = Math.abs(1 / z)
                 const sweep = z > 0 ? 0 : 1
-                this.circleGroup.appendChild(createPath(`M ${top[0]!} ${top[1]!} A ${r} ${r} 0 0 ${sweep} ${-top[0]!} ${-top[1]!}`, "none", color, stroke))
+                this.#circleGroup.appendChild(createPath(`M ${top[0]!} ${top[1]!} A ${r} ${r} 0 0 ${sweep} ${-top[0]!} ${-top[1]!}`, "none", color, stroke))
             }
         }
     }
@@ -316,10 +326,10 @@ class OriginController {
     ]
 
     #setCanvas(polyhedron: NormalPolyhedron): void {
-        const ctx = this.canvas.getContext("2d")
+        const ctx = this.#canvas.getContext("2d")
         if (!ctx) return
-        const width = this.canvas.width
-        const height = this.canvas.height
+        const width = this.#canvas.width
+        const height = this.#canvas.height
         const imageData = ctx.createImageData(width, height)
         const edgeGenerators = polyhedron.getEdgeGenerators()
         const vector0: Vector = [0, 0, 0]
@@ -334,7 +344,7 @@ class OriginController {
                     continue
                 }
 
-                this.uiVectorToSphereVector(x, y, vector0)
+                this.#uiVectorToSphereVector(x, y, vector0)
                 for (let i = 0; i < edgeGenerators.length; i++) {
                     Quaternions.transform(vector0, edgeGenerators[i]!, vector1)
                     distances[i] = Vectors.distanceSquared(vector0, vector1)
@@ -366,17 +376,17 @@ class OriginController {
         if (sp[2]! < 0) {
             Vectors.negateSelf(sp)
         }
-        this.specialPoints.push(sp)
+        this.#specialPoints.push(sp)
         if (Math.abs(sp[2]!) <= 0.001) {
-            this.specialPoints.push([-sp[0]!, -sp[1]!, -sp[2]!]) // 赤道上の点は反対側も追加
+            this.#specialPoints.push([-sp[0]!, -sp[1]!, -sp[2]!]) // 赤道上の点は反対側も追加
         }
     }
 
     setMirrorCircles(polyhedron: NormalPolyhedron): void {
-        clearChildren(this.circleGroup)
+        clearChildren(this.#circleGroup)
         const mirrors = []
         const normals = []
-        this.specialPoints.splice(0)
+        this.#specialPoints.splice(0)
         const length = polyhedron.generators.length
         // 鏡の二等分線の描画
         for (let i = 0; i < length; i++) {
@@ -395,7 +405,7 @@ class OriginController {
         for (const generator of polyhedron.generators) {
             const q = polyhedron.symmetryGroup.transforms[generator.index]!
             const normal = [q.x, q.y, q.z]
-            this.addMirror(normal, "#fff", "0.02")
+            this.#addMirror(normal, "#fff", "0.02")
             mirrors.push(normal)
         }
 
@@ -403,7 +413,7 @@ class OriginController {
             polyhedron.faceDefinitions[0]!.length === 1 && polyhedron.faceDefinitions[1]!.length === 1 &&
             polyhedron.faceDefinitions[2]!.length === 1 && polyhedron.faceDefinitions[3]!.length === 3) {
             for (const sp of polyhedron.snubPoints) {
-                this.specialPoints.push(sp)
+                this.#specialPoints.push(sp)
             }
         } else {
             for (let i = 0; i < normals.length; i++) {
@@ -424,177 +434,181 @@ class OriginController {
     }
 
     reset(): void {
-        this.updateOrigin(0, 0)
+        this.#updateOrigin(0, 0)
     }
 }
 
 // メインアプリケーションクラス
 class PolyhedronViewer {
-    private renderer
-    private rotation = new RotationState()
-    private isDragging = false
-    private lastMouseX = 0
-    private lastMouseY = 0
-    private animationFrameId: number | null = null
-    private lastTime = 0
-    private polyhedron: NormalPolyhedron | null = null
-    private autoRotate = false
-    private faceVisibility: boolean[] = [true, true, true, true, true]
-    private visibilityType: VisibilityType = "All"
-    private fillType: FillType = "Fill"
-    private vertexVisibility = false
-    private edgeVisibility = false
-    private colorByConnected = false
+    #renderer: PolyhedronRenderer
+    #rotation = new RotationState()
+    #isDragging = false
+    #lastMouseX = 0
+    #lastMouseY = 0
+    #animationFrameId: number | null = null
+    #lastTime = 0
+    #polyhedron: NormalPolyhedron | null = null
+    #autoRotate = false
+    #faceVisibility: boolean[] = [true, true, true, true, true]
+    #visibilityType: VisibilityType = "All"
+    #fillType: FillType = "Fill"
+    #vertexVisibility = false
+    #edgeVisibility = false
+    #colorByConnected = false
+    #canvas: HTMLCanvasElement
+    #originController: OriginController
 
     constructor(
-        private canvas: HTMLCanvasElement,
+        canvas: HTMLCanvasElement,
         gpuContext: GpuContext,
-        private originController: OriginController,
+        originController: OriginController,
     ) {
-        this.renderer = gpuContext.createPolyhedronRenderer()
-        this.setupEventListeners()
-        this.startRenderLoop()
+        this.#canvas = canvas
+        this.#renderer = gpuContext.createPolyhedronRenderer()
+        this.#originController = originController
+        this.#setupEventListeners()
+        this.#startRenderLoop()
     }
 
     setAutoRotate(enabled: boolean): void {
-        this.autoRotate = enabled
+        this.#autoRotate = enabled
     }
 
     resetRotation(): void {
-        this.rotation.reset()
+        this.#rotation.reset()
     }
 
-    private setupEventListeners(): void {
+    #setupEventListeners(): void {
         // mousedown は canvas で検知、mousemove/mouseup は document で検知
         // これにより canvas 外でもドラッグ操作が継続する
-        this.canvas.addEventListener("mousedown", this.onMouseDown.bind(this))
-        document.addEventListener("mousemove", this.onMouseMove.bind(this))
-        document.addEventListener("mouseup", this.onMouseUp.bind(this))
+        this.#canvas.addEventListener("mousedown", this.#onMouseDown.bind(this))
+        document.addEventListener("mousemove", this.#onMouseMove.bind(this))
+        document.addEventListener("mouseup", this.#onMouseUp.bind(this))
 
         // タッチイベント対応
-        this.canvas.addEventListener("touchstart", this.onTouchStart.bind(this))
-        document.addEventListener("touchmove", this.onTouchMove.bind(this), { passive: false })
-        document.addEventListener("touchend", this.onTouchEnd.bind(this))
+        this.#canvas.addEventListener("touchstart", this.#onTouchStart.bind(this))
+        document.addEventListener("touchmove", this.#onTouchMove.bind(this), { passive: false })
+        document.addEventListener("touchend", this.#onTouchEnd.bind(this))
     }
 
-    private onMouseDown(e: MouseEvent): void {
-        this.isDragging = true
-        this.lastMouseX = e.clientX
-        this.lastMouseY = e.clientY
+    #onMouseDown(e: MouseEvent): void {
+        this.#isDragging = true
+        this.#lastMouseX = e.clientX
+        this.#lastMouseY = e.clientY
     }
 
-    private onMouseMove(e: MouseEvent): void {
-        if (!this.isDragging) return
+    #onMouseMove(e: MouseEvent): void {
+        if (!this.#isDragging) return
 
-        const deltaX = e.clientX - this.lastMouseX
-        const deltaY = e.clientY - this.lastMouseY
-        this.rotation.applyDrag(deltaX, deltaY)
-        this.lastMouseX = e.clientX
-        this.lastMouseY = e.clientY
+        const deltaX = e.clientX - this.#lastMouseX
+        const deltaY = e.clientY - this.#lastMouseY
+        this.#rotation.applyDrag(deltaX, deltaY)
+        this.#lastMouseX = e.clientX
+        this.#lastMouseY = e.clientY
     }
 
-    private onMouseUp(): void {
-        this.isDragging = false
+    #onMouseUp(): void {
+        this.#isDragging = false
     }
 
-    private onTouchStart(e: TouchEvent): void {
+    #onTouchStart(e: TouchEvent): void {
         if (e.touches.length === 1) {
-            this.isDragging = true
-            this.lastMouseX = e.touches[0]!.clientX
-            this.lastMouseY = e.touches[0]!.clientY
+            this.#isDragging = true
+            this.#lastMouseX = e.touches[0]!.clientX
+            this.#lastMouseY = e.touches[0]!.clientY
             e.preventDefault()
         }
     }
 
-    private onTouchMove(e: TouchEvent): void {
-        if (!this.isDragging || e.touches.length !== 1) return
+    #onTouchMove(e: TouchEvent): void {
+        if (!this.#isDragging || e.touches.length !== 1) return
 
-        const deltaX = e.touches[0]!.clientX - this.lastMouseX
-        const deltaY = e.touches[0]!.clientY - this.lastMouseY
-        this.rotation.applyDrag(deltaX, deltaY)
-        this.lastMouseX = e.touches[0]!.clientX
-        this.lastMouseY = e.touches[0]!.clientY
+        const deltaX = e.touches[0]!.clientX - this.#lastMouseX
+        const deltaY = e.touches[0]!.clientY - this.#lastMouseY
+        this.#rotation.applyDrag(deltaX, deltaY)
+        this.#lastMouseX = e.touches[0]!.clientX
+        this.#lastMouseY = e.touches[0]!.clientY
         e.preventDefault()
     }
 
-    private onTouchEnd(): void {
-        this.isDragging = false
+    #onTouchEnd(): void {
+        this.#isDragging = false
     }
 
     setPolyhedron(selectValue: string, faceSelector: string): NormalPolyhedron {
         const { unit, snubPoints, beginPointIndex } = unitTriangles.find((source) => source.id === selectValue)!
         const selector = faceSelectorMap.get(faceSelector) || faceSelectorMap.get("xxx")!
-        this.polyhedron = new NormalPolyhedron(unit, snubPoints, beginPointIndex, selector)
+        this.#polyhedron = new NormalPolyhedron(unit, snubPoints, beginPointIndex, selector)
         this.#updateMesh()
-        return this.polyhedron
+        return this.#polyhedron
     }
 
     setOrigin(origin: Vector): void {
-        if (!this.polyhedron) return
-        this.polyhedron.setOrigin(origin)
+        if (!this.#polyhedron) return
+        this.#polyhedron.setOrigin(origin)
         this.#updateMesh()
     }
 
     setFaceVisibility(faceVisibility: boolean[]): void {
         for (let i = 0; i < faceVisibility.length; i++) {
-            this.faceVisibility[i] = faceVisibility[i]!
+            this.#faceVisibility[i] = faceVisibility[i]!
         }
         this.#updateMesh()
     }
 
     setEdgeVisibility(edgeVisibility: boolean): void {
-        this.edgeVisibility = edgeVisibility
+        this.#edgeVisibility = edgeVisibility
         this.#updateMesh()
     }
 
     setVertexVisibility(vertexVisibility: boolean): void {
-        this.vertexVisibility = vertexVisibility
+        this.#vertexVisibility = vertexVisibility
         this.#updateMesh()
     }
 
     setColorByConnected(colorByConnected: boolean): void {
-        this.colorByConnected = colorByConnected
+        this.#colorByConnected = colorByConnected
         this.#updateMesh()
     }
 
     setVisibilityType(visibilityType: VisibilityType): void {
-        this.visibilityType = visibilityType
+        this.#visibilityType = visibilityType
         this.#updateMesh()
     }
 
     setFillType(fillType: FillType): void {
-        this.fillType = fillType
+        this.#fillType = fillType
         this.#updateMesh()
     }
 
     #updateMesh(): void {
-        if (!this.polyhedron) return
-        const mesh = buildPolyhedronMesh(this.polyhedron, this.faceVisibility, this.visibilityType, this.vertexVisibility, this.edgeVisibility, this.colorByConnected, this.fillType)
-        this.renderer.updateMesh(mesh)
+        if (!this.#polyhedron) return
+        const mesh = buildPolyhedronMesh(this.#polyhedron, this.#faceVisibility, this.#visibilityType, this.#vertexVisibility, this.#edgeVisibility, this.#colorByConnected, this.#fillType)
+        this.#renderer.updateMesh(mesh)
     }
 
-    private startRenderLoop(): void {
+    #startRenderLoop(): void {
         const render = (time: number) => {
-            const deltaTime = this.lastTime > 0 ? (time - this.lastTime) / 1000 : 0
-            this.lastTime = time
+            const deltaTime = this.#lastTime > 0 ? (time - this.#lastTime) / 1000 : 0
+            this.#lastTime = time
 
             // 自動回転が有効かつドラッグ中でない場合に回転
-            if (this.autoRotate && !this.isDragging) {
-                this.rotation.applyAutoRotate(deltaTime)
+            if (this.#autoRotate && !this.#isDragging) {
+                this.#rotation.applyAutoRotate(deltaTime)
             }
 
-            this.originController.applyAutoOriginMovement(deltaTime)
-            this.renderer.render(this.rotation.getMatrix())
-            this.animationFrameId = requestAnimationFrame(render)
+            this.#originController.applyAutoOriginMovement(deltaTime)
+            this.#renderer.render(this.#rotation.getMatrix())
+            this.#animationFrameId = requestAnimationFrame(render)
         }
-        this.animationFrameId = requestAnimationFrame(render)
+        this.#animationFrameId = requestAnimationFrame(render)
     }
 
     destroy(): void {
-        if (this.animationFrameId !== null) {
-            cancelAnimationFrame(this.animationFrameId)
+        if (this.#animationFrameId !== null) {
+            cancelAnimationFrame(this.#animationFrameId)
         }
-        this.renderer.destroy()
+        this.#renderer.destroy()
     }
 }
 

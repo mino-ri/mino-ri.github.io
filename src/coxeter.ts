@@ -69,7 +69,7 @@ class Vectors {
             directionMap.set(dimension, directions)
         }
 
-        let result = {x: 0, y: 0, z: 0}
+        let result = { x: 0, y: 0, z: 0 }
         for (let i = 0; i < dimension; i++) {
             const a = v[i]!
             const [dx, dy] = directions[i]!
@@ -452,7 +452,7 @@ export class CoxeterGroup {
         if (matrix.dimension !== 2) {
             return false
         }
-        
+
         const theta = Math.PI / matrix.get(0, 1) * 0.5
         const cosP = Math.cos(theta)
         const sinP = Math.sin(theta)
@@ -664,15 +664,24 @@ let coxeterGroup: IRenderableGroup | null = null
 let selectedElement: IRenderableGroupElement[] = []
 
 class CoxeterGroupRenderer {
+    #previewFigure: SVGSVGElement
+    #lineGroup: SVGGElement
+    #elementGroup: SVGGElement
+    #orderText: SVGTextElement
     constructor(
-        private previewFigure: SVGSVGElement,
-        private lineGroup: SVGGElement,
-        private elementGroup: SVGGElement,
-        private orderText: SVGTextElement,
-    ) { }
+        previewFigure: SVGSVGElement,
+        lineGroup: SVGGElement,
+        elementGroup: SVGGElement,
+        orderText: SVGTextElement,
+    ) {
+        this.#previewFigure = previewFigure
+        this.#lineGroup = lineGroup
+        this.#elementGroup = elementGroup
+        this.#orderText = orderText
+    }
 
     clear() {
-        clearChildren(this.lineGroup, this.elementGroup)
+        clearChildren(this.#lineGroup, this.#elementGroup)
     }
 
     render<TGroup extends IRenderableGroup>(coxeterGroup: TGroup, displayNd: boolean) {
@@ -711,19 +720,19 @@ class CoxeterGroupRenderer {
                 maxWidth = Math.max(maxWidth, rankWidth)
                 const startX = -rankWidth / 2
                 const y = rankIndex * verticalSpacing
-    
+
                 for (let i = 0; i < rankElements.length; i++) {
                     positions.set(rankElements[i]!, { x: startX + i * horizontalSpacing, y, z: 1 })
                 }
             }
-    
+
             // viewBoxのサイズを決定
             viewWidth = maxWidth + padding * 2 + circleRadius * 2
             viewHeight = (coxeterGroup.ranks.length - 1) * verticalSpacing + padding * 2 + circleRadius * 2
             setCenter(viewWidth / 2, padding + circleRadius)
         }
 
-        clearChildren(this.lineGroup, this.elementGroup)
+        clearChildren(this.#lineGroup, this.#elementGroup)
         // 既に線を描画したインデックス (min * 65536 + max)
         // (オブジェクトは参照比較されてしまうため、数値に変換する)
         const renderedIndexSet = new Set<number>()
@@ -749,8 +758,8 @@ class CoxeterGroupRenderer {
                 const color = generatorColors[i % generatorColors.length] ?? "#000000"
                 const line = createLine(fromPos.x, fromPos.y, toPos.x, toPos.y, color, "4")
                 const backLine = createLine(fromPos.x, fromPos.y, toPos.x, toPos.y, "#FFFFFF", "8")
-                this.lineGroup.prepend(line)
-                this.lineGroup.prepend(backLine)
+                this.#lineGroup.prepend(line)
+                this.#lineGroup.prepend(backLine)
             }
         }
 
@@ -777,11 +786,11 @@ class CoxeterGroupRenderer {
                 })
             }
 
-            this.elementGroup.prepend(circle)
+            this.#elementGroup.prepend(circle)
         }
 
-        this.orderText.textContent = `order = ${coxeterGroup.isLimitOver ? "∞" : coxeterGroup.order}`
-        this.previewFigure.setAttribute("viewBox", `0 0 ${viewWidth} ${viewHeight}`)
+        this.#orderText.textContent = `order = ${coxeterGroup.isLimitOver ? "∞" : coxeterGroup.order}`
+        this.#previewFigure.setAttribute("viewBox", `0 0 ${viewWidth} ${viewHeight}`)
     }
 }
 
