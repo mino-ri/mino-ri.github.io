@@ -98,18 +98,6 @@ export class Vectors {
         }
     }
 
-    static reflect<T extends Vector>(target: Vector, mirrorNormal: Vector, resultTo: T): T
-    static reflect(target: Vector, mirrorNormal: Vector): Vector
-    static reflect<T extends Vector>(target: Vector, mirrorNormal: Vector, resultTo?: T): T | Vector {
-        const length = Math.min(target.length, mirrorNormal.length)
-        const result = resultTo ?? new Array<number>(length)
-        const r = -2 * Vectors.dot(target, mirrorNormal)
-        for (let i = 0; i < length; i++) {
-            result[i] = target[i]! + mirrorNormal[i]! * r
-        }
-        return result
-    }
-
     static distanceSquared(a: Vector, b: Vector): number {
         const length = Math.min(a.length, b.length)
         let sum = 0

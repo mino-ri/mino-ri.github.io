@@ -536,9 +536,9 @@ class PolyhedronViewer {
     }
 
     setPolyhedron(selectValue: string, faceSelector: string): NormalPolyhedron {
-        const { unit, snubPoints, beginPointIndex } = unitTriangles.find((source) => source.id === selectValue)!
+        const { unit, snubPoints, compoundTransforms } = unitTriangles.find((source) => source.id === selectValue)!
         const selector = faceSelectorMap.get(faceSelector) || faceSelectorMap.get("xxx")!
-        this.#polyhedron = new NormalPolyhedron(unit, snubPoints, beginPointIndex, selector)
+        this.#polyhedron = new NormalPolyhedron(unit, snubPoints, selector, compoundTransforms)
         this.#updateMesh()
         return this.#polyhedron
     }
