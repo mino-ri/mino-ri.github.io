@@ -449,7 +449,7 @@ class PolyhedronViewer {
     #lastTime = 0
     #polyhedron: NormalPolyhedron | null = null
     #autoRotate = false
-    #faceVisibility: boolean[] = [true, true, true, true, true]
+    #faceVisibility: boolean[] = [true, true, true, true, true, true]
     #visibilityType: VisibilityType = "All"
     #fillType: FillType = "Fill"
     #vertexVisibility = false
@@ -535,10 +535,10 @@ class PolyhedronViewer {
         this.#isDragging = false
     }
 
-    setPolyhedron(selectValue: string, faceSelector: string): NormalPolyhedron {
+    setPolyhedron(selectValue: string, faceSelector: string, snubCompound: boolean): NormalPolyhedron {
         const { unit, snubPoints, compoundTransforms } = unitTriangles.find((source) => source.id === selectValue)!
         const selector = faceSelectorMap.get(faceSelector) || faceSelectorMap.get("xxx")!
-        this.#polyhedron = new NormalPolyhedron(unit, snubPoints, selector, compoundTransforms)
+        this.#polyhedron = new NormalPolyhedron(unit, snubPoints, selector, snubCompound, compoundTransforms)
         this.#updateMesh()
         return this.#polyhedron
     }
@@ -648,13 +648,15 @@ window.addEventListener("load", async () => {
     const checkColor2 = document.getElementById("checkbox_color_2") as HTMLInputElement | null
     const checkColor3 = document.getElementById("checkbox_color_3") as HTMLInputElement | null
     const checkColor4 = document.getElementById("checkbox_color_4") as HTMLInputElement | null
+    const checkColor5 = document.getElementById("checkbox_color_5") as HTMLInputElement | null
     const checkVertex = document.getElementById("checkbox_vertex") as HTMLInputElement | null
     const checkEdge = document.getElementById("checkbox_edge") as HTMLInputElement | null
     const checkConnected = document.getElementById("checkbox_connected") as HTMLInputElement | null
+    const checkboxSnubCompound = document.getElementById("checkbox_snub_compound") as HTMLInputElement | null
     const buttonResetRotation = document.getElementById("button_reset_rotation") as HTMLInputElement | null
 
-    if (!canvas || !select || !selectFace || !checkColor0 || !checkColor1 || !checkColor2 || !checkColor3 || !checkColor4 ||
-        !circleGroup || !originBack || !originControlSvg || !originPoint) {
+    if (!canvas || !select || !selectFace || !checkColor0 || !checkColor1 || !checkColor2 || !checkColor3 || !checkColor4 || !checkColor5 ||
+        !circleGroup || !originBack || !originControlSvg || !originPoint || !checkboxSnubCompound) {
         console.error("Required elements not found")
         return
     }
@@ -691,16 +693,17 @@ window.addEventListener("load", async () => {
         select.appendChild(option)
     }
 
-    originController?.setMirrorCircles(viewer.setPolyhedron(select.value, selectFace.value))
+    originController?.setMirrorCircles(viewer.setPolyhedron(select.value, selectFace.value, checkboxSnubCompound.checked))
 
     const rebuildPolyhedron = () => {
-        const polyhedron = viewer.setPolyhedron(select.value, selectFace.value)
+        const polyhedron = viewer.setPolyhedron(select.value, selectFace.value, checkboxSnubCompound.checked)
         originController?.setMirrorCircles(polyhedron)
         originController?.reset()
     }
 
     select.addEventListener("change", rebuildPolyhedron)
     selectFace.addEventListener("change", rebuildPolyhedron)
+    checkboxSnubCompound.addEventListener("change", rebuildPolyhedron)
 
     checkEdge?.addEventListener("change", () => {
         viewer.setEdgeVisibility(checkEdge.checked)
@@ -725,6 +728,7 @@ window.addEventListener("load", async () => {
             checkColor2.checked,
             checkColor3.checked,
             checkColor4.checked,
+            checkColor5.checked,
         ])
     }
 
@@ -733,6 +737,7 @@ window.addEventListener("load", async () => {
     checkColor2.addEventListener("change", colorCheckChangeHandler)
     checkColor3.addEventListener("change", colorCheckChangeHandler)
     checkColor4.addEventListener("change", colorCheckChangeHandler)
+    checkColor5.addEventListener("change", colorCheckChangeHandler)
 
     selectFillType?.addEventListener("change", () => {
         viewer.setFillType(selectFillType.value as FillType)
