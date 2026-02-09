@@ -24,6 +24,10 @@ const crosses = [
     { value: null, source: [0, 0, 0] },
     { value: null, source: [0, 0, 0] },
     { value: null, source: [0, 0, 0] },
+    { value: null, source: [0, 0, 0] },
+    { value: null, source: [0, 0, 0] },
+    { value: null, source: [0, 0, 0] },
+    { value: null, source: [0, 0, 0] },
 ];
 const ball = function () {
     const phi = (Math.sqrt(5) + 1) / 2;
@@ -300,7 +304,8 @@ const cv = [0, 0, 0];
 const nv = [0, 0, 0];
 const mv = [0, 0, 0];
 const ov = [0, 0, 0];
-export function buildPolyhedronMesh(polyhedron, faceVisibility, visibilityType, vertexVisibility, edgeVisibility, colorByConnected, fillType) {
+const holosnubMinIndex = 30;
+export function buildPolyhedronMesh(polyhedron, faceVisibility, visibilityType, vertexVisibility, edgeVisibility, colorByConnected, holosnub, fillType) {
     const triangles = [];
     const verfView = visibilityType === "VertexFigure";
     const eachForOne = visibilityType === "OneForEach";
@@ -315,12 +320,18 @@ export function buildPolyhedronMesh(polyhedron, faceVisibility, visibilityType, 
     else if (eachForOne) {
         refPointIndexes.push(0);
     }
+    const exmaxConnectedId = visibilityType === "ConnectedComponent" ? 1
+        : holosnub ? 9999
+            : holosnubMinIndex;
     const colorDrawn = eachForOne ? new Set() : null;
     const stencilVertexCounts = [];
     const drawIndexes = [];
     let addedVertexCount = 0;
     for (let i = 0; i < polyhedron.faces.length; i++) {
         const face = polyhedron.faces[i];
+        if (face.connectedIndex >= exmaxConnectedId) {
+            continue;
+        }
         const colorIndex = (colorByConnected ? face.connectedIndex : face.colorIndex) % (faceColors.length);
         if (!faceVisibility[colorIndex]) {
             continue;
@@ -411,14 +422,18 @@ export function buildPolyhedronMesh(polyhedron, faceVisibility, visibilityType, 
             addVertex(triangles, polyhedron.vertexes[0]);
         }
         else {
-            for (const index of polyhedron.vertexIndexes) {
-                addVertex(triangles, polyhedron.vertexes[index]);
+            for (let i = 0; i < polyhedron.vertexes.length; i++) {
+                if (!holosnub && polyhedron.vertexConnectedIndexes[i] >= holosnubMinIndex) {
+                    continue;
+                }
+                addVertex(triangles, polyhedron.vertexes[i]);
             }
         }
     }
     if (edgeVisibility) {
-        for (const [index1, index2] of polyhedron.lineIndexes) {
-            if (verfView && !refPointIndexes.includes(index1) && !refPointIndexes.includes(index2)) {
+        for (const { index1, index2, connectedIndex } of polyhedron.edges) {
+            if (verfView && !refPointIndexes.includes(index1) && !refPointIndexes.includes(index2) ||
+                !holosnub && connectedIndex >= holosnubMinIndex) {
                 continue;
             }
             addEdge(triangles, polyhedron.vertexes[index1], polyhedron.vertexes[index2]);

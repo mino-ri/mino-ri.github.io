@@ -392,6 +392,7 @@ class PolyhedronViewer {
     #vertexVisibility = false;
     #edgeVisibility = false;
     #colorByConnected = false;
+    #holosnub = false;
     #canvas;
     #originController;
     constructor(canvas, gpuContext, originController) {
@@ -453,10 +454,10 @@ class PolyhedronViewer {
     #onTouchEnd() {
         this.#isDragging = false;
     }
-    setPolyhedron(selectValue, faceSelector, snubCompound) {
+    setPolyhedron(selectValue, faceSelector) {
         const { unit, snubPoints, compoundTransforms } = unitTriangles.find((source) => source.id === selectValue);
         const selector = faceSelectorMap.get(faceSelector) || faceSelectorMap.get("xxx");
-        this.#polyhedron = new NormalPolyhedron(unit, snubPoints, selector, snubCompound, compoundTransforms);
+        this.#polyhedron = new NormalPolyhedron(unit, snubPoints, selector, compoundTransforms);
         this.#updateMesh();
         return this.#polyhedron;
     }
@@ -492,10 +493,14 @@ class PolyhedronViewer {
         this.#fillType = fillType;
         this.#updateMesh();
     }
+    setHolosnub(holosnub) {
+        this.#holosnub = holosnub;
+        this.#updateMesh();
+    }
     #updateMesh() {
         if (!this.#polyhedron)
             return;
-        const mesh = buildPolyhedronMesh(this.#polyhedron, this.#faceVisibility, this.#visibilityType, this.#vertexVisibility, this.#edgeVisibility, this.#colorByConnected, this.#fillType);
+        const mesh = buildPolyhedronMesh(this.#polyhedron, this.#faceVisibility, this.#visibilityType, this.#vertexVisibility, this.#edgeVisibility, this.#colorByConnected, this.#holosnub, this.#fillType);
         this.#renderer.updateMesh(mesh);
     }
     #startRenderLoop() {
@@ -555,10 +560,10 @@ window.addEventListener("load", async () => {
     const checkVertex = document.getElementById("checkbox_vertex");
     const checkEdge = document.getElementById("checkbox_edge");
     const checkConnected = document.getElementById("checkbox_connected");
-    const checkboxSnubCompound = document.getElementById("checkbox_snub_compound");
+    const checkHolosnub = document.getElementById("checkbox_holosnub");
     const buttonResetRotation = document.getElementById("button_reset_rotation");
     if (!canvas || !select || !selectFace || !checkColor0 || !checkColor1 || !checkColor2 || !checkColor3 || !checkColor4 || !checkColor5 ||
-        !circleGroup || !originBack || !originControlSvg || !originPoint || !checkboxSnubCompound) {
+        !circleGroup || !originBack || !originControlSvg || !originPoint) {
         console.error("Required elements not found");
         return;
     }
@@ -582,15 +587,14 @@ window.addEventListener("load", async () => {
         option.textContent = source.name;
         select.appendChild(option);
     }
-    originController?.setMirrorCircles(viewer.setPolyhedron(select.value, selectFace.value, checkboxSnubCompound.checked));
+    originController?.setMirrorCircles(viewer.setPolyhedron(select.value, selectFace.value));
     const rebuildPolyhedron = () => {
-        const polyhedron = viewer.setPolyhedron(select.value, selectFace.value, checkboxSnubCompound.checked);
+        const polyhedron = viewer.setPolyhedron(select.value, selectFace.value);
         originController?.setMirrorCircles(polyhedron);
         originController?.reset();
     };
     select.addEventListener("change", rebuildPolyhedron);
     selectFace.addEventListener("change", rebuildPolyhedron);
-    checkboxSnubCompound.addEventListener("change", rebuildPolyhedron);
     checkEdge?.addEventListener("change", () => {
         viewer.setEdgeVisibility(checkEdge.checked);
     });
@@ -602,6 +606,9 @@ window.addEventListener("load", async () => {
     });
     checkConnected?.addEventListener("change", () => {
         viewer.setColorByConnected(checkConnected.checked);
+    });
+    checkHolosnub?.addEventListener("change", () => {
+        viewer.setHolosnub(checkHolosnub.checked);
     });
     const colorCheckChangeHandler = () => {
         viewer.setFaceVisibility([
