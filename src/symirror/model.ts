@@ -28,6 +28,10 @@ const crosses: { value: Vector | null, source: Vector }[] = [
     { value: null, source: [0, 0, 0] },
     { value: null, source: [0, 0, 0] },
     { value: null, source: [0, 0, 0] },
+    { value: null, source: [0, 0, 0] },
+    { value: null, source: [0, 0, 0] },
+    { value: null, source: [0, 0, 0] },
+    { value: null, source: [0, 0, 0] },
 ]
 
 const ball = function () {
@@ -376,14 +380,20 @@ export interface IPolyhedronFace {
     readonly vertexIndexes: number[]
 }
 
+export interface IPolyhedronEdge {
+    readonly connectedIndex: number
+    readonly index1: number
+    readonly index2: number
+}
+
 export interface IPolyhedron {
     readonly vertexes: Vector[]
-    readonly vertexIndexes: number[]
-    readonly lineIndexes: [number, number][]
+    readonly vertexConnectedIndexes: number[]
+    readonly edges: IPolyhedronEdge[]
     readonly faces: IPolyhedronFace[]
 }
 
-export type VisibilityType = "All" | "VertexFigure" | "OneForEach"
+export type VisibilityType = "All" | "VertexFigure" | "OneForEach" | "ConnectedComponent"
 
 export type FillType = "Fill" | "EvenOdd" | "GlobalEvenOdd"
 
@@ -435,6 +445,7 @@ const cv = [0, 0, 0]
 const nv = [0, 0, 0]
 const mv = [0, 0, 0]
 const ov = [0, 0, 0]
+const holosnubMinIndex = 30
 
 // 多面体データから描画用メッシュを生成するユーティリティ
 export function buildPolyhedronMesh(
@@ -444,6 +455,7 @@ export function buildPolyhedronMesh(
     vertexVisibility: boolean,
     edgeVisibility: boolean,
     colorByConnected: boolean,
+    holosnub: boolean,
     fillType: FillType,
 ): PolyhedronMesh {
     const triangles: number[] = []
@@ -459,13 +471,21 @@ export function buildPolyhedronMesh(
     } else if (eachForOne) {
         refPointIndexes.push(0)
     }
+    const exmaxConnectedId =
+        visibilityType === "ConnectedComponent" ? 1
+            : holosnub ? 9999
+                : holosnubMinIndex
 
+    // 描画対象の面を決定
     const colorDrawn = eachForOne ? new Set<number>() : null
     const stencilVertexCounts: number[] = []
     const drawIndexes: number[] = []
     let addedVertexCount = 0
     for (let i = 0; i < polyhedron.faces.length; i++) {
         const face = polyhedron.faces[i]!
+        if (face.connectedIndex >= exmaxConnectedId) {
+            continue
+        }
         const colorIndex = (colorByConnected ? face.connectedIndex : face.colorIndex) % (faceColors.length)
         if (!faceVisibility[colorIndex]) {
             continue
@@ -565,17 +585,22 @@ export function buildPolyhedronMesh(
         if (verfView) {
             addVertex(triangles, polyhedron.vertexes[0]!)
         } else {
-            for (const index of polyhedron.vertexIndexes) {
-                addVertex(triangles, polyhedron.vertexes[index]!)
+            for (let i = 0; i < polyhedron.vertexes.length; i++) {
+                if (!holosnub && polyhedron.vertexConnectedIndexes[i]! >= holosnubMinIndex) {
+                    continue
+                }
+                addVertex(triangles, polyhedron.vertexes[i]!)
             }
         }
     }
 
     if (edgeVisibility) {
-        for (const [index1, index2] of polyhedron.lineIndexes) {
-            if (verfView && !refPointIndexes.includes(index1) && !refPointIndexes.includes(index2)) {
+        for (const { index1, index2, connectedIndex } of polyhedron.edges) {
+            if (verfView && !refPointIndexes.includes(index1) && !refPointIndexes.includes(index2) ||
+                !holosnub && connectedIndex >= holosnubMinIndex) {
                 continue
             }
+
             addEdge(triangles, polyhedron.vertexes[index1]!, polyhedron.vertexes[index2]!)
         }
     }

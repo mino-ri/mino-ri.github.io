@@ -129,6 +129,7 @@ export const unitTriangles: PolyhedronSource[] = function (): PolyhedronSource[]
     const symmetryP5 = createSymmetry(2, 5)
     const symmetryP6 = createSymmetry(2, 6)
     const symmetryP7 = createSymmetry(2, 7)
+    const symmetryP10 = createSymmetry(2, 10)
 
     const aSources: PolyhedronSource[] = [
         { id: "a00", name: "3 3 2", unit: symmetryA.getDefaultGenerators(), snubPoints: [[0.3719739026214218, 0.3711063250059786, 0.8508322462795742], [-0.6016644209754163, -0.6013068195365014, 0.5257661393730243]] },
@@ -158,6 +159,10 @@ export const unitTriangles: PolyhedronSource[] = function (): PolyhedronSource[]
     ]
     const p6Sources = [
         { id: "p61", name: "6 2 2", unit: symmetryP6.getDefaultGenerators(), snubPoints: [[-0.3931935908064074, 0.23786331464090538, 0.8881553038161767], [0.3931935908064074, 0.23786331464090538, 0.8881553038161767]] },
+    ]
+    const p10Sources = [
+        { id: "px1", name: "10 2 2", unit: symmetryP10.getDefaultGenerators(), snubPoints: [[-0.2578736359424642, 0.1511515095222257, 0.9542821433176699], [0.2578736359424642, 0.1511515095222257, 0.9542821433176699]] },
+        { id: "px2", name: "10/3 2 2", unit: symmetryP10.getGenerators(19, 2, 1), snubPoints: [[-0.5560948813996377, -0.12974124631273248, 0.8209297728102823], [0.5560948813996377, -0.12974124631273248, 0.8209297728102823]] },
     ]
     const rotate90 = Quaternions.rotation([0, 0, 1], Math.PI / 2)
     const rotate45 = Quaternions.rotation([0, 0, 1], Math.PI / 4)
@@ -198,8 +203,9 @@ export const unitTriangles: PolyhedronSource[] = function (): PolyhedronSource[]
         ...compound(bSources, symmetryH.getTransforms([0, 7, 22, 24, 8], symmetryB.getMirrorRotator(1, 2))),
         ...compound(hSources, symmetryH.getTransforms([0, 7, 22, 24, 8], rotate90)),
         ...compound(p5Sources, symmetryH.getTransforms([0, 4, 6, 18, 21, 46], Quaternions.mul(symmetryH.getMirrorRotator(2, 1), Quaternions.mul(rotate90, symmetryP5.getMirrorRotator(1, 2))))),
-        ...compound(p3Sources, symmetryH.getTransforms([0, 22, 23, 37, 38, 42, 19, 16, 5, 7], Quaternions.mul(symmetryH.getMirrorRotator(2, 3), symmetryP3.getMirrorRotator(1, 2)))),
-        ...compound(p6Sources, symmetryH.getTransforms([0, 22, 23, 37, 38, 42, 19, 16, 5, 7], Quaternions.mul(symmetryH.getMirrorRotator(2, 3), symmetryP6.getMirrorRotator(1, 2)))),
+        ...compound(p10Sources, symmetryH.getTransforms([0, 4, 6, 18, 21, 46], Quaternions.mul(symmetryH.getMirrorRotator(2, 1), Quaternions.mul(rotate90, symmetryP10.getMirrorRotator(1, 2))))),
+        ...compound(p3Sources, symmetryH.getTransforms([0, 5, 23, 22, 7, 42, 16, 19, 37, 38], Quaternions.mul(symmetryH.getMirrorRotator(2, 3), symmetryP3.getMirrorRotator(1, 2)))),
+        ...compound(p6Sources, symmetryH.getTransforms([0, 5, 23, 22, 7, 42, 16, 19, 37, 38], Quaternions.mul(symmetryH.getMirrorRotator(2, 3), symmetryP6.getMirrorRotator(1, 2)))),
         ...compound(aSources, [
             ...symmetryH.getTransforms([0, 7, 22, 24, 8], rotate45),
             ...symmetryH.getTransforms([0, 7, 22, 24, 8], rotateN45),
@@ -271,11 +277,17 @@ export type PolyhedronFace = {
     vertexIndexes: number[]
 }
 
+export type PolyhedronEdge = {
+    connectedIndex: number
+    index1: number
+    index2: number
+}
+
 export class NormalPolyhedron implements IPolyhedron {
     #compoundTransforms: Quaternion[]
     vertexes: Vector[]
-    vertexIndexes: number[]
-    lineIndexes: [number, number][]
+    vertexConnectedIndexes: number[]
+    edges: PolyhedronEdge[]
     faces: PolyhedronFace[]
     symmetryGroup: ISymmetryGroup3
     generators: CoxeterGroupElement[]
@@ -286,10 +298,11 @@ export class NormalPolyhedron implements IPolyhedron {
         source: UnitTriangle,
         snubPoints: Vector[] | undefined,
         faceSelector: FaceSelectorFunction,
-        useAllVertex: boolean,
         compoundTransforms?: Quaternion[],
     ) {
-        this.vertexes = new Array<Vector>(source.symmetryGroup.order * (compoundTransforms?.length || 1))
+        const vertexCount = source.symmetryGroup.order * (compoundTransforms?.length || 1)
+        const connectedIndexMap = new Array<number | undefined>(vertexCount)
+        this.vertexes = new Array<Vector>(vertexCount)
         this.symmetryGroup = source.symmetryGroup
         this.generators = source.generators
         this.#compoundTransforms = compoundTransforms ?? []
@@ -297,60 +310,53 @@ export class NormalPolyhedron implements IPolyhedron {
         const faceDefinitions = faceSelector(source.generators[0]!, source.generators[1]!, source.generators[2]!)
         this.faceDefinitions = faceDefinitions
 
-        // 頂点の選別 (useAllVertex === true の場合、連結成分ごとに色分け)
-        const vertexIndexes: number[] = []
-        const vertexColorMap = new Map<number, number>()
-        for (let i = 0; i < vertexIndexes.length; i++) {
-            vertexColorMap.set(vertexIndexes[i]!, i % 5)
-        }
-
-        let colorAdded = 0
+        // 頂点ごとの連結成分ID
+        // 連結成分Idへのマップ
+        let connectedIndex = 0
         for (let i = 0; i < source.symmetryGroup.order; i++) {
-            if (vertexColorMap.has(i)) continue
+            if (connectedIndexMap[i] !== undefined) continue
 
-            vertexIndexes.push(i)
-            vertexColorMap.set(i, colorAdded % 5)
-            if (!compoundTransforms) colorAdded++
+            const vertexIndexes = [i]
+            connectedIndexMap[i] = connectedIndex
+            connectedIndex += compoundTransforms ? 30 : 31
 
-            for (let j = i; j < vertexIndexes.length; j++) {
+            for (let j = 0; j < vertexIndexes.length; j++) {
                 const currentIndex = vertexIndexes[j]!
                 const currentElement = source.symmetryGroup.getElement(currentIndex)
                 for (const faceDef of faceDefinitions) {
                     for (const edgeElement of faceDef) {
                         const otherIndex = currentElement.mul(edgeElement).index
-                        if (!vertexColorMap.has(otherIndex)) {
-                            vertexColorMap.set(otherIndex, vertexColorMap.get(currentIndex) ?? 0)
+                        if (connectedIndexMap[otherIndex] === undefined) {
+                            connectedIndexMap[otherIndex] = connectedIndexMap[currentIndex] ?? 0
                             vertexIndexes.push(otherIndex)
                         }
                     }
                 }
             }
 
-            if (!useAllVertex || vertexIndexes.length >= source.symmetryGroup.order) break
+            if (vertexIndexes.length >= source.symmetryGroup.order) break
         }
 
-        vertexIndexes.sort((a, b) => a - b)
-
         // 辺の生成
-        const lineSet = new Map<number, Set<number>>()
-        for (const currentIndex of vertexIndexes) {
+        const lineSet = new Map<number, { connectedIndex: number, vertexes: Set<number> }>()
+        for (let currentIndex = 0; currentIndex < source.symmetryGroup.order; currentIndex++) {
             const element = source.symmetryGroup.getElement(currentIndex)
             for (const faceDef of faceDefinitions) {
                 for (const edgeElement of faceDef) {
                     const otherIndex = element.mul(edgeElement).index
                     const [minIndex, maxIndex] = currentIndex < otherIndex ? [currentIndex, otherIndex] : [otherIndex, currentIndex]
                     if (!lineSet.has(minIndex)) {
-                        lineSet.set(minIndex, new Set<number>())
+                        lineSet.set(minIndex, { connectedIndex: connectedIndexMap[minIndex] ?? 0, vertexes: new Set<number>() })
                     }
-                    lineSet.get(minIndex)!.add(maxIndex)
+                    lineSet.get(minIndex)!.vertexes.add(maxIndex)
                 }
             }
         }
 
-        const lines: [number, number][] = []
-        for (const [a, bs] of lineSet) {
-            for (const b of bs) {
-                lines.push([a, b])
+        const edges: PolyhedronEdge[] = []
+        for (const [index1, bs] of lineSet) {
+            for (const index2 of bs.vertexes) {
+                edges.push({ index1, index2, connectedIndex: bs.connectedIndex })
             }
         }
 
@@ -361,7 +367,7 @@ export class NormalPolyhedron implements IPolyhedron {
             const faceDef = faceDefinitions[mirrorA]!
             usedVertexSet.clear()
             const isReflectable = faceDef[0]!.period === 2 && faceDef[0]!.rank % 2 === 1
-            for (const currentIndex of vertexIndexes) {
+            for (let currentIndex = 0; currentIndex < source.symmetryGroup.order; currentIndex++) {
                 const element = source.symmetryGroup.getElement(currentIndex)!
                 if (usedVertexSet.has(currentIndex)) {
                     continue
@@ -386,7 +392,7 @@ export class NormalPolyhedron implements IPolyhedron {
                 if (faceVertexIndexes.length >= 3) {
                     faces.push({
                         colorIndex: mirrorA,
-                        connectedIndex: vertexColorMap.get(currentIndex) ?? 0,
+                        connectedIndex: connectedIndexMap[currentIndex] ?? 0,
                         vertexIndexes: faceVertexIndexes,
                     })
                 }
@@ -396,13 +402,13 @@ export class NormalPolyhedron implements IPolyhedron {
         const compoundCount = this.#compoundTransforms.length
         if (compoundCount > 0) {
             const baseOrder = source.symmetryGroup.order
-            const vertexIndexCount = vertexIndexes.length
-            const lineCount = lines.length
+            const vertexIndexCount = source.symmetryGroup.order
+            const lineCount = edges.length
             const faceCount = faces.length
-            vertexIndexes.length *= compoundCount
-            lines.length *= compoundCount
+            // compoundMap
+            edges.length *= compoundCount
             faces.length *= compoundCount
-            const colorCount =
+            const connectedCount =
                 compoundCount % 6 === 0 ? 6
                     : compoundCount % 5 === 0 ? 5
                         : compoundCount % 4 === 0 ? 4
@@ -410,14 +416,19 @@ export class NormalPolyhedron implements IPolyhedron {
             for (let c = 1; c < compoundCount; c++) {
                 const baseIndex = baseOrder * c
                 const baseVertexIndexIndex = vertexIndexCount * c
+                const additionalConnectedIndex = c % connectedCount + Math.floor(c / connectedCount) * 6
                 for (let i = 0; i < vertexIndexCount; i++) {
-                    vertexIndexes[baseVertexIndexIndex + i] = vertexIndexes[i]! + baseIndex
+                    connectedIndexMap[baseVertexIndexIndex + i] = connectedIndexMap[i]! + additionalConnectedIndex
                 }
 
                 const baseLineIndex = lineCount * c
                 for (let i = 0; i < lineCount; i++) {
-                    const [a, b] = lines[i]!
-                    lines[baseLineIndex + i] = [a + baseIndex, b + baseIndex]
+                    const { index1, index2, connectedIndex } = edges[i]!
+                    edges[baseLineIndex + i] = {
+                        index1: index1 + baseIndex,
+                        index2: index2 + baseIndex,
+                        connectedIndex: connectedIndex + additionalConnectedIndex,
+                    }
                 }
 
                 const baseFaceIndex = faceCount * c
@@ -425,15 +436,15 @@ export class NormalPolyhedron implements IPolyhedron {
                     const face = faces[i]!
                     faces[baseFaceIndex + i] = {
                         colorIndex: face.colorIndex,
-                        connectedIndex: c % colorCount,
+                        connectedIndex: face.connectedIndex + additionalConnectedIndex,
                         vertexIndexes: face.vertexIndexes.map(v => v + baseIndex),
                     }
                 }
             }
         }
 
-        this.vertexIndexes = vertexIndexes
-        this.lineIndexes = lines
+        this.vertexConnectedIndexes = connectedIndexMap as number[]
+        this.edges = edges
         this.faces = faces
         this.setOrigin([0, 0, 1])
     }
@@ -481,7 +492,7 @@ export class NormalPolyhedron implements IPolyhedron {
         let maximum = 0
         for (const face of this.faceDefinitions) {
             for (const element of face) {
-                const distance = Vectors.distanceSquared(this.origin, this.vertexes[element.index]!)
+                const distance = Vectors.distanceSquared(this.vertexes[0]!, this.vertexes[element.index]!)
                 minimum = Math.min(minimum, distance)
                 maximum = Math.max(maximum, distance)
             }
@@ -490,8 +501,8 @@ export class NormalPolyhedron implements IPolyhedron {
         if (this.maxRatio < ratio) {
             this.maxRatio = ratio
             console.log(ratio)
-            console.log(`[${this.origin[0]}, ${this.origin[1]}, ${this.origin[2]}]`)
+            console.log(`[${newOrigin[0]}, ${newOrigin[1]}, ${newOrigin[2]}]`)
         }
-        */
+        // */
     }
 }
