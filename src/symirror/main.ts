@@ -382,17 +382,42 @@ class OriginController {
         }
     }
 
-    setMirrorCircles(polyhedron: NormalPolyhedron): void {
+    setMirrorCircles(polyhedron: NormalPolyhedron, faceSelector: string): void {
         clearChildren(this.#circleGroup)
         const mirrors = []
         const normals = []
         this.#specialPoints.splice(0)
-        const length = polyhedron.generators.length
+        const generators: Quaternion[] = []
+        const pseudoMirrorIndex =
+            faceSelector === "oxx" ? 0 :
+                faceSelector === "xox" ? 1 :
+                    faceSelector === "xxo" ? 2 : -1
+        const pseudoMirror = pseudoMirrorIndex >= 0 ? polyhedron.symmetryGroup.transforms[polyhedron.generators[pseudoMirrorIndex]!.index] : undefined
+        for (let i = 0; i < polyhedron.generators.length; i++) {
+            const generator = polyhedron.symmetryGroup.transforms[polyhedron.generators[i]!.index]!
+            if (generator !== pseudoMirror) {
+                generators.push(generator)
+                if (pseudoMirror) {
+                    let dot = generator.x * pseudoMirror.x + generator.y * pseudoMirror.y + generator.z * pseudoMirror.z
+                    if (Math.abs(dot) > 1e-6) {
+                        generators.push({
+                            x: generator.x - 2 * dot * pseudoMirror.x,
+                            y: generator.y - 2 * dot * pseudoMirror.y,
+                            z: generator.z - 2 * dot * pseudoMirror.z,
+                            w: 0,
+                            negate: true,
+                        })
+                    }
+                }
+            }
+        }
+
+        const length = generators.length
         // 鏡の二等分線の描画
         for (let i = 0; i < length; i++) {
             for (let j = i + 1; j < length; j++) {
-                const g1 = polyhedron.symmetryGroup.transforms[polyhedron.generators[i]!.index]!
-                const g2 = polyhedron.symmetryGroup.transforms[polyhedron.generators[j]!.index]!
+                const g1 = generators[i]!
+                const g2 = generators[j]!
                 const normal1 = [g1.x + g2.x, g1.y + g2.y, g1.z + g2.z]
                 const normal2 = [g1.x - g2.x, g1.y - g2.y, g1.z - g2.z]
                 Vectors.normalizeSelf(normal1)
@@ -402,16 +427,14 @@ class OriginController {
         }
 
         // 鏡そのものの描画
-        for (const generator of polyhedron.generators) {
-            const q = polyhedron.symmetryGroup.transforms[generator.index]!
+        for (const q of generators) {
             const normal = [q.x, q.y, q.z]
             this.#addMirror(normal, "#fff", "0.02")
             mirrors.push(normal)
         }
 
-        if (polyhedron.snubPoints && polyhedron.faceDefinitions.length === 4 &&
-            polyhedron.faceDefinitions[0]!.length === 1 && polyhedron.faceDefinitions[1]!.length === 1 &&
-            polyhedron.faceDefinitions[2]!.length === 1 && polyhedron.faceDefinitions[3]!.length === 3) {
+        // 特別な点、全ての二等分線の交点
+        if (polyhedron.snubPoints && faceSelector === "ooo") {
             for (const sp of polyhedron.snubPoints) {
                 this.#specialPoints.push(sp)
             }
@@ -423,7 +446,7 @@ class OriginController {
             }
         }
 
-        // 特別な点の計算
+        // 鏡本体と二等分線の交点
         for (const n1 of mirrors) {
             for (const n2 of normals) {
                 this.#addCrossMirror(n1, n2)
@@ -699,11 +722,11 @@ window.addEventListener("load", async () => {
         select.appendChild(option)
     }
 
-    originController?.setMirrorCircles(viewer.setPolyhedron(select.value, selectFace.value))
+    originController?.setMirrorCircles(viewer.setPolyhedron(select.value, selectFace.value), selectFace.value)
 
     const rebuildPolyhedron = () => {
         const polyhedron = viewer.setPolyhedron(select.value, selectFace.value)
-        originController?.setMirrorCircles(polyhedron)
+        originController?.setMirrorCircles(polyhedron, selectFace.value)
         originController?.reset()
     }
 
