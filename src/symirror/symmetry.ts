@@ -190,7 +190,7 @@ export const unitTriangles: PolyhedronSource[] = function (): PolyhedronSource[]
         { id: "p73", name: "7/3 2 2", unit: symmetryP7.getGenerators(19, 2, 1), snubPoints: [[-0.5994232712396262, -0.1779700836642542, 0.7803963039487846], [0.5994232712396262, -0.1779700836642542, 0.7803963039487846], [-0.5034145899510695, 0.8423776194324194, 0.19228545681815487], [0.5034145899510695, 0.8423776194324194, 0.19228545681815487]] },
 
         // 対象性は維持されるが、望む形ではなさそう
-        ...compound(p2Sources, symmetryA.getTransforms([0, 7, 8], rotate45)),
+        ...compound(p4Sources, symmetryA.getTransforms([0, 7, 8], rotate45)),
         // 立方体対称の複合多面体
         ...compound(aSources, symmetryB.getTransforms([0, 8], symmetryB.getMirrorRotator(2, 1))),
         ...compound(hSources, symmetryB.getTransforms([0, 8], symmetryB.getMirrorRotator(2, 1))),
@@ -250,6 +250,33 @@ export const faceSelectorMap = new Map<string, FaceSelectorFunction>([
         const ab = a.mul(b)
         const ba = b.mul(a)
         return [[ab], [c, bcb], [c, aca], [bcb, ba, aca, ab]]
+    }],
+    ["xxs", (a, b, c) => {
+        const ab = a.mul(b)
+        const bc = b.mul(c)
+        const ca = c.mul(a)
+        const caca = ca.mul(ca)
+        const bcbc = bc.mul(bc)
+        const cbac = c.mul(b).mul(a).mul(c)
+        return [[ab], [bcbc], [caca], [ab, bcbc, cbac, caca], [cbac]]
+    }],
+    ["xsx", (a, b, c) => {
+        const ab = a.mul(b)
+        const bc = b.mul(c)
+        const ca = c.mul(a)
+        const abab = ab.mul(ab)
+        const bcbc = bc.mul(bc)
+        const bacb = b.mul(a).mul(c).mul(b)
+        return [[abab], [bcbc], [ca], [bcbc, ca, abab, bacb], [bacb]]
+    }],
+    ["sxx", (a, b, c) => {
+        const ab = a.mul(b)
+        const bc = b.mul(c)
+        const ca = c.mul(a)
+        const caca = ca.mul(ca)
+        const abab = ab.mul(ab)
+        const acba = a.mul(c).mul(b).mul(a)
+        return [[abab], [bc], [caca], [caca, acba, abab, bc], [acba]]
     }],
     ["ooo", (a, b, c) => {
         const ab = a.mul(b)

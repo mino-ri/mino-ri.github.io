@@ -389,9 +389,9 @@ class OriginController {
         this.#specialPoints.splice(0)
         const generators: Quaternion[] = []
         const pseudoMirrorIndex =
-            faceSelector === "oxx" ? 0 :
-                faceSelector === "xox" ? 1 :
-                    faceSelector === "xxo" ? 2 : -1
+            faceSelector === "oxx" || faceSelector === "sxx" ? 0 :
+                faceSelector === "xox" || faceSelector === "xsx" ? 1 :
+                    faceSelector === "xxo" || faceSelector === "xxs" ? 2 : -1
         const pseudoMirror = pseudoMirrorIndex >= 0 ? polyhedron.symmetryGroup.transforms[polyhedron.generators[pseudoMirrorIndex]!.index] : undefined
         for (let i = 0; i < polyhedron.generators.length; i++) {
             const generator = polyhedron.symmetryGroup.transforms[polyhedron.generators[i]!.index]!
