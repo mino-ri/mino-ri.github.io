@@ -148,7 +148,7 @@ export const unitTriangles = function () {
         { id: "p71", name: "7 2 2", unit: symmetryP7.getDefaultGenerators(), snubPoints: [[-0.34915940259840533, 0.2083295343698897, 0.9136117975849204], [0.34915940259840533, 0.2083295343698897, 0.9136117975849204]] },
         { id: "p72", name: "7/2 2 2", unit: symmetryP7.getGenerators(11, 2, 1), snubPoints: [[-0.5455983391838306, 0.0002153961070602594, 0.8380467802481928], [0.5455983391838306, 0.0002153961070602594, 0.8380467802481928]] },
         { id: "p73", name: "7/3 2 2", unit: symmetryP7.getGenerators(19, 2, 1), snubPoints: [[-0.5994232712396262, -0.1779700836642542, 0.7803963039487846], [0.5994232712396262, -0.1779700836642542, 0.7803963039487846], [-0.5034145899510695, 0.8423776194324194, 0.19228545681815487], [0.5034145899510695, 0.8423776194324194, 0.19228545681815487]] },
-        ...compound(p2Sources, symmetryA.getTransforms([0, 7, 8], rotate45)),
+        ...compound(p4Sources, symmetryA.getTransforms([0, 7, 8], rotate45)),
         ...compound(aSources, symmetryB.getTransforms([0, 8], symmetryB.getMirrorRotator(2, 1))),
         ...compound(hSources, symmetryB.getTransforms([0, 8], symmetryB.getMirrorRotator(2, 1))),
         ...compound(p4Sources, symmetryB.getTransforms([0, 4, 6], Quaternions.mul(symmetryB.getMirrorRotator(2, 1), symmetryP4.getMirrorRotator(1, 2)))),
@@ -203,6 +203,33 @@ export const faceSelectorMap = new Map([
             const ab = a.mul(b);
             const ba = b.mul(a);
             return [[ab], [c, bcb], [c, aca], [bcb, ba, aca, ab]];
+        }],
+    ["xxs", (a, b, c) => {
+            const ab = a.mul(b);
+            const bc = b.mul(c);
+            const ca = c.mul(a);
+            const caca = ca.mul(ca);
+            const bcbc = bc.mul(bc);
+            const cbac = c.mul(b).mul(a).mul(c);
+            return [[ab], [bcbc], [caca], [ab, bcbc, cbac, caca], [cbac]];
+        }],
+    ["xsx", (a, b, c) => {
+            const ab = a.mul(b);
+            const bc = b.mul(c);
+            const ca = c.mul(a);
+            const abab = ab.mul(ab);
+            const bcbc = bc.mul(bc);
+            const bacb = b.mul(a).mul(c).mul(b);
+            return [[abab], [bcbc], [ca], [bcbc, ca, abab, bacb], [bacb]];
+        }],
+    ["sxx", (a, b, c) => {
+            const ab = a.mul(b);
+            const bc = b.mul(c);
+            const ca = c.mul(a);
+            const caca = ca.mul(ca);
+            const abab = ab.mul(ab);
+            const acba = a.mul(c).mul(b).mul(a);
+            return [[abab], [bc], [caca], [caca, acba, abab, bc], [acba]];
         }],
     ["ooo", (a, b, c) => {
             const ab = a.mul(b);
