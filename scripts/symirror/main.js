@@ -333,27 +333,50 @@ class OriginController {
         const normals = [];
         this.#specialPoints.splice(0);
         const generators = [];
-        const pseudoMirrorIndex = faceSelector === "oxx" || faceSelector === "sxx" ? 0 :
-            faceSelector === "xox" || faceSelector === "xsx" ? 1 :
-                faceSelector === "xxo" || faceSelector === "xxs" ? 2 : -1;
-        const pseudoMirror = pseudoMirrorIndex >= 0 ? polyhedron.symmetryGroup.transforms[polyhedron.generators[pseudoMirrorIndex].index] : undefined;
-        for (let i = 0; i < polyhedron.generators.length; i++) {
-            const generator = polyhedron.symmetryGroup.transforms[polyhedron.generators[i].index];
-            if (generator !== pseudoMirror) {
-                generators.push(generator);
-                if (pseudoMirror) {
-                    let dot = generator.x * pseudoMirror.x + generator.y * pseudoMirror.y + generator.z * pseudoMirror.z;
-                    if (Math.abs(dot) > 1e-6) {
-                        generators.push({
-                            x: generator.x - 2 * dot * pseudoMirror.x,
-                            y: generator.y - 2 * dot * pseudoMirror.y,
-                            z: generator.z - 2 * dot * pseudoMirror.z,
-                            w: 0,
-                            negate: true,
-                        });
+        switch (faceSelector) {
+            case "oxx":
+            case "xox":
+            case "xxo":
+            case "opp":
+            case "pop":
+            case "ppo":
+                const pseudoMirrorIndex = faceSelector.indexOf("o");
+                const pseudoMirror = polyhedron.symmetryGroup.transforms[polyhedron.generators[pseudoMirrorIndex].index];
+                for (let i = 0; i < polyhedron.generators.length; i++) {
+                    const generator = polyhedron.symmetryGroup.transforms[polyhedron.generators[i].index];
+                    if (generator !== pseudoMirror) {
+                        generators.push(generator);
+                        let dot = generator.x * pseudoMirror.x + generator.y * pseudoMirror.y + generator.z * pseudoMirror.z;
+                        if (Math.abs(dot) > 1e-6) {
+                            generators.push({
+                                x: generator.x - 2 * dot * pseudoMirror.x,
+                                y: generator.y - 2 * dot * pseudoMirror.y,
+                                z: generator.z - 2 * dot * pseudoMirror.z,
+                                w: 0,
+                                negate: true,
+                            });
+                        }
                     }
                 }
-            }
+                break;
+            case "xoo":
+            case "oxo":
+            case "oox":
+                const realMirrorElement = polyhedron.generators[faceSelector.indexOf("x")];
+                for (let i = 0; i < polyhedron.generators.length; i++) {
+                    const generatorElement = polyhedron.generators[i];
+                    const element = realMirrorElement === generatorElement
+                        ? generatorElement
+                        : generatorElement.mul(realMirrorElement).mul(generatorElement);
+                    generators.push(polyhedron.symmetryGroup.transforms[element !== realMirrorElement
+                        ? element.index : generatorElement.index]);
+                }
+                break;
+            default:
+                for (let i = 0; i < polyhedron.generators.length; i++) {
+                    generators.push(polyhedron.symmetryGroup.transforms[polyhedron.generators[i].index]);
+                }
+                break;
         }
         const length = generators.length;
         for (let i = 0; i < length; i++) {

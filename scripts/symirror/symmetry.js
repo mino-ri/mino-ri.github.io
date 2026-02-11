@@ -204,7 +204,7 @@ export const faceSelectorMap = new Map([
             const ba = b.mul(a);
             return [[ab], [c, bcb], [c, aca], [bcb, ba, aca, ab]];
         }],
-    ["xxs", (a, b, c) => {
+    ["ppo", (a, b, c) => {
             const ab = a.mul(b);
             const bc = b.mul(c);
             const ca = c.mul(a);
@@ -213,7 +213,7 @@ export const faceSelectorMap = new Map([
             const cbac = c.mul(b).mul(a).mul(c);
             return [[ab], [bcbc], [caca], [ab, bcbc, cbac, caca], [cbac]];
         }],
-    ["xsx", (a, b, c) => {
+    ["pop", (a, b, c) => {
             const ab = a.mul(b);
             const bc = b.mul(c);
             const ca = c.mul(a);
@@ -222,7 +222,7 @@ export const faceSelectorMap = new Map([
             const bacb = b.mul(a).mul(c).mul(b);
             return [[abab], [bcbc], [ca], [bcbc, ca, abab, bacb], [bacb]];
         }],
-    ["sxx", (a, b, c) => {
+    ["opp", (a, b, c) => {
             const ab = a.mul(b);
             const bc = b.mul(c);
             const ca = c.mul(a);
