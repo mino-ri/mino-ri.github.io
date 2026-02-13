@@ -341,20 +341,18 @@ class OriginController {
             case "pop":
             case "ppo":
                 const pseudoMirrorIndex = faceSelector.indexOf("o");
-                const pseudoMirror = polyhedron.symmetryGroup.transforms[polyhedron.generators[pseudoMirrorIndex].index];
+                const pseudoMirror = polyhedron.getGeneratorTransform(pseudoMirrorIndex);
                 for (let i = 0; i < polyhedron.generators.length; i++) {
                     const generator = polyhedron.symmetryGroup.transforms[polyhedron.generators[i].index];
                     if (generator !== pseudoMirror) {
-                        generators.push(generator);
+                        generators.push(Quaternions.toVector(generator));
                         let dot = generator.x * pseudoMirror.x + generator.y * pseudoMirror.y + generator.z * pseudoMirror.z;
                         if (Math.abs(dot) > 1e-6) {
-                            generators.push({
-                                x: generator.x - 2 * dot * pseudoMirror.x,
-                                y: generator.y - 2 * dot * pseudoMirror.y,
-                                z: generator.z - 2 * dot * pseudoMirror.z,
-                                w: 0,
-                                negate: true,
-                            });
+                            generators.push([
+                                generator.x - 2 * dot * pseudoMirror.x,
+                                generator.y - 2 * dot * pseudoMirror.y,
+                                generator.z - 2 * dot * pseudoMirror.z,
+                            ]);
                         }
                     }
                 }
@@ -368,13 +366,33 @@ class OriginController {
                     const element = realMirrorElement === generatorElement
                         ? generatorElement
                         : generatorElement.mul(realMirrorElement).mul(generatorElement);
-                    generators.push(polyhedron.symmetryGroup.transforms[element !== realMirrorElement
-                        ? element.index : generatorElement.index]);
+                    generators.push(Quaternions.toVector(polyhedron.symmetryGroup.transforms[element !== realMirrorElement
+                        ? element.index : generatorElement.index]));
                 }
+                break;
+            case "xxd":
+            case "xdx":
+            case "dxx":
+            case "ood":
+            case "odo":
+            case "doo":
+            case "ppd":
+            case "pdp":
+            case "dpp":
+                const omitMirrorIndex = faceSelector.indexOf("d");
+                for (let i = 0; i < polyhedron.generators.length; i++) {
+                    if (i !== omitMirrorIndex) {
+                        generators.push(Quaternions.toVector(polyhedron.getGeneratorTransform(i)));
+                    }
+                }
+                const cross = [0, 0, 0];
+                Vectors.cross(generators[0], generators[1], cross);
+                Vectors.normalizeSelf(cross);
+                generators.push(cross);
                 break;
             default:
                 for (let i = 0; i < polyhedron.generators.length; i++) {
-                    generators.push(polyhedron.symmetryGroup.transforms[polyhedron.generators[i].index]);
+                    generators.push(Quaternions.toVector(polyhedron.getGeneratorTransform(i)));
                 }
                 break;
         }
@@ -383,17 +401,16 @@ class OriginController {
             for (let j = i + 1; j < length; j++) {
                 const g1 = generators[i];
                 const g2 = generators[j];
-                const normal1 = [g1.x + g2.x, g1.y + g2.y, g1.z + g2.z];
-                const normal2 = [g1.x - g2.x, g1.y - g2.y, g1.z - g2.z];
+                const normal1 = Vectors.add(g1, g2);
+                const normal2 = Vectors.sub(g1, g2);
                 Vectors.normalizeSelf(normal1);
                 Vectors.normalizeSelf(normal2);
                 normals.push(normal1, normal2);
             }
         }
         for (const q of generators) {
-            const normal = [q.x, q.y, q.z];
-            this.#addMirror(normal, "#fff", "0.02");
-            mirrors.push(normal);
+            this.#addMirror(q, "#fff", "0.02");
+            mirrors.push(q);
         }
         if (polyhedron.snubPoints && faceSelector === "ooo") {
             for (const sp of polyhedron.snubPoints) {

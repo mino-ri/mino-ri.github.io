@@ -1,6 +1,9 @@
 import { Vectors } from "./vector.js";
 export class Quaternions {
     static identity = { w: 1, x: 0, y: 0, z: 0, negate: false };
+    static toVector(q) {
+        return [q.x, q.y, q.z];
+    }
     static conjugateMul(a, bConj, resultTo) {
         const result = resultTo ?? { w: 0, x: 0, y: 0, z: 0, negate: false };
         result.w = -a.w * bConj.w - a.x * bConj.x - a.y * bConj.y - a.z * bConj.z;

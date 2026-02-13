@@ -38,6 +38,9 @@ export class SymmetryGroup3 {
     getElement(index) {
         return this.#coxeterGroup.elements[index];
     }
+    getMaxElement() {
+        return this.#coxeterGroup.ranks[this.#coxeterGroup.ranks.length - 1][0];
+    }
     getDefaultGenerators() {
         return this.getGenerators(3, 2, 1);
     }
@@ -166,77 +169,126 @@ export const unitTriangles = function () {
         ...compound(p2Sources, symmetryH.getTransforms([0, 4, 6, 8, 18, 43, 24, 39, 17, 21, 44, 40, 46, 20, 36])),
     ];
 }();
+function rotateP(f) {
+    return (a, b, c, g) => {
+        const result = f(b, c, a, g);
+        return [
+            result[2],
+            result[0],
+            result[1],
+            ...result.slice(3),
+        ];
+    };
+}
+function rotateQ(f) {
+    return (a, b, c, g) => {
+        const result = f(c, a, b, g);
+        return [
+            result[1],
+            result[2],
+            result[0],
+            ...result.slice(3),
+        ];
+    };
+}
+const ionicFaceSelector = (a, b, c) => {
+    const aba = a.mul(b).mul(a);
+    const aca = a.mul(c).mul(a);
+    return [[aba, b], [b, c], [aca, c], [aba, aca]];
+};
+const halfFaceSelector = (a, b, c) => {
+    const bab = b.mul(a).mul(b);
+    const cac = c.mul(a).mul(c);
+    const bc = b.mul(c);
+    const cb = c.mul(b);
+    return [[a, bab], [bc], [a, cac], [cac, cb, bab, bc]];
+};
+const halfIonicFaceSelector = (a, b, c) => {
+    const ab = a.mul(b);
+    const bc = b.mul(c);
+    const ca = c.mul(a);
+    const caca = ca.mul(ca);
+    const abab = ab.mul(ab);
+    const acba = a.mul(c).mul(b).mul(a);
+    return [[abab], [bc], [caca], [caca, acba, abab, bc], [acba]];
+};
+const compoundFaceSelector = (a, b, _, group) => {
+    const period = a.mul(b).period;
+    const generators = [a, b];
+    let opposite = group.getMaxElement();
+    const oppositeRank = opposite.rank;
+    for (let i = 0; i < period; i++) {
+        opposite = generators[i % 2].mul(opposite);
+    }
+    if ((period + oppositeRank) % 2 === 0) {
+        return [[a, b], [], [], [a, opposite, b, opposite]];
+    }
+    else {
+        return [[a, b], [b, opposite], [a, opposite]];
+    }
+};
+const compoundChiralFaceSelector1 = (a, b, _, group) => {
+    const period = a.mul(b).period;
+    const generators = [a, b];
+    let opposite = group.getMaxElement();
+    const oppositeRank = opposite.rank;
+    for (let i = 0; i < period; i++) {
+        opposite = generators[i % 2].mul(opposite);
+    }
+    if ((period + oppositeRank) % 2 === 0) {
+        const ab = a.mul(b);
+        return [[ab], [], [], [ab, opposite, opposite.mul(b).mul(a)]];
+    }
+    else {
+        const ab = a.mul(b);
+        const bc = b.mul(opposite);
+        const ca = opposite.mul(a);
+        return [[ab], [], [], [ab, bc, ca]];
+    }
+};
+const compoundChiralFaceSelector2 = (a, b, _, group) => {
+    const period = a.mul(b).period;
+    const generators = [a, b];
+    let opposite = group.getMaxElement();
+    const oppositeRank = opposite.rank;
+    for (let i = 0; i < period; i++) {
+        opposite = generators[i % 2].mul(opposite);
+    }
+    if ((period + oppositeRank) % 2 === 0) {
+        const ab = a.mul(b);
+        return [[ab], [], [], [ab, b.mul(opposite), opposite.mul(a)]];
+    }
+    else {
+        const ab = a.mul(b);
+        return [[ab], [], [], [ab, opposite, b.mul(a), opposite]];
+    }
+};
 export const faceSelectorMap = new Map([
     ["xxx", (a, b, c) => [[a, b], [b, c], [c, a]]],
-    ["oxx", (a, b, c) => {
-            const aba = a.mul(b).mul(a);
-            const aca = a.mul(c).mul(a);
-            return [[aba, b], [b, c], [aca, c], [aba, aca]];
-        }],
-    ["xox", (a, b, c) => {
-            const bab = b.mul(a).mul(b);
-            const bcb = b.mul(c).mul(b);
-            return [[a, bab], [bcb, c], [a, c], [bab, bcb]];
-        }],
-    ["xxo", (a, b, c) => {
-            const cac = c.mul(a).mul(c);
-            const cbc = c.mul(b).mul(c);
-            return [[a, b], [b, cbc], [a, cac], [cac, cbc]];
-        }],
-    ["xoo", (a, b, c) => {
-            const bab = b.mul(a).mul(b);
-            const cac = c.mul(a).mul(c);
-            const bc = b.mul(c);
-            const cb = c.mul(b);
-            return [[a, bab], [bc], [a, cac], [cac, cb, bab, bc]];
-        }],
-    ["oxo", (a, b, c) => {
-            const aba = a.mul(b).mul(a);
-            const cbc = c.mul(b).mul(c);
-            const ac = a.mul(c);
-            const ca = c.mul(a);
-            return [[b, aba], [b, cbc], [ac], [cbc, ca, aba, ac]];
-        }],
-    ["oox", (a, b, c) => {
-            const aca = a.mul(c).mul(a);
-            const bcb = b.mul(c).mul(b);
-            const ab = a.mul(b);
-            const ba = b.mul(a);
-            return [[ab], [c, bcb], [c, aca], [bcb, ba, aca, ab]];
-        }],
-    ["ppo", (a, b, c) => {
-            const ab = a.mul(b);
-            const bc = b.mul(c);
-            const ca = c.mul(a);
-            const caca = ca.mul(ca);
-            const bcbc = bc.mul(bc);
-            const cbac = c.mul(b).mul(a).mul(c);
-            return [[ab], [bcbc], [caca], [ab, bcbc, cbac, caca], [cbac]];
-        }],
-    ["pop", (a, b, c) => {
-            const ab = a.mul(b);
-            const bc = b.mul(c);
-            const ca = c.mul(a);
-            const abab = ab.mul(ab);
-            const bcbc = bc.mul(bc);
-            const bacb = b.mul(a).mul(c).mul(b);
-            return [[abab], [bcbc], [ca], [bcbc, ca, abab, bacb], [bacb]];
-        }],
-    ["opp", (a, b, c) => {
-            const ab = a.mul(b);
-            const bc = b.mul(c);
-            const ca = c.mul(a);
-            const caca = ca.mul(ca);
-            const abab = ab.mul(ab);
-            const acba = a.mul(c).mul(b).mul(a);
-            return [[abab], [bc], [caca], [caca, acba, abab, bc], [acba]];
-        }],
     ["ooo", (a, b, c) => {
             const ab = a.mul(b);
             const bc = b.mul(c);
             const ca = c.mul(a);
             return [[ab], [bc], [ca], [ab, bc, ca]];
         }],
+    ["oxx", ionicFaceSelector],
+    ["xox", rotateP(ionicFaceSelector)],
+    ["xxo", rotateQ(ionicFaceSelector)],
+    ["xoo", halfFaceSelector],
+    ["oxo", rotateP(halfFaceSelector)],
+    ["oox", rotateQ(halfFaceSelector)],
+    ["opp", halfIonicFaceSelector],
+    ["pop", rotateP(halfIonicFaceSelector)],
+    ["ppo", rotateQ(halfIonicFaceSelector)],
+    ["xxd", compoundFaceSelector],
+    ["dxx", rotateP(compoundFaceSelector)],
+    ["xdx", rotateQ(compoundFaceSelector)],
+    ["ood", compoundChiralFaceSelector1],
+    ["doo", rotateP(compoundChiralFaceSelector1)],
+    ["odo", rotateQ(compoundChiralFaceSelector1)],
+    ["ppd", compoundChiralFaceSelector2],
+    ["dpp", rotateP(compoundChiralFaceSelector2)],
+    ["pdp", rotateQ(compoundChiralFaceSelector2)],
     ["oooo", (a, b, c) => {
             const ab = c.mul(b);
             const bc = b.mul(a);
@@ -255,7 +307,7 @@ export class NormalPolyhedron {
     faces;
     symmetryGroup;
     generators;
-    faceDefinitions;
+    #faceDefinitions;
     snubPoints;
     constructor(source, snubPoints, faceSelector, compoundTransforms) {
         const vertexCount = source.symmetryGroup.order * (compoundTransforms?.length || 1);
@@ -265,8 +317,9 @@ export class NormalPolyhedron {
         this.generators = source.generators;
         this.#compoundTransforms = compoundTransforms ?? [];
         this.snubPoints = snubPoints;
-        const faceDefinitions = faceSelector(source.generators[0], source.generators[1], source.generators[2]);
-        this.faceDefinitions = faceDefinitions;
+        const faceDefinitions = faceSelector(source.generators[0], source.generators[1], source.generators[2], source.symmetryGroup)
+            .map(f => f.filter(e => e.period > 1));
+        this.#faceDefinitions = faceDefinitions;
         let connectedIndex = 0;
         for (let i = 0; i < source.symmetryGroup.order; i++) {
             if (connectedIndexMap[i] !== undefined)
@@ -314,6 +367,8 @@ export class NormalPolyhedron {
         const faces = [];
         for (let mirrorA = 0; mirrorA < faceDefinitions.length; mirrorA++) {
             const faceDef = faceDefinitions[mirrorA];
+            if (faceDef.length === 0)
+                continue;
             usedVertexSet.clear();
             const isReflectable = faceDef[0].period === 2 && faceDef[0].rank % 2 === 1;
             for (let currentIndex = 0; currentIndex < source.symmetryGroup.order; currentIndex++) {
@@ -399,7 +454,7 @@ export class NormalPolyhedron {
     }
     getEdgeGenerators() {
         const result = [];
-        for (const face of this.faceDefinitions) {
+        for (const face of this.#faceDefinitions) {
             for (const element of face) {
                 if (!this.#isExisting(result, element)) {
                     result.push(element);
@@ -407,6 +462,9 @@ export class NormalPolyhedron {
             }
         }
         return result.map((e) => this.symmetryGroup.transforms[e.index]);
+    }
+    getGeneratorTransform(generatorIndex) {
+        return this.symmetryGroup.transforms[this.generators[generatorIndex].index];
     }
     setOrigin(newOrigin) {
         for (let i = 0; i < this.symmetryGroup.transforms.length; i++) {
