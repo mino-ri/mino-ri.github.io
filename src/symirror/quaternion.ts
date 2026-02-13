@@ -11,6 +11,10 @@ export type Quaternion = {
 export class Quaternions {
     static readonly identity: Quaternion = { w: 1, x: 0, y: 0, z: 0, negate: false }
 
+    static toVector(q: Quaternion): Vector {
+        return [q.x, q.y, q.z]
+    }
+
     static conjugateMul(a: Quaternion, bConj: Quaternion, resultTo?: Quaternion): Quaternion {
         const result = resultTo ?? { w: 0, x: 0, y: 0, z: 0, negate: false }
         result.w = -a.w * bConj.w - a.x * bConj.x - a.y * bConj.y - a.z * bConj.z
