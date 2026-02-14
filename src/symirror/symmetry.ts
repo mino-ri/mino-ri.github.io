@@ -193,8 +193,6 @@ export const unitTriangles: PolyhedronSource[] = function (): PolyhedronSource[]
         { id: "p72", name: "7/2 2 2", unit: symmetryP7.getGenerators(11, 2, 1), snubPoints: [[-0.5455983391838306, 0.0002153961070602594, 0.8380467802481928], [0.5455983391838306, 0.0002153961070602594, 0.8380467802481928]] },
         { id: "p73", name: "7/3 2 2", unit: symmetryP7.getGenerators(19, 2, 1), snubPoints: [[-0.5994232712396262, -0.1779700836642542, 0.7803963039487846], [0.5994232712396262, -0.1779700836642542, 0.7803963039487846], [-0.5034145899510695, 0.8423776194324194, 0.19228545681815487], [0.5034145899510695, 0.8423776194324194, 0.19228545681815487]] },
 
-        // 対象性は維持されるが、望む形ではなさそう
-        ...compound(p4Sources, symmetryA.getTransforms([0, 7, 8], rotate45)),
         // 立方体対称の複合多面体
         ...compound(aSources, symmetryB.getTransforms([0, 8], symmetryB.getMirrorRotator(2, 1))),
         ...compound(hSources, symmetryB.getTransforms([0, 8], symmetryB.getMirrorRotator(2, 1))),
@@ -269,60 +267,52 @@ const halfIonicFaceSelector: FaceSelectorFunction = (a, b, c) => {
     return [[abab], [bc], [caca], [caca, acba, abab, bc], [acba]]
 }
 
+function getCompoundElements(a: CoxeterGroupElement, b: CoxeterGroupElement, group: SymmetryGroup3) {
+    const period = a.mul(b).period
+    let frontToBack = group.getMaxElement()
+    let backToFront = frontToBack
+    const oppositeA = frontToBack.mul(frontToBack.rank % 2 === 1 ? a : b).mul(frontToBack)
+    const oppositeB = frontToBack.mul(frontToBack.rank % 2 === 1 ? b : a).mul(frontToBack)
+    const generators = [oppositeA, oppositeB]
+    for (let i = 0; i < period; i++) {
+        frontToBack = frontToBack.mul(generators[i % 2]!)
+        backToFront = generators[i % 2]!.mul(backToFront)
+    }
+    return { oppositeA, oppositeB, frontToBack, backToFront }
+}
+
 const compoundFaceSelector: FaceSelectorFunction = (a, b, _, group) => {
-    const period = a.mul(b).period
-    const generators = [a, b]
-    let opposite = group.getMaxElement()
-    const oppositeRank = opposite.rank
-    for (let i = 0; i < period; i++) {
-        opposite = generators[i % 2]!.mul(opposite)
-    }
-    if ((period + oppositeRank) % 2 === 0) {
+    const { oppositeA, oppositeB, frontToBack, backToFront } = getCompoundElements(a, b, group)
+    if (frontToBack.rank % 2 === 0) {
         // 対面同士が180°回転 (反角柱型)
-        return [[a, b], [], [], [a, opposite, b, opposite]]
+        return [[a, b], [], [], [a, frontToBack, oppositeB, backToFront]]
     } else {
         // 対面同士が平行移動したもの (角柱型)
-        return [[a, b], [b, opposite], [a, opposite]]
+        return [[a, b], [b, frontToBack, oppositeB, backToFront], [a, frontToBack, oppositeA, backToFront]]
     }
 }
 
-const compoundChiralFaceSelector1: FaceSelectorFunction = (a, b, _, group) => {
-    const period = a.mul(b).period
-    const generators = [a, b]
-    let opposite = group.getMaxElement()
-    const oppositeRank = opposite.rank
-    for (let i = 0; i < period; i++) {
-        opposite = generators[i % 2]!.mul(opposite)
-    }
-    if ((period + oppositeRank) % 2 === 0) {
+const compoundChiralFaceSelector: FaceSelectorFunction = (a, b, _, group) => {
+    const { oppositeA, oppositeB, frontToBack, backToFront } = getCompoundElements(a, b, group)
+    const ab = a.mul(b)
+    if (frontToBack.rank % 2 === 0) {
         // 対面同士が180°回転 (反角柱型)
-        const ab = a.mul(b)
-        return [[ab], [], [], [ab, opposite, opposite.mul(b).mul(a)]]
+        return [[ab], [], [], [ab, frontToBack, oppositeA.mul(oppositeB), backToFront]]
     } else {
         // 対面同士が平行移動したもの (角柱型)
-        const ab = a.mul(b)
-        const bc = b.mul(opposite)
-        const ca = opposite.mul(a)
-        return [[ab], [], [], [ab, bc, ca]]
+        return [[ab], [], [], [ab, b.mul(frontToBack), backToFront.mul(oppositeA)]]
     }
 }
 
-const compoundChiralFaceSelector2: FaceSelectorFunction = (a, b, _, group) => {
-    const period = a.mul(b).period
-    const generators = [a, b]
-    let opposite = group.getMaxElement()
-    const oppositeRank = opposite.rank
-    for (let i = 0; i < period; i++) {
-        opposite = generators[i % 2]!.mul(opposite)
-    }
-    if ((period + oppositeRank) % 2 === 0) {
+const compoundHalfFaceSelector: FaceSelectorFunction = (a, b, _, group) => {
+    const { oppositeA, oppositeB, frontToBack, backToFront } = getCompoundElements(a, b, group)
+    const ab = a.mul(b)
+    if (frontToBack.rank % 2 === 0) {
         // 対面同士が180°回転 (反角柱型)
-        const ab = a.mul(b)
-        return [[ab], [], [], [ab, b.mul(opposite), opposite.mul(a)]]
+        return [[ab], [], [], [ab, oppositeB.mul(frontToBack), backToFront.mul(oppositeA)]]
     } else {
         // 対面同士が平行移動したもの (角柱型)
-        const ab = a.mul(b)
-        return [[ab], [], [], [ab, opposite, b.mul(a), opposite]]
+        return [[ab], [], [], [ab, frontToBack, oppositeB.mul(oppositeA), backToFront]]
     }
 }
 
@@ -346,12 +336,12 @@ export const faceSelectorMap = new Map<string, FaceSelectorFunction>([
     ["xxd", compoundFaceSelector],
     ["dxx", rotateP(compoundFaceSelector)],
     ["xdx", rotateQ(compoundFaceSelector)],
-    ["ood", compoundChiralFaceSelector1],
-    ["doo", rotateP(compoundChiralFaceSelector1)],
-    ["odo", rotateQ(compoundChiralFaceSelector1)],
-    ["ppd", compoundChiralFaceSelector2],
-    ["dpp", rotateP(compoundChiralFaceSelector2)],
-    ["pdp", rotateQ(compoundChiralFaceSelector2)],
+    ["ood", compoundChiralFaceSelector],
+    ["doo", rotateP(compoundChiralFaceSelector)],
+    ["odo", rotateQ(compoundChiralFaceSelector)],
+    ["ppd", compoundHalfFaceSelector],
+    ["dpp", rotateP(compoundHalfFaceSelector)],
+    ["pdp", rotateQ(compoundHalfFaceSelector)],
     ["oooo", (a, b, c) => {
         const ab = c.mul(b)
         const bc = b.mul(a)
@@ -402,17 +392,17 @@ export class NormalPolyhedron implements IPolyhedron {
         const faceDefinitions = faceSelector(source.generators[0]!, source.generators[1]!, source.generators[2]!, source.symmetryGroup)
             .map(f => f.filter(e => e.period > 1))
         this.#faceDefinitions = faceDefinitions
+        const maxElement = source.symmetryGroup.getMaxElement()
 
         // 頂点ごとの連結成分ID
         // 連結成分Idへのマップ
         let connectedIndex = 0
+        let isHalf: boolean | null = null
         for (let i = 0; i < source.symmetryGroup.order; i++) {
-            if (connectedIndexMap[i] !== undefined) continue
+            if (connectedIndexMap[i] !== undefined || source.symmetryGroup.getElement(i).rank % 2 === 1) continue
 
             const vertexIndexes = [i]
             connectedIndexMap[i] = connectedIndex
-            connectedIndex += compoundTransforms ? 30 : 31
-
             for (let j = 0; j < vertexIndexes.length; j++) {
                 const currentIndex = vertexIndexes[j]!
                 const currentElement = source.symmetryGroup.getElement(currentIndex)
@@ -428,6 +418,16 @@ export class NormalPolyhedron implements IPolyhedron {
             }
 
             if (vertexIndexes.length >= source.symmetryGroup.order) break
+            isHalf ??= vertexIndexes.length >= source.symmetryGroup.order / 2
+
+            // 鏡像が分かれている図形は、鏡像を holosnub 限定図形にする
+            if (maxElement.rank % 2 === 1 && connectedIndexMap[source.symmetryGroup.getElement(i).mul(maxElement).index] === undefined) {
+                for (const j of vertexIndexes) {
+                    connectedIndexMap[source.symmetryGroup.getElement(j).mul(maxElement).index] ??= connectedIndex + (isHalf ? 31 : 30)
+                }
+            }
+
+            connectedIndex += compoundTransforms ? 30 : isHalf ? 31 : 1
         }
 
         // 辺の生成
