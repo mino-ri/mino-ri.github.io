@@ -311,10 +311,11 @@ export class NormalPolyhedron {
             .map(f => f.filter(e => e.period > 1));
         this.#faceDefinitions = faceDefinitions;
         const maxElement = source.symmetryGroup.getMaxElement();
+        const isCentrosymmetry = maxElement.rank % 2 === 1;
         let connectedIndex = 0;
         let isHalf = null;
         for (let i = 0; i < source.symmetryGroup.order; i++) {
-            if (connectedIndexMap[i] !== undefined || source.symmetryGroup.getElement(i).rank % 2 === 1)
+            if (connectedIndexMap[i] !== undefined || (isCentrosymmetry && source.symmetryGroup.getElement(i).rank % 2 === 1))
                 continue;
             const vertexIndexes = [i];
             connectedIndexMap[i] = connectedIndex;
@@ -334,7 +335,7 @@ export class NormalPolyhedron {
             if (vertexIndexes.length >= source.symmetryGroup.order)
                 break;
             isHalf ??= vertexIndexes.length >= source.symmetryGroup.order / 2;
-            if (maxElement.rank % 2 === 1 && connectedIndexMap[source.symmetryGroup.getElement(i).mul(maxElement).index] === undefined) {
+            if (isCentrosymmetry && connectedIndexMap[source.symmetryGroup.getElement(i).mul(maxElement).index] === undefined) {
                 for (const j of vertexIndexes) {
                     connectedIndexMap[source.symmetryGroup.getElement(j).mul(maxElement).index] ??= connectedIndex + (isHalf ? 31 : 30);
                 }
