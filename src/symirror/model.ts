@@ -269,9 +269,23 @@ function addPolygon(
         } else if (Vectors.getCrossPoint(v1, v2, v3, v0, cv)) {
             addTriangle(triangles, v0, v1, cv, r, g, b)
             addTriangle(triangles, v2, v3, cv, r, g, b)
-        } else {
+        } else if (Vectors.getCrossPoint(v0, v2, v1, v3, cv)) {
             addTriangle(triangles, v0, v1, v2, r, g, b)
             addTriangle(triangles, v2, v3, v0, r, g, b)
+        } else {
+            cv[0]! = 0
+            cv[1]! = 0
+            cv[2]! = 0
+            // 多角形の重心を計算
+            for (const idx of indexes) {
+                const v = vertexes[idx]!
+                Vectors.add(cv, v, cv)
+            }
+            Vectors.div(cv, indexes.length, cv)
+            addTriangle(triangles, v0, v1, cv, r, g, b)
+            addTriangle(triangles, v1, v2, cv, r, g, b)
+            addTriangle(triangles, v2, v3, cv, r, g, b)
+            addTriangle(triangles, v3, v0, cv, r, g, b)
         }
         return
     } else if (evenOdd && indexes.length === 5) {
