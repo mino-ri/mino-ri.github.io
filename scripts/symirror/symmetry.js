@@ -151,7 +151,6 @@ export const unitTriangles = function () {
         { id: "p71", name: "7 2 2", unit: symmetryP7.getDefaultGenerators(), snubPoints: [[-0.34915940259840533, 0.2083295343698897, 0.9136117975849204], [0.34915940259840533, 0.2083295343698897, 0.9136117975849204]] },
         { id: "p72", name: "7/2 2 2", unit: symmetryP7.getGenerators(11, 2, 1), snubPoints: [[-0.5455983391838306, 0.0002153961070602594, 0.8380467802481928], [0.5455983391838306, 0.0002153961070602594, 0.8380467802481928]] },
         { id: "p73", name: "7/3 2 2", unit: symmetryP7.getGenerators(19, 2, 1), snubPoints: [[-0.5994232712396262, -0.1779700836642542, 0.7803963039487846], [0.5994232712396262, -0.1779700836642542, 0.7803963039487846], [-0.5034145899510695, 0.8423776194324194, 0.19228545681815487], [0.5034145899510695, 0.8423776194324194, 0.19228545681815487]] },
-        ...compound(p4Sources, symmetryA.getTransforms([0, 7, 8], rotate45)),
         ...compound(aSources, symmetryB.getTransforms([0, 8], symmetryB.getMirrorRotator(2, 1))),
         ...compound(hSources, symmetryB.getTransforms([0, 8], symmetryB.getMirrorRotator(2, 1))),
         ...compound(p4Sources, symmetryB.getTransforms([0, 4, 6], Quaternions.mul(symmetryB.getMirrorRotator(2, 1), symmetryP4.getMirrorRotator(1, 2)))),
@@ -212,55 +211,46 @@ const halfIonicFaceSelector = (a, b, c) => {
     const acba = a.mul(c).mul(b).mul(a);
     return [[abab], [bc], [caca], [caca, acba, abab, bc], [acba]];
 };
+function getCompoundElements(a, b, group) {
+    const period = a.mul(b).period;
+    let frontToBack = group.getMaxElement();
+    let backToFront = frontToBack;
+    const oppositeA = frontToBack.mul(frontToBack.rank % 2 === 1 ? a : b).mul(frontToBack);
+    const oppositeB = frontToBack.mul(frontToBack.rank % 2 === 1 ? b : a).mul(frontToBack);
+    const generators = [oppositeA, oppositeB];
+    for (let i = 0; i < period; i++) {
+        frontToBack = frontToBack.mul(generators[i % 2]);
+        backToFront = generators[i % 2].mul(backToFront);
+    }
+    return { oppositeA, oppositeB, frontToBack, backToFront };
+}
 const compoundFaceSelector = (a, b, _, group) => {
-    const period = a.mul(b).period;
-    const generators = [a, b];
-    let opposite = group.getMaxElement();
-    const oppositeRank = opposite.rank;
-    for (let i = 0; i < period; i++) {
-        opposite = generators[i % 2].mul(opposite);
-    }
-    if ((period + oppositeRank) % 2 === 0) {
-        return [[a, b], [], [], [a, opposite, b, opposite]];
+    const { oppositeA, oppositeB, frontToBack, backToFront } = getCompoundElements(a, b, group);
+    if (frontToBack.rank % 2 === 0) {
+        return [[a, b], [], [], [a, frontToBack, oppositeB, backToFront]];
     }
     else {
-        return [[a, b], [b, opposite], [a, opposite]];
+        return [[a, b], [b, frontToBack, oppositeB, backToFront], [a, frontToBack, oppositeA, backToFront]];
     }
 };
-const compoundChiralFaceSelector1 = (a, b, _, group) => {
-    const period = a.mul(b).period;
-    const generators = [a, b];
-    let opposite = group.getMaxElement();
-    const oppositeRank = opposite.rank;
-    for (let i = 0; i < period; i++) {
-        opposite = generators[i % 2].mul(opposite);
-    }
-    if ((period + oppositeRank) % 2 === 0) {
-        const ab = a.mul(b);
-        return [[ab], [], [], [ab, opposite, opposite.mul(b).mul(a)]];
+const compoundChiralFaceSelector = (a, b, _, group) => {
+    const { oppositeA, oppositeB, frontToBack, backToFront } = getCompoundElements(a, b, group);
+    const ab = a.mul(b);
+    if (frontToBack.rank % 2 === 0) {
+        return [[ab], [], [], [ab, frontToBack, oppositeA.mul(oppositeB), backToFront]];
     }
     else {
-        const ab = a.mul(b);
-        const bc = b.mul(opposite);
-        const ca = opposite.mul(a);
-        return [[ab], [], [], [ab, bc, ca]];
+        return [[ab], [], [], [ab, b.mul(frontToBack), backToFront.mul(oppositeA)]];
     }
 };
-const compoundChiralFaceSelector2 = (a, b, _, group) => {
-    const period = a.mul(b).period;
-    const generators = [a, b];
-    let opposite = group.getMaxElement();
-    const oppositeRank = opposite.rank;
-    for (let i = 0; i < period; i++) {
-        opposite = generators[i % 2].mul(opposite);
-    }
-    if ((period + oppositeRank) % 2 === 0) {
-        const ab = a.mul(b);
-        return [[ab], [], [], [ab, b.mul(opposite), opposite.mul(a)]];
+const compoundHalfFaceSelector = (a, b, _, group) => {
+    const { oppositeA, oppositeB, frontToBack, backToFront } = getCompoundElements(a, b, group);
+    const ab = a.mul(b);
+    if (frontToBack.rank % 2 === 0) {
+        return [[ab], [], [], [ab, oppositeB.mul(frontToBack), backToFront.mul(oppositeA)]];
     }
     else {
-        const ab = a.mul(b);
-        return [[ab], [], [], [ab, opposite, b.mul(a), opposite]];
+        return [[ab], [], [], [ab, frontToBack, oppositeB.mul(oppositeA), backToFront]];
     }
 };
 export const faceSelectorMap = new Map([
@@ -283,12 +273,12 @@ export const faceSelectorMap = new Map([
     ["xxd", compoundFaceSelector],
     ["dxx", rotateP(compoundFaceSelector)],
     ["xdx", rotateQ(compoundFaceSelector)],
-    ["ood", compoundChiralFaceSelector1],
-    ["doo", rotateP(compoundChiralFaceSelector1)],
-    ["odo", rotateQ(compoundChiralFaceSelector1)],
-    ["ppd", compoundChiralFaceSelector2],
-    ["dpp", rotateP(compoundChiralFaceSelector2)],
-    ["pdp", rotateQ(compoundChiralFaceSelector2)],
+    ["ood", compoundChiralFaceSelector],
+    ["doo", rotateP(compoundChiralFaceSelector)],
+    ["odo", rotateQ(compoundChiralFaceSelector)],
+    ["ppd", compoundHalfFaceSelector],
+    ["dpp", rotateP(compoundHalfFaceSelector)],
+    ["pdp", rotateQ(compoundHalfFaceSelector)],
     ["oooo", (a, b, c) => {
             const ab = c.mul(b);
             const bc = b.mul(a);
@@ -320,13 +310,14 @@ export class NormalPolyhedron {
         const faceDefinitions = faceSelector(source.generators[0], source.generators[1], source.generators[2], source.symmetryGroup)
             .map(f => f.filter(e => e.period > 1));
         this.#faceDefinitions = faceDefinitions;
+        const maxElement = source.symmetryGroup.getMaxElement();
         let connectedIndex = 0;
+        let isHalf = null;
         for (let i = 0; i < source.symmetryGroup.order; i++) {
-            if (connectedIndexMap[i] !== undefined)
+            if (connectedIndexMap[i] !== undefined || source.symmetryGroup.getElement(i).rank % 2 === 1)
                 continue;
             const vertexIndexes = [i];
             connectedIndexMap[i] = connectedIndex;
-            connectedIndex += compoundTransforms ? 30 : 31;
             for (let j = 0; j < vertexIndexes.length; j++) {
                 const currentIndex = vertexIndexes[j];
                 const currentElement = source.symmetryGroup.getElement(currentIndex);
@@ -342,6 +333,13 @@ export class NormalPolyhedron {
             }
             if (vertexIndexes.length >= source.symmetryGroup.order)
                 break;
+            isHalf ??= vertexIndexes.length >= source.symmetryGroup.order / 2;
+            if (maxElement.rank % 2 === 1 && connectedIndexMap[source.symmetryGroup.getElement(i).mul(maxElement).index] === undefined) {
+                for (const j of vertexIndexes) {
+                    connectedIndexMap[source.symmetryGroup.getElement(j).mul(maxElement).index] ??= connectedIndex + (isHalf ? 31 : 30);
+                }
+            }
+            connectedIndex += compoundTransforms ? 30 : isHalf ? 31 : 1;
         }
         const lineSet = new Map();
         for (let currentIndex = 0; currentIndex < source.symmetryGroup.order; currentIndex++) {
