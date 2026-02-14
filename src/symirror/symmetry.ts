@@ -393,13 +393,14 @@ export class NormalPolyhedron implements IPolyhedron {
             .map(f => f.filter(e => e.period > 1))
         this.#faceDefinitions = faceDefinitions
         const maxElement = source.symmetryGroup.getMaxElement()
+        const isCentrosymmetry = maxElement.rank % 2 === 1
 
         // 頂点ごとの連結成分ID
         // 連結成分Idへのマップ
         let connectedIndex = 0
         let isHalf: boolean | null = null
         for (let i = 0; i < source.symmetryGroup.order; i++) {
-            if (connectedIndexMap[i] !== undefined || source.symmetryGroup.getElement(i).rank % 2 === 1) continue
+            if (connectedIndexMap[i] !== undefined || (isCentrosymmetry && source.symmetryGroup.getElement(i).rank % 2 === 1)) continue
 
             const vertexIndexes = [i]
             connectedIndexMap[i] = connectedIndex
@@ -421,7 +422,7 @@ export class NormalPolyhedron implements IPolyhedron {
             isHalf ??= vertexIndexes.length >= source.symmetryGroup.order / 2
 
             // 鏡像が分かれている図形は、鏡像を holosnub 限定図形にする
-            if (maxElement.rank % 2 === 1 && connectedIndexMap[source.symmetryGroup.getElement(i).mul(maxElement).index] === undefined) {
+            if (isCentrosymmetry && connectedIndexMap[source.symmetryGroup.getElement(i).mul(maxElement).index] === undefined) {
                 for (const j of vertexIndexes) {
                     connectedIndexMap[source.symmetryGroup.getElement(j).mul(maxElement).index] ??= connectedIndex + (isHalf ? 31 : 30)
                 }
