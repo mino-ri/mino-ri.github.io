@@ -145,7 +145,8 @@ export class Vectors {
         Vectors.mul(Vectors.#v, t, Vectors.#v);
         Vectors.add(Vectors.#v, c, Vectors.#v);
         Vectors.add(Vectors.#u, Vectors.#v, resultTo);
-        return Vectors.mul(resultTo, 0.5, resultTo);
+        Vectors.mul(resultTo, 0.5, resultTo);
+        return Vectors.distanceSquared(Vectors.#u, Vectors.#v) < 1e-6 ? resultTo : null;
     }
     static average(vectors, resultTo) {
         for (let i = 0; i < resultTo.length; i++) {
