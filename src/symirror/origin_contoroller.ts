@@ -1,6 +1,6 @@
 import { NormalPolyhedron } from "./symmetry.js"
 import { type Vector, Vectors } from "./vector.js"
-import { createCircle, createPath, createLine, clearChildren } from "../svg_generator.js"
+import { clearChildren, createCircle, createLine, createPath } from "../svg_generator.js"
 import { Quaternion, Quaternions } from "./quaternion.js"
 
 // origin 操作コントローラ
@@ -19,6 +19,7 @@ export class OriginController {
     #originPoint: SVGCircleElement
     #circleGroup: SVGGElement
     #canvas: HTMLCanvasElement
+    #evalPoints: number[]
     #onOriginChange: (origin: Vector) => void
 
     constructor(
@@ -33,6 +34,7 @@ export class OriginController {
         this.#circleGroup = circleGroup
         this.#canvas = canvas
         this.#onOriginChange = onOriginChange
+        this.#evalPoints = new Array<number>((canvas.width + 2) * (canvas.height + 2))
         this.#setupEventListeners()
     }
 
@@ -240,6 +242,10 @@ export class OriginController {
         }
     }
 
+    #addPoint(x: number, y: number) {
+        this.#circleGroup.append(createCircle(x, y, 0.03, "#fff", "none", "0"))
+    }
+
     static #colors = [
         { r: 0, g: 0, b: 0 },
         { r: 180, g: 0, b: 0 },
@@ -257,32 +263,22 @@ export class OriginController {
         const width = this.#canvas.width
         const height = this.#canvas.height
         const imageData = ctx.createImageData(width, height)
-        const edgeGenerators = polyhedron.getEdgeGenerators()
+        const { lengths: edgeGenerators, additionalLengths } = polyhedron.getEdgeGenerators()
         const vector0: Vector = [0, 0, 0]
         const vector1: Vector = [0, 0, 0]
-        const distances = new Array<number>(edgeGenerators.length)
+        const distances = new Array<number>(edgeGenerators.length + additionalLengths.length)
+        this.#evalPoints.fill(1)
 
         for (let px = 0; px < width; px++) {
             for (let py = 0; py < height; py++) {
                 const x = (px + 0.5) / width * 2.25 - 1.125
                 const y = (py + 0.5) / height * 2.25 - 1.125
+                this.#evalPoints[px + 1 + (py + 1) * width] = this.#calcDistance(x, y, vector0, vector1, edgeGenerators, additionalLengths, distances)
                 if (x * x + y * y > 1) {
                     continue
                 }
 
-                this.#uiVectorToSphereVector(x, y, vector0)
-                for (let i = 0; i < edgeGenerators.length; i++) {
-                    Quaternions.transform(vector0, edgeGenerators[i]!, vector1)
-                    distances[i] = Vectors.distanceSquared(vector0, vector1)
-                }
-
-                const colorIndex = distances.length >= 4
-                    ? ((distances[0]! > distances[1]!) === (distances[2]! > distances[3]!) ? 1 : 0) +
-                    ((distances[1]! > distances[2]!) === (distances[0]! > distances[3]!) ? 2 : 0) +
-                    ((distances[2]! > distances[0]!) === (distances[1]! > distances[3]!) ? 4 : 0)
-                    : (distances[0]! > distances[1]! ? 1 : 0) +
-                    (distances[1]! > distances[2]! ? 2 : 0) +
-                    (distances[2]! > distances[0]! ? 4 : 0)
+                const colorIndex = this.#getColorIndex(distances, edgeGenerators.length)
                 const { r, g, b } = OriginController.#colors[colorIndex]!
                 const baseIndex = (py * width + px) * 4
                 imageData.data[baseIndex + 0] = r
@@ -292,27 +288,123 @@ export class OriginController {
             }
         }
 
+        this.#specialPoints.splice(0)
+        for (let px = 0; px < width; px++) {
+            for (let py = 0; py < height; py++) {
+                const x = (px + 0.5) / width * 2.25 - 1.125
+                const y = (py + 0.5) / height * 2.25 - 1.125
+                if (x * x + y * y > 1.01 || !this.#isSpecialPoint(px, py, width)) continue
+
+                let baseX = px
+                let baseY = py
+                let range = 1
+                let delta = 0.25
+                for (let i = 0; i < 4; i++) {
+                    let minValue = 1
+                    let minX = 0
+                    let minY = 0
+                    for (let dx = -range; dx <= range; dx += delta) {
+                        for (let dy = -range; dy <= range; dy += delta) {
+                            const ex = (baseX + dx + 0.5) / width * 2.25 - 1.125
+                            const ey = (baseY + dy + 0.5) / height * 2.25 - 1.125
+                            const value = this.#calcDistance(ex, ey, vector0, vector1, edgeGenerators, additionalLengths, distances)
+                            if (value < minValue) {
+                                minX = dx
+                                minY = dy
+                                minValue = value
+                            }
+                        }
+                    }
+                    baseX += minX
+                    baseY += minY
+                    range *= 0.25
+                    delta *= 0.25
+                }
+
+                baseX = (baseX + 0.5) / width * 2.25 - 1.125
+                baseY = (baseY + 0.5) / height * 2.25 - 1.125
+                this.#specialPoints.push(this.#uiVectorToSphereVector(baseX, baseY))
+                this.#addPoint(x, y)
+            }
+        }
+
         ctx.putImageData(imageData, 0, 0)
+        console.log(this.#specialPoints)
     }
 
-    #addCrossMirror(n1: Vector, n2: Vector): void {
-        const sp = [0, 0, 0]
-        Vectors.cross(n1, n2, sp)
-        Vectors.normalizeSelf(sp)
-        if (sp[2]! < 0) {
-            Vectors.negateSelf(sp)
+    #calcDistance(x: number, y: number, vector0: Vector, vector1: Vector, edgeGenerators: Quaternion[], additionalLengths: Quaternion[], distances: number[]): number {
+        this.#uiVectorToSphereVector(x, y, vector0)
+        for (let i = 0; i < edgeGenerators.length; i++) {
+            Quaternions.transform(vector0, edgeGenerators[i]!, vector1)
+            distances[i] = Vectors.distanceSquared(vector0, vector1)
         }
-        this.#specialPoints.push(sp)
-        if (Math.abs(sp[2]!) <= 0.001) {
-            this.#specialPoints.push([-sp[0]!, -sp[1]!, -sp[2]!]) // 赤道上の点は反対側も追加
+        for (let i = 0; i < additionalLengths.length; i++) {
+            Quaternions.transform(vector0, additionalLengths[i]!, vector1)
+            distances[edgeGenerators.length + i] = Vectors.distanceSquared(vector0, vector1)
         }
+
+        let evaluateValue = 0
+        for (let i = 0; i < edgeGenerators.length; i++) {
+            for (let j = i + 1; j < edgeGenerators.length; j++) {
+                const a = distances[i]!
+                const b = distances[j]!
+                evaluateValue += a * b * (a - b) * (a - b)
+            }
+        }
+
+        for (let i = 0; i < additionalLengths.length; i++) {
+            for (let j = i + 1; j < additionalLengths.length; j++) {
+                const a = distances[edgeGenerators.length + i]!
+                const b = distances[edgeGenerators.length + j]!
+                evaluateValue += a * b * (a - b) * (a - b)
+            }
+        }
+
+        return evaluateValue
+    }
+
+    #getColorIndex(distances: number[], normalCount: number) {
+        let colorIndex = 0
+        let additionalBase = 1
+        if (normalCount >= 4) {
+            colorIndex = ((distances[0]! > distances[1]!) === (distances[2]! > distances[3]!) ? 1 : 0) +
+                ((distances[1]! > distances[2]!) === (distances[0]! > distances[3]!) ? 2 : 0) +
+                ((distances[2]! > distances[0]!) === (distances[1]! > distances[3]!) ? 4 : 0)
+            additionalBase = 8
+        } else if (normalCount == 3) {
+            colorIndex = (distances[0]! > distances[1]! ? 1 : 0) +
+                (distances[1]! > distances[2]! ? 2 : 0) +
+                (distances[2]! > distances[0]! ? 4 : 0)
+            additionalBase = 4
+        } else if (normalCount == 2) {
+            colorIndex = (distances[0]! > distances[1]! ? 1 : 0)
+            additionalBase = 2
+        }
+
+        if (distances.length - normalCount >= 2) {
+            colorIndex += (distances[normalCount]! > distances[normalCount + 1]! ? additionalBase : 0)
+        }
+
+        return colorIndex
+    }
+
+    #isSpecialPoint(px: number, py: number, width: number): boolean {
+        const currentValue = this.#evalPoints[px + 1 + (py + 1) * width]!
+        if (currentValue >= 0.0625) return false
+
+        for (let x = 0; x < 3; x++) {
+            for (let y = 0; y < 3; y++) {
+                if (this.#evalPoints[px + x + (py + y) * width]! < currentValue) {
+                    return false
+                }
+            }
+        }
+        return true
     }
 
     setMirrorCircles(polyhedron: NormalPolyhedron, faceSelector: string): void {
         clearChildren(this.#circleGroup)
         const mirrors = []
-        const normals = []
-        this.#specialPoints.splice(0)
         const generators: Vector[] = []
         switch (faceSelector) {
             case "oxx": case "xox": case "xxo": case "opp": case "pop": case "ppo":
@@ -366,44 +458,10 @@ export class OriginController {
                 break
         }
 
-        const length = generators.length
-        // 鏡の二等分線の描画
-        for (let i = 0; i < length; i++) {
-            for (let j = i + 1; j < length; j++) {
-                const g1 = generators[i]!
-                const g2 = generators[j]!
-                const normal1 = Vectors.add(g1, g2)
-                const normal2 = Vectors.sub(g1, g2)
-                Vectors.normalizeSelf(normal1)
-                Vectors.normalizeSelf(normal2)
-                normals.push(normal1, normal2)
-            }
-        }
-
         // 鏡そのものの描画
         for (const q of generators) {
-            this.#addMirror(q, "#fff", "0.02")
+            this.#addMirror(q, "#fff", "0.015")
             mirrors.push(q)
-        }
-
-        // 特別な点、全ての二等分線の交点
-        if (polyhedron.snubPoints && faceSelector === "ooo") {
-            for (const sp of polyhedron.snubPoints) {
-                this.#specialPoints.push(sp)
-            }
-        } else {
-            for (let i = 0; i < normals.length; i++) {
-                for (let j = i + 1; j < normals.length; j++) {
-                    this.#addCrossMirror(normals[i]!, normals[j]!)
-                }
-            }
-        }
-
-        // 鏡本体と二等分線の交点
-        for (const n1 of mirrors) {
-            for (const n2 of normals) {
-                this.#addCrossMirror(n1, n2)
-            }
         }
 
         this.#setCanvas(polyhedron)
