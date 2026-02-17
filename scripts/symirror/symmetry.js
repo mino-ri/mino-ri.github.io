@@ -158,9 +158,10 @@ export const unitTriangles = function () {
 }();
 function rotateP(f) {
     return (a, b, c, g) => {
-        const { elements, additionalElements: additionalLength } = f(b, c, a, g);
+        const { elements, additionalElements, mirrorImageReflector } = f(b, c, a, g);
         return {
-            additionalElements: additionalLength,
+            mirrorImageReflector,
+            additionalElements,
             elements: [
                 elements[2],
                 elements[0],
@@ -172,9 +173,10 @@ function rotateP(f) {
 }
 function rotateQ(f) {
     return (a, b, c, g) => {
-        const { elements, additionalElements: additionalLength } = f(c, a, b, g);
+        const { elements, additionalElements, mirrorImageReflector } = f(c, a, b, g);
         return {
-            additionalElements: additionalLength,
+            mirrorImageReflector,
+            additionalElements,
             elements: [
                 elements[1],
                 elements[2],
@@ -187,14 +189,20 @@ function rotateQ(f) {
 const ionicFaceSelector = (a, b, c) => {
     const aba = a.mul(b).mul(a);
     const aca = a.mul(c).mul(a);
-    return { additionalElements: [a, b.mul(c)], elements: [[aba, b], [b, c], [aca, c], [aba, aca]] };
+    return {
+        additionalElements: [a, b.mul(c)], elements: [[aba, b], [b, c], [aca, c], [aba, aca]],
+        mirrorImageReflector: a,
+    };
 };
 const halfFaceSelector = (a, b, c) => {
     const bab = b.mul(a).mul(b);
     const cac = c.mul(a).mul(c);
     const bc = b.mul(c);
     const cb = c.mul(b);
-    return { additionalElements: [b, c], elements: [[a, bab], [bc], [a, cac], [cac, cb, bab, bc]] };
+    return {
+        additionalElements: [b, c], elements: [[a, bab], [bc], [a, cac], [cac, cb, bab, bc]],
+        mirrorImageReflector: b,
+    };
 };
 const halfIonicFaceSelector = (a, b, c) => {
     const ab = a.mul(b);
@@ -203,7 +211,7 @@ const halfIonicFaceSelector = (a, b, c) => {
     const caca = ca.mul(ca);
     const abab = ab.mul(ab);
     const acba = a.mul(c).mul(b).mul(a);
-    return { additionalElements: [], elements: [[abab], [bc], [caca], [caca, acba, abab, bc], [acba]] };
+    return { elements: [[abab], [bc], [caca], [caca, acba, abab, bc], [acba]] };
 };
 function getCompoundElements(a, b, group) {
     const period = a.mul(b).period;
@@ -221,13 +229,13 @@ function getCompoundElements(a, b, group) {
 const compoundFaceSelector = (a, b, _, group) => {
     const { oppositeA, oppositeB, frontToBack, backToFront } = getCompoundElements(a, b, group);
     if (frontToBack.rank % 2 === 0) {
-        return { additionalElements: [], elements: [[a, b], [], [], [a, frontToBack, oppositeB, backToFront]] };
+        return { elements: [[a, b], [], [], [a, frontToBack, oppositeB, backToFront]] };
     }
     else {
-        return { additionalElements: [], elements: [[a, b], [b, frontToBack, oppositeB, backToFront], [a, frontToBack, oppositeA, backToFront]] };
+        return { elements: [[a, b], [b, frontToBack, oppositeB, backToFront], [a, frontToBack, oppositeA, backToFront]] };
     }
 };
-const compoundChiralFaceSelector = (a, b, _, group) => {
+const compoundChiralFaceSelector1 = (a, b, _, group) => {
     const { oppositeA, oppositeB, frontToBack, backToFront } = getCompoundElements(a, b, group);
     const ab = a.mul(b);
     if (frontToBack.rank % 2 === 0) {
@@ -237,7 +245,20 @@ const compoundChiralFaceSelector = (a, b, _, group) => {
         };
     }
     else {
-        return { additionalElements: [], elements: [[ab], [], [], [ab, b.mul(frontToBack), backToFront.mul(oppositeA)]] };
+        return { elements: [[ab], [], [], [ab, b.mul(frontToBack), backToFront.mul(oppositeA)]] };
+    }
+};
+const compoundChiralFaceSelector2 = (a, b, _, group) => {
+    const { oppositeA, frontToBack, backToFront } = getCompoundElements(a, b, group);
+    const ab = a.mul(b);
+    if (frontToBack.rank % 2 === 0) {
+        return {
+            additionalElements: [frontToBack.mul(ab), ab.mul(backToFront)],
+            elements: [[ab], [], [], [ab, frontToBack, backToFront.mul(b).mul(a)]],
+        };
+    }
+    else {
+        return { elements: [[ab], [], [], [ab, b.mul(frontToBack), backToFront.mul(oppositeA)]] };
     }
 };
 const compoundHalfFaceSelector = (a, b, _, group) => {
@@ -246,23 +267,25 @@ const compoundHalfFaceSelector = (a, b, _, group) => {
     if (frontToBack.rank % 2 === 0) {
         return {
             additionalElements: [a, b],
+            mirrorImageReflector: a,
             elements: [[ab], [], [], [ab, oppositeB.mul(frontToBack), backToFront.mul(oppositeA)]],
         };
     }
     else {
         return {
             additionalElements: [a, b],
+            mirrorImageReflector: a,
             elements: [[ab], [], [], [ab, frontToBack, oppositeB.mul(oppositeA), backToFront]],
         };
     }
 };
 export const faceSelectorMap = new Map([
-    ["xxx", (a, b, c) => ({ additionalElements: [], elements: [[a, b], [b, c], [c, a]] })],
+    ["xxx", (a, b, c) => ({ elements: [[a, b], [b, c], [c, a]] })],
     ["ooo", (a, b, c) => {
             const ab = a.mul(b);
             const bc = b.mul(c);
             const ca = c.mul(a);
-            return { additionalElements: [], elements: [[ab], [bc], [ca], [ab, bc, ca]] };
+            return { elements: [[ab], [bc], [ca], [ab, bc, ca]] };
         }],
     ["oxx", ionicFaceSelector],
     ["xox", rotateP(ionicFaceSelector)],
@@ -276,21 +299,37 @@ export const faceSelectorMap = new Map([
     ["xxd", compoundFaceSelector],
     ["dxx", rotateP(compoundFaceSelector)],
     ["xdx", rotateQ(compoundFaceSelector)],
-    ["ood", compoundChiralFaceSelector],
-    ["doo", rotateP(compoundChiralFaceSelector)],
-    ["odo", rotateQ(compoundChiralFaceSelector)],
+    ["ood", compoundChiralFaceSelector1],
+    ["ooe", compoundChiralFaceSelector2],
+    ["doo", rotateP(compoundChiralFaceSelector1)],
+    ["eoo", rotateP(compoundChiralFaceSelector2)],
+    ["odo", rotateQ(compoundChiralFaceSelector1)],
+    ["oeo", rotateQ(compoundChiralFaceSelector2)],
     ["ppd", compoundHalfFaceSelector],
     ["dpp", rotateP(compoundHalfFaceSelector)],
     ["pdp", rotateQ(compoundHalfFaceSelector)],
     ["oooo", (a, b, c) => {
-            const ab = c.mul(b);
-            const bc = b.mul(a);
-            const ac = c.mul(a);
-            const ca = a.mul(c);
-            const abDash = ac.mul(ab).mul(ca);
-            const bcDash = ca.mul(bc).mul(ac);
-            return { additionalElements: [], elements: [[bc], [bcDash], [ab], [ab, bc, abDash, bcDash], [abDash]] };
+            const cb = c.mul(b);
+            const ba = b.mul(a);
+            const ca = c.mul(a);
+            const ac = a.mul(c);
+            const cbDash = ca.mul(cb).mul(ac);
+            const baDash = ac.mul(ba).mul(ca);
+            return { elements: [[ba], [baDash], [cb], [cb, ba, cbDash, baDash], [cbDash]] };
         }],
+    ["oddd", (a, b, c) => {
+            const ab = a.mul(b);
+            const cb = c.mul(b);
+            const ba = b.mul(a);
+            const ca = c.mul(a);
+            const ac = a.mul(c);
+            const cbDash = ca.mul(cb).mul(ac);
+            const baDash = ac.mul(ba).mul(ca);
+            const antiCb = ab.mul(ac).mul(ab).mul(ca);
+            return {
+                elements: [[], [cb], [cb, ba, cbDash, baDash], [baDash, ba, antiCb]],
+            };
+        }]
 ]);
 export class NormalPolyhedron {
     #compoundTransforms;
@@ -309,27 +348,31 @@ export class NormalPolyhedron {
         this.symmetryGroup = source.symmetryGroup;
         this.generators = source.generators;
         this.#compoundTransforms = compoundTransforms ?? [];
-        const { elements: faceDefinitions, additionalElements: additionalLength } = faceSelector(source.generators[0], source.generators[1], source.generators[2], source.symmetryGroup);
-        this.#additionalLengths = additionalLength;
+        const { elements: faceDefinitions, additionalElements, mirrorImageReflector } = faceSelector(source.generators[0], source.generators[1], source.generators[2], source.symmetryGroup);
+        this.#additionalLengths = additionalElements ?? [];
         this.#faceDefinitions = faceDefinitions.map(f => f.filter(e => e.period > 1));
         const maxElement = source.symmetryGroup.getMaxElement();
         const isCentrosymmetry = maxElement.rank % 2 === 1;
+        const reflector = mirrorImageReflector ?? (isCentrosymmetry ? maxElement : undefined);
         let connectedIndex = 0;
         let isHalf = null;
         for (let i = 0; i < source.symmetryGroup.order; i++) {
             if (connectedIndexMap[i] !== undefined || (isCentrosymmetry && source.symmetryGroup.getElement(i).rank % 2 === 1))
                 continue;
             const vertexIndexes = [i];
+            let isChiral = true;
             connectedIndexMap[i] = connectedIndex;
             for (let j = 0; j < vertexIndexes.length; j++) {
                 const currentIndex = vertexIndexes[j];
                 const currentElement = source.symmetryGroup.getElement(currentIndex);
                 for (const faceDef of this.#faceDefinitions) {
                     for (const edgeElement of faceDef) {
-                        const otherIndex = currentElement.mul(edgeElement).index;
+                        const otherElement = currentElement.mul(edgeElement);
+                        const otherIndex = otherElement.index;
                         if (connectedIndexMap[otherIndex] === undefined) {
                             connectedIndexMap[otherIndex] = connectedIndexMap[currentIndex] ?? 0;
                             vertexIndexes.push(otherIndex);
+                            isChiral &&= otherElement.rank % 2 === 0;
                         }
                     }
                 }
@@ -337,9 +380,18 @@ export class NormalPolyhedron {
             if (vertexIndexes.length >= source.symmetryGroup.order)
                 break;
             isHalf ??= vertexIndexes.length >= source.symmetryGroup.order / 2;
-            if (isCentrosymmetry && connectedIndexMap[source.symmetryGroup.getElement(i).mul(maxElement).index] === undefined) {
-                for (const j of vertexIndexes) {
-                    connectedIndexMap[source.symmetryGroup.getElement(j).mul(maxElement).index] ??= connectedIndex + (isHalf ? 31 : 30);
+            if (reflector && connectedIndexMap[source.symmetryGroup.getElement(i).mul(reflector).index] === undefined) {
+                const oppositeConnectedIndex = connectedIndex + (isHalf ? 31 : 30);
+                if (!isChiral && i !== 0) {
+                    for (const j of vertexIndexes) {
+                        connectedIndexMap[j] = oppositeConnectedIndex;
+                        connectedIndexMap[source.symmetryGroup.getElement(j).mul(reflector).index] ??= connectedIndex;
+                    }
+                }
+                else {
+                    for (const j of vertexIndexes) {
+                        connectedIndexMap[source.symmetryGroup.getElement(j).mul(reflector).index] ??= oppositeConnectedIndex;
+                    }
                 }
             }
             connectedIndex += compoundTransforms ? 30 : isHalf ? 31 : 1;

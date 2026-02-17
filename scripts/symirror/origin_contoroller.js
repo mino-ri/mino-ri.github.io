@@ -293,7 +293,6 @@ export class OriginController {
             }
         }
         ctx.putImageData(imageData, 0, 0);
-        console.log(this.#specialPoints);
     }
     #calcDistance(x, y, vector0, vector1, edgeGenerators, additionalLengths, distances) {
         this.#uiVectorToSphereVector(x, y, vector0);
