@@ -329,7 +329,6 @@ export class OriginController {
         }
 
         ctx.putImageData(imageData, 0, 0)
-        console.log(this.#specialPoints)
     }
 
     #calcDistance(x: number, y: number, vector0: Vector, vector1: Vector, edgeGenerators: Quaternion[], additionalLengths: Quaternion[], distances: number[]): number {
