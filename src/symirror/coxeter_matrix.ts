@@ -75,14 +75,17 @@ export class CoxeterMatrix {
         return new CoxeterMatrix([a])
     }
 
-    static create3D(p: number, q: number, r?: number): CoxeterMatrix {
-        return new CoxeterMatrix([p, r ?? 2, q])
+    static create3D(p: number, q: number): CoxeterMatrix {
+        return new CoxeterMatrix([p, 2, q])
     }
 
-    static create4D(ab: number, bc: number, cd: number, bd?: number, ac?: number, ad?: number): CoxeterMatrix {
-        return new CoxeterMatrix([ab, ac ?? 2, bc, ad ?? 2, bd ?? 2, cd])
+    static create4D(a: number, b: number, c: number): CoxeterMatrix {
+        return new CoxeterMatrix([a, 2, b, 2, 2, c])
     }
 
+    static create4DDemicube(a: number, b: number, c: number): CoxeterMatrix {
+        return new CoxeterMatrix([a, 2, b, 2, c, 2])
+    }
     static #getAlternatingNumbers(a: number, b: number, count: number): [number[], number[]] {
         const aRepr = new Array<number>(count)
         const bRepr = new Array<number>(count)

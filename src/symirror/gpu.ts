@@ -1,75 +1,5 @@
 /// <reference types="@webgpu/types" />
 
-// 頂点シェーダー: MVP 変換を適用
-// フラグメントシェーダー: flat shading
-const shaderCode = /* wgsl */`
-struct Uniforms {
-    modelMatrix: mat4x4<f32>,
-    viewProjectionMatrix: mat4x4<f32>,
-    lightProjection: mat4x4<f32>,
-}
-
-@group(0) @binding(0) var<uniform> uniforms: Uniforms;
-@group(0) @binding(1) var shadowMap: texture_depth_2d;
-@group(0) @binding(2) var shadowSampler: sampler_comparison;
-
-struct VertexInput {
-    @location(0) position: vec3<f32>,
-    @location(1) normal: vec3<f32>,
-    @location(2) color: vec3<f32>,
-}
-
-struct VertexOutput {
-    @builtin(position) position: vec4<f32>,
-    @location(0) worldPos: vec4<f32>,
-    @location(1) worldNormal: vec3<f32>,
-    @location(2) color: vec3<f32>,
-}
-
-@vertex
-fn vertexMain(input: VertexInput) -> VertexOutput {
-    var output: VertexOutput;
-    let worldPos = uniforms.modelMatrix * vec4<f32>(input.position, 1.0);
-    output.worldPos = worldPos;
-    output.position = uniforms.viewProjectionMatrix * worldPos;
-    output.worldNormal = (uniforms.modelMatrix * vec4<f32>(input.normal, 0.0)).xyz;
-    output.color = input.color;
-    return output;
-}
-
-@vertex
-fn vertexShadow(input: VertexInput) -> @builtin(position) vec4<f32> {
-    let worldPos = uniforms.modelMatrix * vec4<f32>(input.position, 1.0);
-    let shadowPos = uniforms.lightProjection * worldPos;
-    return shadowPos;
-}
-
-@fragment
-fn fragmentMain(input: VertexOutput, @builtin(front_facing) isFront : bool) -> @location(0) vec4<f32> {
-    let normal = normalize(input.worldNormal) * select(-1.0, 1.0, isFront);
-    var shadowPos = uniforms.lightProjection * (input.worldPos + vec4<f32>(normal / 512.0, 0.0));
-    shadowPos = shadowPos / shadowPos.w;
-    shadowPos.x = 0.5 + shadowPos.x * 0.5;
-    shadowPos.y = 0.5 - shadowPos.y * 0.5;
-    let shadowFactor = textureSampleCompare(shadowMap, shadowSampler, shadowPos.xy, shadowPos.z);
-    let shadow = 0.5 + shadowFactor * 0.5;
-    let lightPos = vec3<f32>(-1.5085136, -5.1947107, -7.4417315);
-    let sight = vec3<f32>(0.0, 0.0, -5.0);
-    let lightDir = normalize(lightPos - input.worldPos.xyz);
-    let cameraDir = normalize(sight - input.worldPos.xyz);
-    let halfVector = normalize(lightDir + cameraDir);
-    let diffuse = max(0, dot(normal.xyz, lightDir)) * 0.85;
-    let specula = pow(max(0, dot(normal.xyz, halfVector)), 5.0) * 0.2;
-    let ambient = 0.2;
-    let brightness = (ambient + diffuse * shadow);
-    return vec4<f32>(input.color * brightness + vec3<f32>(specula, specula, specula) * shadow, 1.0);
-}
-  
-@fragment
-fn fragmentEmpty() {
-}  
-`
-
 export interface PolyhedronMesh {
     // インターリーブ頂点データ: [x, y, z, nx, ny, nz, r, g, b] × 頂点数
     vertexData: Float32Array
@@ -83,11 +13,18 @@ export interface PolyhedronRenderer {
     destroy(): void
 }
 
+export type ShaderSource = {
+    shaderCode: string
+    dynamicBufferByteSize: number
+    constantBufferValue: Float32Array
+    vertexBufferLayout: GPUVertexBufferLayout
+}
+
 export interface GpuContext {
     readonly device: GPUDevice
     readonly context: GPUCanvasContext
     readonly format: GPUTextureFormat
-    createPolyhedronRenderer(): PolyhedronRenderer
+    createPolyhedronRenderer(shaderSource: ShaderSource): PolyhedronRenderer
 }
 
 export const initGpu = async (canvas: HTMLCanvasElement): Promise<GpuContext | null> => {
@@ -126,25 +63,10 @@ class GpuContextImpl implements GpuContext {
         readonly format: GPUTextureFormat,
     ) { }
 
-    createPolyhedronRenderer(): PolyhedronRenderer {
-        return new PolyhedronRendererImpl(this.device, this.context, this.format)
+    createPolyhedronRenderer({ shaderCode, dynamicBufferByteSize, constantBufferValue, vertexBufferLayout }: ShaderSource): PolyhedronRenderer {
+        return new PolyhedronRendererImpl(this.device, this.context, this.format, shaderCode, dynamicBufferByteSize, constantBufferValue, vertexBufferLayout)
     }
 }
-
-// View-Projection 行列 (perspective + lookAt)
-const viewProjectionMatrix = new Float32Array([
-    4, 0, 0, 0,
-    0, -4, 0, 0,
-    0, 0, 1.75, 1,
-    -0.009765625, 0.009765625, 3.5, 5,
-])
-
-const lightViewProjectionMatrix = new Float32Array([
-    8.96319, 1.025915, 0.836241245, 0.163968876,
-    0, -7.548099, 2.87967658, 0.5646425,
-    -1.81692851, 5.06099749, 4.12530756, 0.808883846,
-    -0.0178622864, 0.0178622864, 5.09999847, 9.2,
-])
 
 class PolyhedronRendererImpl implements PolyhedronRenderer {
     #pipeline: GPURenderPipeline
@@ -174,20 +96,15 @@ class PolyhedronRendererImpl implements PolyhedronRenderer {
         device: GPUDevice,
         context: GPUCanvasContext,
         format: GPUTextureFormat,
+        code: string,
+        dynamicBufferByteSize: number,
+        constantBufferValue: Float32Array,
+        vertexBufferLayout: GPUVertexBufferLayout,
     ) {
         this.#device = device
         this.#context = context
         this.#format = format
-        const shaderModule = device.createShaderModule({ code: shaderCode })
-
-        const vertexBuferLayout: GPUVertexBufferLayout = {
-            arrayStride: 9 * 4, // 9 floats per vertex
-            attributes: [
-                { shaderLocation: 0, offset: 0, format: "float32x3" }, // position
-                { shaderLocation: 1, offset: 12, format: "float32x3" }, // normal
-                { shaderLocation: 2, offset: 24, format: "float32x3" }, // color
-            ],
-        }
+        const shaderModule = device.createShaderModule({ code })
 
         this.#shadowSampler = device.createSampler({
             compare: 'less', // シェーダー内の textureSampleCompare で使用
@@ -247,7 +164,7 @@ class PolyhedronRendererImpl implements PolyhedronRenderer {
         const shadowVertexState: GPUVertexState = {
             module: shaderModule,
             entryPoint: "vertexShadow",
-            buffers: [vertexBuferLayout],
+            buffers: [vertexBufferLayout],
         }
         const ignoreDepthStencilState: GPUDepthStencilState = {
             format: "depth24plus-stencil8",
@@ -295,7 +212,7 @@ class PolyhedronRendererImpl implements PolyhedronRenderer {
         const vertexState: GPUVertexState = {
             module: shaderModule,
             entryPoint: "vertexMain",
-            buffers: [vertexBuferLayout],
+            buffers: [vertexBufferLayout],
         }
         this.#pipeline = device.createRenderPipeline({
             layout: layout,
@@ -331,8 +248,7 @@ class PolyhedronRendererImpl implements PolyhedronRenderer {
             depthStencil: readDepthStencilState,
         })
 
-        this.#device.queue.writeBuffer(this.#uniformBuffer, 64, viewProjectionMatrix.buffer, viewProjectionMatrix.byteOffset, viewProjectionMatrix.byteLength)
-        this.#device.queue.writeBuffer(this.#uniformBuffer, 128, lightViewProjectionMatrix.buffer, lightViewProjectionMatrix.byteOffset, lightViewProjectionMatrix.byteLength)
+        this.#device.queue.writeBuffer(this.#uniformBuffer, dynamicBufferByteSize, constantBufferValue.buffer, constantBufferValue.byteOffset, constantBufferValue.byteLength)
     }
 
     updateMesh(mesh: PolyhedronMesh): void {

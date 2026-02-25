@@ -1,9 +1,10 @@
-import { NormalPolyhedron, unitTriangles, faceSelectorMap } from "./symmetry.js"
+import { NormalPolyhedron, unitTriangles, faceSelectorMap } from "./polyhedron.js"
 import { initGpu, PolyhedronRenderer, type GpuContext } from "./gpu.js"
 import { buildPolyhedronMesh, type VisibilityType, FillType } from "./model.js"
 import { type Vector } from "./vector.js"
 import { setCenter } from "../svg_generator.js"
 import { OriginController } from "./origin_contoroller.js"
+import { shaderSource } from "./gpu_3d.js"
 
 // 回転状態を管理するクォータニオン
 class RotationState {
@@ -104,7 +105,7 @@ class PolyhedronViewer {
         originController: OriginController,
     ) {
         this.#canvas = canvas
-        this.#renderer = gpuContext.createPolyhedronRenderer()
+        this.#renderer = gpuContext.createPolyhedronRenderer(shaderSource)
         this.#originController = originController
         this.#setupEventListeners()
         this.#startRenderLoop()
