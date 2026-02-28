@@ -18,6 +18,10 @@ struct VertexInput {
     @location(2) color: vec3<f32>,
 }
 
+struct BallInput {
+    @location(3) position: vec3<f32>,
+}
+
 struct VertexOutput {
     @builtin(position) position: vec4<f32>,
     @location(0) worldPos: vec4<f32>,
@@ -37,8 +41,26 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
 }
 
 @vertex
+fn vertexBall(input: VertexInput, ballInput: BallInput) -> VertexOutput {
+    var output: VertexOutput;
+    let worldPos = uniforms.modelMatrix * vec4<f32>(ballInput.position, 1.0) + vec4<f32>(input.position, 0.0);
+    output.worldPos = worldPos;
+    output.position = uniforms.viewProjectionMatrix * worldPos;
+    output.worldNormal = input.normal;
+    output.color = input.color;
+    return output;
+}
+
+@vertex
 fn vertexShadow(input: VertexInput) -> @builtin(position) vec4<f32> {
     let worldPos = uniforms.modelMatrix * vec4<f32>(input.position, 1.0);
+    let shadowPos = uniforms.lightProjection * worldPos;
+    return shadowPos;
+}
+
+@vertex
+fn vertexBallShadow(input: VertexInput, ballInput: BallInput) -> @builtin(position) vec4<f32> {
+    let worldPos = uniforms.modelMatrix * vec4<f32>(ballInput.position, 1.0) + vec4<f32>(input.position, 0.0);
     let shadowPos = uniforms.lightProjection * worldPos;
     return shadowPos;
 }
@@ -84,11 +106,20 @@ const constantBufferValue = new Float32Array([
 
 
 const vertexBufferLayout: GPUVertexBufferLayout = {
-    arrayStride: 9 * 4, // 9 floats per vertex
+    stepMode: "vertex",
+    arrayStride: 9 * 4,
     attributes: [
         { shaderLocation: 0, offset: 0, format: "float32x3" }, // position
         { shaderLocation: 1, offset: 12, format: "float32x3" }, // normal
         { shaderLocation: 2, offset: 24, format: "float32x3" }, // color
+    ],
+}
+
+const ballInstanceBufferLayout: GPUVertexBufferLayout = {
+    stepMode: "instance",
+    arrayStride: 3 * 4,
+    attributes: [
+        { shaderLocation: 3, offset: 0, format: "float32x3" }, // position
     ],
 }
 
@@ -97,4 +128,5 @@ export const shaderSource: ShaderSource = {
     dynamicBufferByteSize: 64,
     constantBufferValue,
     vertexBufferLayout,
+    ballInstanceBufferLayout,
 }
