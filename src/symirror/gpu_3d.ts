@@ -22,6 +22,11 @@ struct BallInput {
     @location(3) position: vec3<f32>,
 }
 
+struct LineInput {
+    @location(3) positionA: vec3<f32>,
+    @location(4) positionB: vec3<f32>,
+}
+
 struct VertexOutput {
     @builtin(position) position: vec4<f32>,
     @location(0) worldPos: vec4<f32>,
@@ -41,12 +46,28 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
 }
 
 @vertex
-fn vertexBall(input: VertexInput, ballInput: BallInput) -> VertexOutput {
+fn vertexBallMain(input: VertexInput, ballInput: BallInput) -> VertexOutput {
     var output: VertexOutput;
     let worldPos = uniforms.modelMatrix * vec4<f32>(ballInput.position, 1.0) + vec4<f32>(input.position, 0.0);
     output.worldPos = worldPos;
     output.position = uniforms.viewProjectionMatrix * worldPos;
     output.worldNormal = input.normal;
+    output.color = input.color;
+    return output;
+}
+
+@vertex
+fn vertexLineMain(input: VertexInput, lineInput: LineInput) -> VertexOutput {
+    let lineDir = lineInput.positionB - lineInput.positionA;
+    let zDir = normalize(lineDir);
+    let xDir = normalize(cross(zDir, select(vec3<f32>(1, 0, 0), vec3<f32>(0, 1, 0), abs(zDir.x) > 0.9)));
+    let yDir = normalize(cross(zDir, xDir));
+    var output: VertexOutput;
+    let pos3 = lineInput.positionA + input.position.x * xDir + input.position.y * yDir + input.position.z * lineDir;
+    let worldPos = uniforms.modelMatrix * vec4<f32>(pos3, 1.0);
+    output.worldPos = worldPos;
+    output.position = uniforms.viewProjectionMatrix * worldPos;
+    output.worldNormal = (uniforms.modelMatrix * vec4<f32>(input.normal.x * xDir + input.normal.y * yDir, 0.0)).xyz;
     output.color = input.color;
     return output;
 }
@@ -61,6 +82,18 @@ fn vertexShadow(input: VertexInput) -> @builtin(position) vec4<f32> {
 @vertex
 fn vertexBallShadow(input: VertexInput, ballInput: BallInput) -> @builtin(position) vec4<f32> {
     let worldPos = uniforms.modelMatrix * vec4<f32>(ballInput.position, 1.0) + vec4<f32>(input.position, 0.0);
+    let shadowPos = uniforms.lightProjection * worldPos;
+    return shadowPos;
+}
+
+@vertex
+fn vertexLineShadow(input: VertexInput, lineInput: LineInput) -> @builtin(position) vec4<f32> {
+    let lineDir = lineInput.positionB - lineInput.positionA;
+    let zDir = normalize(lineDir);
+    let xDir = normalize(cross(zDir, select(vec3<f32>(1, 0, 0), vec3<f32>(0, 1, 0), abs(zDir.x) > 0.9)));
+    let yDir = normalize(cross(zDir, xDir));
+    let pos3 = lineInput.positionA + input.position.x * xDir + input.position.y * yDir + input.position.z * lineDir;
+    let worldPos = uniforms.modelMatrix * vec4<f32>(pos3, 1.0);
     let shadowPos = uniforms.lightProjection * worldPos;
     return shadowPos;
 }
@@ -123,10 +156,20 @@ const ballInstanceBufferLayout: GPUVertexBufferLayout = {
     ],
 }
 
+const lineInstanceBufferLayout: GPUVertexBufferLayout = {
+    stepMode: "instance",
+    arrayStride: 6 * 4,
+    attributes: [
+        { shaderLocation: 3, offset: 0, format: "float32x3" }, // position
+        { shaderLocation: 4, offset: 12, format: "float32x3" }, // position
+    ],
+}
+
 export const shaderSource: ShaderSource = {
     shaderCode,
     dynamicBufferByteSize: 64,
     constantBufferValue,
     vertexBufferLayout,
     ballInstanceBufferLayout,
+    lineInstanceBufferLayout,
 }

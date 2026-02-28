@@ -34,84 +34,6 @@ const crosses: { value: Vector | null, source: Vector }[] = [
     { value: null, source: [0, 0, 0] },
 ]
 
-function addEdgeSurface(
-    triangles: number[],
-    vertex1: Vector,
-    vertex2: Vector,
-    left: Vector,
-    right: Vector,
-) {
-    const r = 0.25
-    const g = 0.25
-    const b = 0.25
-    const p1x = vertex1[0]! + left[0]! / 96
-    const p1y = vertex1[1]! + left[1]! / 96
-    const p1z = vertex1[2]! + left[2]! / 96
-    const p2x = vertex1[0]! + right[0]! / 96
-    const p2y = vertex1[1]! + right[1]! / 96
-    const p2z = vertex1[2]! + right[2]! / 96
-    const p3x = vertex2[0]! + left[0]! / 96
-    const p3y = vertex2[1]! + left[1]! / 96
-    const p3z = vertex2[2]! + left[2]! / 96
-    const p4x = vertex2[0]! + right[0]! / 96
-    const p4y = vertex2[1]! + right[1]! / 96
-    const p4z = vertex2[2]! + right[2]! / 96
-
-    triangles.push(
-        p1x, p1y, p1z, left[0]!, left[1]!, left[2]!, r, g, b,
-        p2x, p2y, p2z, right[0]!, right[1]!, right[2]!, r, g, b,
-        p3x, p3y, p3z, left[0]!, left[1]!, left[2]!, r, g, b,
-
-        p3x, p3y, p3z, left[0]!, left[1]!, left[2]!, r, g, b,
-        p2x, p2y, p2z, right[0]!, right[1]!, right[2]!, r, g, b,
-        p4x, p4y, p4z, right[0]!, right[1]!, right[2]!, r, g, b,
-    )
-}
-
-function addEdge(
-    triangles: number[],
-    vertex1: Vector,
-    vertex2: Vector,
-) {
-    Vectors.sub(vertex2, vertex1, cv)
-    if (Vectors.lengthSquared(cv) < 0.0035) {
-        return
-    }
-
-    Vectors.normalizeSelf(cv)
-    if (Math.abs(cv[0]!) >= 0.9) {
-        mv[0] = 0
-        mv[1] = 1
-        mv[2] = 0
-    } else {
-        mv[0] = 1
-        mv[1] = 0
-        mv[2] = 0
-    }
-    Vectors.cross(mv, cv, nv)
-    Vectors.normalizeSelf(nv)
-    Vectors.cross(cv, nv, mv)
-    Vectors.normalizeSelf(mv)
-    Vectors.add(nv, mv, cv)
-    Vectors.normalizeSelf(cv)
-    Vectors.sub(mv, nv, ov)
-    Vectors.normalizeSelf(ov)
-    // nv - cv - mv - ov の順に並んでいる
-    addEdgeSurface(triangles, vertex1, vertex2, nv, cv)
-    addEdgeSurface(triangles, vertex1, vertex2, cv, mv)
-    addEdgeSurface(triangles, vertex1, vertex2, mv, ov)
-    Vectors.negateSelf(nv)
-    addEdgeSurface(triangles, vertex1, vertex2, ov, nv)
-    Vectors.negateSelf(cv)
-    Vectors.negateSelf(mv)
-    Vectors.negateSelf(ov)
-    addEdgeSurface(triangles, vertex1, vertex2, nv, cv)
-    addEdgeSurface(triangles, vertex1, vertex2, cv, mv)
-    addEdgeSurface(triangles, vertex1, vertex2, mv, ov)
-    Vectors.negateSelf(nv)
-    addEdgeSurface(triangles, vertex1, vertex2, ov, nv)
-}
-
 function addTriangle(
     triangles: number[],
     v0: Vector,
@@ -352,7 +274,6 @@ const maxError = 1.0 / 128.0
 const cv = [0, 0, 0]
 const nv = [0, 0, 0]
 const mv = [0, 0, 0]
-const ov = [0, 0, 0]
 const holosnubMinIndex = 30
 
 // 多面体データから描画用メッシュを生成するユーティリティ
@@ -492,33 +413,31 @@ export function buildPolyhedronMesh(
     const ballInstances: number[] = []
     if (vertexVisibility) {
         if (verfView) {
-            ballInstances.push(
-                polyhedron.vertexes[0]![0]!,
-                polyhedron.vertexes[0]![1]!,
-                polyhedron.vertexes[0]![2]!,
-            )
+            const vertex = polyhedron.vertexes[0]!
+            ballInstances.push(vertex[0]!, vertex[1]!, vertex[2]!)
         } else {
             for (let i = 0; i < polyhedron.vertexes.length; i++) {
                 if (!holosnub && polyhedron.vertexConnectedIndexes[i]! >= holosnubMinIndex) {
                     continue
                 }
-                ballInstances.push(
-                    polyhedron.vertexes[i]![0]!,
-                    polyhedron.vertexes[i]![1]!,
-                    polyhedron.vertexes[i]![2]!,
-                )
+                const vertex = polyhedron.vertexes[i]!
+                ballInstances.push(vertex[0]!, vertex[1]!, vertex[2]!)
             }
         }
     }
 
+    const lineInstances: number[] = []
     if (edgeVisibility) {
         for (const { index1, index2, connectedIndex } of polyhedron.edges) {
+            const vertex1 = polyhedron.vertexes[index1]!
+            const vertex2 = polyhedron.vertexes[index2]!
             if (verfView && !refPointIndexes.includes(index1) && !refPointIndexes.includes(index2) ||
-                !holosnub && connectedIndex >= holosnubMinIndex) {
+                !holosnub && connectedIndex >= holosnubMinIndex ||
+                Vectors.distanceSquared(vertex1, vertex2) < 0.0035) {
                 continue
             }
 
-            addEdge(triangles, polyhedron.vertexes[index1]!, polyhedron.vertexes[index2]!)
+            lineInstances.push(vertex1[0]!, vertex1[1]!, vertex1[2]!, vertex2[0]!, vertex2[1]!, vertex2[2]!)
         }
     }
 
@@ -530,5 +449,7 @@ export function buildPolyhedronMesh(
         normalVertexCount,
         ballInstanceData: new Float32Array(ballInstances),
         ballCount: ballInstances.length / 3,
+        lineInstanceData: new Float32Array(lineInstances),
+        lineCount: lineInstances.length / 6,
     }
 }

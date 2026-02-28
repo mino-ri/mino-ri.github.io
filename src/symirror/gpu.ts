@@ -5,9 +5,11 @@ export interface PolyhedronMesh {
     // インターリーブ頂点データ: [x, y, z, nx, ny, nz, r, g, b] × 頂点数
     vertexData: Float32Array
     ballInstanceData: Float32Array
+    lineInstanceData: Float32Array
     stencilVertexCounts: number[]
     normalVertexCount: number
     ballCount: number
+    lineCount: number
 }
 
 export interface PolyhedronRenderer {
@@ -22,6 +24,7 @@ export type ShaderSource = {
     constantBufferValue: Float32Array
     vertexBufferLayout: GPUVertexBufferLayout
     ballInstanceBufferLayout: GPUVertexBufferLayout
+    lineInstanceBufferLayout: GPUVertexBufferLayout
 }
 
 export interface GpuContext {
@@ -67,243 +70,34 @@ class GpuContextImpl implements GpuContext {
         readonly format: GPUTextureFormat,
     ) { }
 
-    createPolyhedronRenderer({ shaderCode, dynamicBufferByteSize, constantBufferValue, vertexBufferLayout, ballInstanceBufferLayout }: ShaderSource): PolyhedronRenderer {
-        return new PolyhedronRendererImpl(this.device, this.context, this.format, shaderCode, dynamicBufferByteSize, constantBufferValue, vertexBufferLayout, ballInstanceBufferLayout)
+    createPolyhedronRenderer({ shaderCode, dynamicBufferByteSize, constantBufferValue, vertexBufferLayout, ballInstanceBufferLayout, lineInstanceBufferLayout }: ShaderSource): PolyhedronRenderer {
+        return new PolyhedronRendererImpl(this.device, this.context, this.format, shaderCode, dynamicBufferByteSize, constantBufferValue, vertexBufferLayout, ballInstanceBufferLayout, lineInstanceBufferLayout)
     }
 }
 
-class PolyhedronRendererImpl implements PolyhedronRenderer {
-    #pipeline: GPURenderPipeline
-    #ballPipeline: GPURenderPipeline
-    #stencilWritePipeline: GPURenderPipeline
-    #stencilMaskPipeline: GPURenderPipeline
-    #shadowPipeline: GPURenderPipeline
-    #shadowBallPipeline: GPURenderPipeline
-    #shadowStencilWritePipeline: GPURenderPipeline
-    #shadowStencilMaskPipeline: GPURenderPipeline
-    #uniformBuffer: GPUBuffer
-    #shadowBindGroup: GPUBindGroup
-    #bindGroupLayout: GPUBindGroupLayout
-    #bindGroup: GPUBindGroup
-    #vertexBuffer: GPUBuffer | null = null
-    #ballVertexBuffer: GPUBuffer
-    #ballInstanceBuffer: GPUBuffer | null = null
-    #stencilVertexCounts: number[] = []
-    #normalVertexCount = 0
-    #ballCount = 0
-    #depthTexture: GPUTexture | null = null
-    #shadowTexture: GPUTexture
-    #shadowSampler: GPUSampler
-    #lastWidth = 0
-    #lastHeight = 0
+class RenderBuffer {
     #device: GPUDevice
-    #context: GPUCanvasContext
-    #format: GPUTextureFormat
+    uniformBuffer: GPUBuffer
+    ballVertexBuffer: GPUBuffer
+    lineVertexBuffer: GPUBuffer
+    vertexBuffer: GPUBuffer | null = null
+    ballInstanceBuffer: GPUBuffer | null = null
+    lineInstanceBuffer: GPUBuffer | null = null
+    stencilVertexCounts: number[] = []
+    normalVertexCount = 0
+    ballCount = 0
+    lineCount = 0
 
-    constructor(
-        device: GPUDevice,
-        context: GPUCanvasContext,
-        format: GPUTextureFormat,
-        code: string,
-        dynamicBufferByteSize: number,
-        constantBufferValue: Float32Array,
-        vertexBufferLayout: GPUVertexBufferLayout,
-        ballInstanceBufferLayout: GPUVertexBufferLayout,
-    ) {
+    constructor(device: GPUDevice, dynamicBufferByteSize: number, constantBufferValue: Float32Array) {
         this.#device = device
-        this.#context = context
-        this.#format = format
-        const shaderModule = device.createShaderModule({ code })
-
-        this.#shadowSampler = device.createSampler({
-            compare: 'less', // シェーダー内の textureSampleCompare で使用
-            magFilter: 'linear',
-            minFilter: 'linear',
-        });
-
-        // Uniform buffer: model matrix (64 bytes) + viewProjection matrix (64 bytes) + lightProjection matrix (64 bytes)
-        this.#uniformBuffer = device.createBuffer({
+        this.uniformBuffer = device.createBuffer({
             size: constantBufferValue.byteLength + dynamicBufferByteSize,
             usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
         })
 
-        const shadowBindGroupLayout = device.createBindGroupLayout({
-            entries: [
-                { binding: 0, visibility: GPUShaderStage.VERTEX, buffer: { type: "uniform" } },
-            ],
-        })
-        this.#shadowBindGroup = this.#device.createBindGroup({
-            layout: shadowBindGroupLayout,
-            entries: [
-                { binding: 0, resource: { buffer: this.#uniformBuffer } },
-            ],
-        })
-
-        this.#bindGroupLayout = device.createBindGroupLayout({
-            entries: [
-                { binding: 0, visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT, buffer: { type: "uniform" } },
-                { binding: 1, visibility: GPUShaderStage.FRAGMENT, texture: { sampleType: 'depth' } },
-                { binding: 2, visibility: GPUShaderStage.FRAGMENT, sampler: { type: 'comparison' } },
-            ],
-        })
-
-        this.#shadowTexture = this.#device.createTexture({
-            size: [2048, 2048],
-            format: 'depth24plus-stencil8',
-            usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING,
-        })
-
-        this.#bindGroup = this.#device.createBindGroup({
-            layout: this.#bindGroupLayout,
-            entries: [
-                { binding: 0, resource: { buffer: this.#uniformBuffer } },
-                { binding: 1, resource: this.#shadowTexture.createView({ aspect: "depth-only" }) },
-                { binding: 2, resource: this.#shadowSampler },
-            ],
-        })
-
-        const premitiveState: GPUPrimitiveState = {
-            topology: "triangle-list",
-            cullMode: "none",
-            frontFace: "ccw",
-        }
-        const shadowLayout = device.createPipelineLayout({
-            bindGroupLayouts: [shadowBindGroupLayout],
-        })
-        const shadowVertexState: GPUVertexState = {
-            module: shaderModule,
-            entryPoint: "vertexShadow",
-            buffers: [vertexBufferLayout],
-        }
-        const ignoreDepthStencilState: GPUDepthStencilState = {
-            format: "depth24plus-stencil8",
-            depthWriteEnabled: true,
-            depthCompare: "less",
-            stencilFront: { compare: "always", passOp: "keep" },
-            stencilBack: { compare: "always", passOp: "keep" },
-        }
-        const readDepthStencilState: GPUDepthStencilState = {
-            format: "depth24plus-stencil8",
-            depthWriteEnabled: true,
-            depthCompare: "less",
-            stencilFront: { compare: "not-equal", passOp: "zero", depthFailOp: "zero" },
-            stencilBack: { compare: "not-equal", passOp: "zero", depthFailOp: "zero" },
-        }
-        const writeDepthStencilState: GPUDepthStencilState = {
-            format: "depth24plus-stencil8",
-            depthWriteEnabled: false,
-            depthCompare: "always",
-            stencilFront: { compare: "always", passOp: "invert" },
-            stencilBack: { compare: "always", passOp: "invert" },
-        }
-        this.#shadowPipeline = device.createRenderPipeline({
-            layout: shadowLayout,
-            vertex: shadowVertexState,
-            primitive: premitiveState,
-            depthStencil: ignoreDepthStencilState,
-        })
-        this.#shadowStencilWritePipeline = device.createRenderPipeline({
-            layout: shadowLayout,
-            vertex: shadowVertexState,
-            primitive: premitiveState,
-            depthStencil: writeDepthStencilState,
-        })
-        this.#shadowStencilMaskPipeline = device.createRenderPipeline({
-            layout: shadowLayout,
-            vertex: shadowVertexState,
-            primitive: premitiveState,
-            depthStencil: readDepthStencilState,
-        })
-        this.#shadowBallPipeline = device.createRenderPipeline({
-            layout: shadowLayout,
-            vertex: {
-                module: shaderModule,
-                entryPoint: "vertexBallShadow",
-                buffers: [vertexBufferLayout, ballInstanceBufferLayout],
-            },
-            primitive: premitiveState,
-            depthStencil: ignoreDepthStencilState,
-        })
-
-        const layout = device.createPipelineLayout({
-            bindGroupLayouts: [this.#bindGroupLayout],
-        })
-        const vertexState: GPUVertexState = {
-            module: shaderModule,
-            entryPoint: "vertexMain",
-            buffers: [vertexBufferLayout],
-        }
-        this.#pipeline = device.createRenderPipeline({
-            layout: layout,
-            vertex: vertexState,
-            fragment: {
-                module: shaderModule,
-                entryPoint: "fragmentMain",
-                targets: [{ format: this.#format }],
-            },
-            primitive: premitiveState,
-            depthStencil: ignoreDepthStencilState,
-        })
-        this.#stencilWritePipeline = device.createRenderPipeline({
-            layout: layout,
-            vertex: vertexState,
-            fragment: {
-                module: shaderModule,
-                entryPoint: "fragmentEmpty",
-                targets: [{ format: this.#format, writeMask: 0 }],
-            },
-            primitive: premitiveState,
-            depthStencil: writeDepthStencilState,
-        })
-        this.#stencilMaskPipeline = device.createRenderPipeline({
-            layout: layout,
-            vertex: vertexState,
-            fragment: {
-                module: shaderModule,
-                entryPoint: "fragmentMain",
-                targets: [{ format: this.#format }],
-            },
-            primitive: premitiveState,
-            depthStencil: readDepthStencilState,
-        })
-        this.#ballPipeline = device.createRenderPipeline({
-            layout: layout,
-            vertex: {
-                module: shaderModule,
-                entryPoint: "vertexBall",
-                buffers: [vertexBufferLayout, ballInstanceBufferLayout],
-            },
-            fragment: {
-                module: shaderModule,
-                entryPoint: "fragmentMain",
-                targets: [{ format: this.#format }],
-            },
-            primitive: premitiveState,
-            depthStencil: ignoreDepthStencilState,
-        })
-
-        this.#device.queue.writeBuffer(this.#uniformBuffer, dynamicBufferByteSize, constantBufferValue.buffer, constantBufferValue.byteOffset, constantBufferValue.byteLength)
-        this.#ballVertexBuffer = this.#createBallMesh()
-    }
-
-    updateMesh(mesh: PolyhedronMesh): void {
-        this.#vertexBuffer = this.#setMesh(this.#vertexBuffer, mesh.vertexData)
-        this.#ballInstanceBuffer = this.#setMesh(this.#ballInstanceBuffer, mesh.ballInstanceData)
-        this.#stencilVertexCounts = mesh.stencilVertexCounts
-        this.#normalVertexCount = mesh.normalVertexCount
-        this.#ballCount = mesh.ballCount
-    }
-
-    #setMesh(buffer: GPUBuffer | null, data: Float32Array) {
-        if (!buffer || buffer.size < data.byteLength) {
-            buffer?.destroy()
-            buffer = this.#device.createBuffer({
-                size: data.byteLength,
-                usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
-            })
-        }
-        this.#device.queue.writeBuffer(buffer, 0, data.buffer, data.byteOffset, data.byteLength)
-        return buffer
+        this.#device.queue.writeBuffer(this.uniformBuffer, dynamicBufferByteSize, constantBufferValue.buffer, constantBufferValue.byteOffset, constantBufferValue.byteLength)
+        this.ballVertexBuffer = this.#createBallMesh()
+        this.lineVertexBuffer = this.#createLineMesh()
     }
 
     #createBallMesh(): GPUBuffer {
@@ -419,8 +213,351 @@ class PolyhedronRendererImpl implements PolyhedronRenderer {
         return vertexBuffer
     }
 
+    #createLineMesh(): GPUBuffer {
+        const triangles: number[] = []
+        const r = 0.25
+        const g = 0.25
+        const b = 0.25
+        for (let i = 0; i < 8; i++) {
+            const thetaA = Math.PI / 4 * i
+            const thetaB = Math.PI / 4 * ((i + 1) % 8)
+            const cosA = Math.cos(thetaA)
+            const sinA = Math.sin(thetaA)
+            const cosB = Math.cos(thetaB)
+            const sinB = Math.sin(thetaB)
+
+            triangles.push(
+                cosA / 96, sinA / 96, 0, cosA, sinA, 0, r, g, b,
+                cosB / 96, sinB / 96, 0, cosB, sinB, 0, r, g, b,
+                cosA / 96, sinA / 96, 1, cosA, sinA, 0, r, g, b,
+
+                cosA / 96, sinA / 96, 1, cosA, sinA, 0, r, g, b,
+                cosB / 96, sinB / 96, 0, cosB, sinB, 0, r, g, b,
+                cosB / 96, sinB / 96, 1, cosB, sinB, 0, r, g, b,
+            )
+        }
+
+        const vertexData = new Float32Array(triangles)
+        const vertexBuffer = this.#device.createBuffer({
+            size: vertexData.byteLength,
+            usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
+        })
+
+        this.#device.queue.writeBuffer(vertexBuffer, 0, vertexData.buffer, vertexData.byteOffset, vertexData.byteLength)
+        return vertexBuffer
+    }
+
+    updateMesh(mesh: PolyhedronMesh): void {
+        this.vertexBuffer = this.#setMesh(this.vertexBuffer, mesh.vertexData)
+        this.ballInstanceBuffer = this.#setMesh(this.ballInstanceBuffer, mesh.ballInstanceData)
+        this.lineInstanceBuffer = this.#setMesh(this.lineInstanceBuffer, mesh.lineInstanceData)
+        this.stencilVertexCounts = mesh.stencilVertexCounts
+        this.normalVertexCount = mesh.normalVertexCount
+        this.ballCount = mesh.ballCount
+        this.lineCount = mesh.lineCount
+    }
+
+    #setMesh(buffer: GPUBuffer | null, data: Float32Array) {
+        if (!buffer || buffer.size < data.byteLength) {
+            buffer?.destroy()
+            buffer = this.#device.createBuffer({
+                size: data.byteLength,
+                usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
+            })
+        }
+        this.#device.queue.writeBuffer(buffer, 0, data.buffer, data.byteOffset, data.byteLength)
+        return buffer
+    }
+}
+
+class RenderPipeline {
+    static #premitiveState: GPUPrimitiveState = {
+        topology: "triangle-list",
+        cullMode: "none",
+        frontFace: "ccw",
+    }
+    static #instanceVertexBufferLayout: GPUVertexBufferLayout = {
+        stepMode: "vertex",
+        arrayStride: 9 * 4,
+        attributes: [
+            { shaderLocation: 0, offset: 0, format: "float32x3" }, // position
+            { shaderLocation: 1, offset: 12, format: "float32x3" }, // normal
+            { shaderLocation: 2, offset: 24, format: "float32x3" }, // color
+        ],
+    }
+    static #ignoreDepthStencilState: GPUDepthStencilState = {
+        format: "depth24plus-stencil8",
+        depthWriteEnabled: true,
+        depthCompare: "less",
+        stencilFront: { compare: "always", passOp: "keep" },
+        stencilBack: { compare: "always", passOp: "keep" },
+    }
+    static #readDepthStencilState: GPUDepthStencilState = {
+        format: "depth24plus-stencil8",
+        depthWriteEnabled: true,
+        depthCompare: "less",
+        stencilFront: { compare: "not-equal", passOp: "zero", depthFailOp: "zero" },
+        stencilBack: { compare: "not-equal", passOp: "zero", depthFailOp: "zero" },
+    }
+    static #writeDepthStencilState: GPUDepthStencilState = {
+        format: "depth24plus-stencil8",
+        depthWriteEnabled: false,
+        depthCompare: "always",
+        stencilFront: { compare: "always", passOp: "invert" },
+        stencilBack: { compare: "always", passOp: "invert" },
+    }
+
+    #device: GPUDevice
+    #bindGroup: GPUBindGroup
+    #layout: GPUPipelineLayout
+    #pipeline: GPURenderPipeline
+    #ballPipeline: GPURenderPipeline
+    #linePipeline: GPURenderPipeline
+    #stencilWritePipeline: GPURenderPipeline
+    #stencilMaskPipeline: GPURenderPipeline
+    #buffer: RenderBuffer
+
+    constructor(
+        shaderNameSuffix: string,
+        device: GPUDevice,
+        shaderModule: GPUShaderModule,
+        buffer: RenderBuffer,
+        bindGroup: GPUBindGroup,
+        layout: GPUPipelineLayout,
+        vertexBufferLayout: GPUVertexBufferLayout,
+        ballInstanceBufferLayout: GPUVertexBufferLayout,
+        lineInstanceBufferLayout: GPUVertexBufferLayout,
+        fragmentState?: GPUFragmentState,
+        discardFragmentState?: GPUFragmentState,
+    ) {
+        this.#device = device
+        this.#buffer = buffer
+        this.#bindGroup = bindGroup
+        this.#layout = layout
+
+        const vertexState: GPUVertexState = {
+            module: shaderModule,
+            entryPoint: "vertex" + shaderNameSuffix,
+            buffers: [vertexBufferLayout],
+        }
+
+        this.#pipeline = this.#createPipeline(vertexState, RenderPipeline.#ignoreDepthStencilState, fragmentState)
+        this.#stencilWritePipeline = this.#createPipeline(vertexState, RenderPipeline.#writeDepthStencilState, discardFragmentState)
+        this.#stencilMaskPipeline = this.#createPipeline(vertexState, RenderPipeline.#readDepthStencilState, fragmentState)
+        this.#ballPipeline = this.#createPipeline({
+            module: shaderModule,
+            entryPoint: "vertexBall" + shaderNameSuffix,
+            buffers: [RenderPipeline.#instanceVertexBufferLayout, ballInstanceBufferLayout],
+        }, RenderPipeline.#ignoreDepthStencilState, fragmentState)
+        this.#linePipeline = this.#createPipeline({
+            module: shaderModule,
+            entryPoint: "vertexLine" + shaderNameSuffix,
+            buffers: [RenderPipeline.#instanceVertexBufferLayout, lineInstanceBufferLayout],
+        }, RenderPipeline.#ignoreDepthStencilState, fragmentState)
+    }
+
+    #createPipeline(vertexState: GPUVertexState, depthStencilState: GPUDepthStencilState, fragmentState?: GPUFragmentState): GPURenderPipeline {
+        const desc: GPURenderPipelineDescriptor = {
+            layout: this.#layout,
+            vertex: vertexState,
+            primitive: RenderPipeline.#premitiveState,
+            depthStencil: depthStencilState,
+        }
+        if (fragmentState) desc.fragment = fragmentState
+        return this.#device.createRenderPipeline(desc)
+    }
+
+    render(commandEncoder: GPUCommandEncoder, depthTextureView: GPUTextureView, stencilColorAttachments: GPURenderPassColorAttachment[], colorAttachments: GPURenderPassColorAttachment[]) {
+        let vertexIndex = 0
+        if (this.#buffer.stencilVertexCounts.length > 0) {
+            const stencilPass = commandEncoder.beginRenderPass({
+                colorAttachments: stencilColorAttachments,
+                depthStencilAttachment: {
+                    view: depthTextureView,
+                    depthClearValue: 1.0,
+                    depthLoadOp: "clear",
+                    depthStoreOp: "store",
+                    stencilClearValue: 0,
+                    stencilLoadOp: "clear",
+                    stencilStoreOp: "store",
+                },
+            })
+
+            for (let i = 0; i < this.#buffer.stencilVertexCounts.length; i++) {
+                const vertexCount = this.#buffer.stencilVertexCounts[i]!
+                // ステンシル更新
+                stencilPass.setPipeline(this.#stencilWritePipeline)
+                stencilPass.setBindGroup(0, this.#bindGroup)
+                stencilPass.setVertexBuffer(0, this.#buffer.vertexBuffer)
+                stencilPass.draw(vertexCount, 1, vertexIndex)
+                // 描画
+                stencilPass.setPipeline(this.#stencilMaskPipeline)
+                stencilPass.setBindGroup(0, this.#bindGroup)
+                stencilPass.setVertexBuffer(0, this.#buffer.vertexBuffer)
+                stencilPass.draw(vertexCount, 1, vertexIndex)
+                vertexIndex += vertexCount
+            }
+
+            stencilPass.end()
+        }
+
+        const mainPass = commandEncoder.beginRenderPass({
+            colorAttachments: colorAttachments,
+            depthStencilAttachment: {
+                view: depthTextureView,
+                depthClearValue: 1.0,
+                depthLoadOp: this.#buffer.stencilVertexCounts.length === 0 ? "clear" : "load",
+                depthStoreOp: "store",
+                stencilReadOnly: true,
+            },
+        })
+        if (this.#buffer.normalVertexCount > 0) {
+            // 描画
+            mainPass.setPipeline(this.#pipeline)
+            mainPass.setBindGroup(0, this.#bindGroup)
+            mainPass.setVertexBuffer(0, this.#buffer.vertexBuffer)
+            mainPass.draw(this.#buffer.normalVertexCount, 1, vertexIndex)
+        }
+        if (this.#buffer.lineCount > 0) {
+            // 辺描画
+            mainPass.setPipeline(this.#linePipeline)
+            mainPass.setBindGroup(0, this.#bindGroup)
+            mainPass.setVertexBuffer(0, this.#buffer.lineVertexBuffer)
+            mainPass.setVertexBuffer(1, this.#buffer.lineInstanceBuffer)
+            mainPass.draw(this.#buffer.lineVertexBuffer.size / 36, this.#buffer.lineCount)
+        }
+        if (this.#buffer.ballCount > 0) {
+            // 頂点描画
+            mainPass.setPipeline(this.#ballPipeline)
+            mainPass.setBindGroup(0, this.#bindGroup)
+            mainPass.setVertexBuffer(0, this.#buffer.ballVertexBuffer)
+            mainPass.setVertexBuffer(1, this.#buffer.ballInstanceBuffer)
+            mainPass.draw(this.#buffer.ballVertexBuffer.size / 36, this.#buffer.ballCount)
+        }
+        mainPass.end()
+    }
+}
+
+class PolyhedronRendererImpl implements PolyhedronRenderer {
+    #shadowSPipeline: RenderPipeline
+    #mainSPipeline: RenderPipeline
+    #shadowBindGroup: GPUBindGroup
+    #bindGroup: GPUBindGroup
+    #buffer: RenderBuffer
+    #depthTexture: GPUTexture | null = null
+    #shadowTexture: GPUTexture
+    #shadowSampler: GPUSampler
+    #lastWidth = 0
+    #lastHeight = 0
+    #device: GPUDevice
+    #context: GPUCanvasContext
+    #format: GPUTextureFormat
+
+    constructor(
+        device: GPUDevice,
+        context: GPUCanvasContext,
+        format: GPUTextureFormat,
+        code: string,
+        dynamicBufferByteSize: number,
+        constantBufferValue: Float32Array,
+        vertexBufferLayout: GPUVertexBufferLayout,
+        ballInstanceBufferLayout: GPUVertexBufferLayout,
+        lineInstanceBufferLayout: GPUVertexBufferLayout,
+    ) {
+        this.#device = device
+        this.#context = context
+        this.#format = format
+        const shaderModule = device.createShaderModule({ code })
+        this.#buffer = new RenderBuffer(device, dynamicBufferByteSize, constantBufferValue)
+
+        this.#shadowSampler = device.createSampler({
+            compare: 'less', // シェーダー内の textureSampleCompare で使用
+            magFilter: 'linear',
+            minFilter: 'linear',
+        });
+
+        const shadowBindGroupLayout = device.createBindGroupLayout({
+            entries: [
+                { binding: 0, visibility: GPUShaderStage.VERTEX, buffer: { type: "uniform" } },
+            ],
+        })
+        this.#shadowBindGroup = this.#device.createBindGroup({
+            layout: shadowBindGroupLayout,
+            entries: [
+                { binding: 0, resource: { buffer: this.#buffer.uniformBuffer } },
+            ],
+        })
+
+        const bindGroupLayout = device.createBindGroupLayout({
+            entries: [
+                { binding: 0, visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT, buffer: { type: "uniform" } },
+                { binding: 1, visibility: GPUShaderStage.FRAGMENT, texture: { sampleType: 'depth' } },
+                { binding: 2, visibility: GPUShaderStage.FRAGMENT, sampler: { type: 'comparison' } },
+            ],
+        })
+
+        this.#shadowTexture = this.#device.createTexture({
+            size: [2048, 2048],
+            format: 'depth24plus-stencil8',
+            usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING,
+        })
+
+        this.#bindGroup = this.#device.createBindGroup({
+            layout: bindGroupLayout,
+            entries: [
+                { binding: 0, resource: { buffer: this.#buffer.uniformBuffer } },
+                { binding: 1, resource: this.#shadowTexture.createView({ aspect: "depth-only" }) },
+                { binding: 2, resource: this.#shadowSampler },
+            ],
+        })
+
+        const shadowLayout = device.createPipelineLayout({
+            bindGroupLayouts: [shadowBindGroupLayout],
+        })
+        this.#shadowSPipeline = new RenderPipeline(
+            "Shadow",
+            device,
+            shaderModule,
+            this.#buffer,
+            this.#shadowBindGroup,
+            shadowLayout,
+            vertexBufferLayout,
+            ballInstanceBufferLayout,
+            lineInstanceBufferLayout
+        )
+
+        const layout = device.createPipelineLayout({ bindGroupLayouts: [bindGroupLayout] })
+        const fragmentState: GPUFragmentState = {
+            module: shaderModule,
+            entryPoint: "fragmentMain",
+            targets: [{ format: this.#format }],
+        }
+        const discardFragmentState: GPUFragmentState = {
+            module: shaderModule,
+            entryPoint: "fragmentEmpty",
+            targets: [{ format: this.#format, writeMask: 0 }],
+        }
+        this.#mainSPipeline = new RenderPipeline(
+            "Main",
+            device,
+            shaderModule,
+            this.#buffer,
+            this.#bindGroup,
+            layout,
+            vertexBufferLayout,
+            ballInstanceBufferLayout,
+            lineInstanceBufferLayout,
+            fragmentState,
+            discardFragmentState,
+        )
+    }
+
+    updateMesh(mesh: PolyhedronMesh): void {
+        this.#buffer.updateMesh(mesh)
+    }
+
     render(modelMatrix: Float32Array): void {
-        if (!this.#vertexBuffer) {
+        if (!this.#buffer.vertexBuffer) {
             return
         }
 
@@ -444,7 +581,7 @@ class PolyhedronRendererImpl implements PolyhedronRenderer {
         }
 
         // Update uniforms
-        this.#device.queue.writeBuffer(this.#uniformBuffer, 0, modelMatrix.buffer, modelMatrix.byteOffset, modelMatrix.byteLength)
+        this.#device.queue.writeBuffer(this.#buffer.uniformBuffer, 0, modelMatrix.buffer, modelMatrix.byteOffset, modelMatrix.byteLength)
 
         const commandEncoder = this.#device.createCommandEncoder()
         this.#renderShadow(commandEncoder)
@@ -453,15 +590,7 @@ class PolyhedronRendererImpl implements PolyhedronRenderer {
     }
 
     #renderShadow(commandEncoder: GPUCommandEncoder) {
-        this.#renderCore(commandEncoder,
-            [],
-            this.#shadowTexture.createView(),
-            this.#shadowStencilWritePipeline,
-            this.#shadowBindGroup,
-            this.#shadowStencilMaskPipeline,
-            [],
-            this.#shadowPipeline,
-            this.#shadowBallPipeline)
+        this.#shadowSPipeline.render(commandEncoder, this.#shadowTexture.createView(), [], [])
     }
 
     #renderNormal(commandEncoder: GPUCommandEncoder) {
@@ -475,90 +604,19 @@ class PolyhedronRendererImpl implements PolyhedronRenderer {
         const colorAttachments: GPURenderPassColorAttachment[] = [{
             view: textureView,
             clearValue: { r: 1.0, g: 1.0, b: 1.0, a: 1.0 },
-            loadOp: this.#stencilVertexCounts.length === 0 ? "clear" : "load",
+            loadOp: this.#buffer.stencilVertexCounts.length === 0 ? "clear" : "load",
             storeOp: "store",
         }]
-
-        this.#renderCore(commandEncoder,
-            stencilColorAttachments,
-            this.#depthTexture!.createView(),
-            this.#stencilWritePipeline,
-            this.#bindGroup,
-            this.#stencilMaskPipeline,
-            colorAttachments,
-            this.#pipeline,
-            this.#ballPipeline)
-    }
-
-    #renderCore(commandEncoder: GPUCommandEncoder, stencilColorAttachments: GPURenderPassColorAttachment[], depthTextureView: GPUTextureView, stencilWritePipeline: GPURenderPipeline, bindGroup: GPUBindGroup, stencilMaskPipeline: GPURenderPipeline, colorAttachments: GPURenderPassColorAttachment[], pipeline: GPURenderPipeline, ballPipeline: GPURenderPipeline) {
-        let vertexIndex = 0
-        if (this.#stencilVertexCounts.length > 0) {
-            const stencilPass = commandEncoder.beginRenderPass({
-                colorAttachments: stencilColorAttachments,
-                depthStencilAttachment: {
-                    view: depthTextureView,
-                    depthClearValue: 1.0,
-                    depthLoadOp: "clear",
-                    depthStoreOp: "store",
-                    stencilClearValue: 0,
-                    stencilLoadOp: "clear",
-                    stencilStoreOp: "store",
-                },
-            })
-
-            for (let i = 0; i < this.#stencilVertexCounts.length; i++) {
-                const vertexCount = this.#stencilVertexCounts[i]!
-                // ステンシル更新
-                stencilPass.setPipeline(stencilWritePipeline)
-                stencilPass.setBindGroup(0, bindGroup)
-                stencilPass.setVertexBuffer(0, this.#vertexBuffer)
-                stencilPass.draw(vertexCount, 1, vertexIndex)
-                // 描画
-                stencilPass.setPipeline(stencilMaskPipeline)
-                stencilPass.setBindGroup(0, bindGroup)
-                stencilPass.setVertexBuffer(0, this.#vertexBuffer)
-                stencilPass.draw(vertexCount, 1, vertexIndex)
-                vertexIndex += vertexCount
-            }
-
-            stencilPass.end()
-        }
-
-        const mainPass = commandEncoder.beginRenderPass({
-            colorAttachments: colorAttachments,
-            depthStencilAttachment: {
-                view: depthTextureView,
-                depthClearValue: 1.0,
-                depthLoadOp: this.#stencilVertexCounts.length === 0 ? "clear" : "load",
-                depthStoreOp: "store",
-                stencilReadOnly: true,
-            },
-        })
-        if (this.#normalVertexCount > 0) {
-            // 描画
-            mainPass.setPipeline(pipeline)
-            mainPass.setBindGroup(0, bindGroup)
-            mainPass.setVertexBuffer(0, this.#vertexBuffer)
-            mainPass.draw(this.#normalVertexCount, 1, vertexIndex)
-        }
-        if (this.#ballCount > 0) {
-            // 頂点描画
-            mainPass.setPipeline(ballPipeline)
-            mainPass.setBindGroup(0, bindGroup)
-            mainPass.setVertexBuffer(0, this.#ballVertexBuffer)
-            mainPass.setVertexBuffer(1, this.#ballInstanceBuffer)
-            mainPass.draw(this.#ballVertexBuffer.size / 36, this.#ballCount)
-        }
-        mainPass.end()
+        this.#mainSPipeline.render(commandEncoder, this.#depthTexture!.createView(), stencilColorAttachments, colorAttachments)
     }
 
     destroy(): void {
-        if (this.#vertexBuffer) {
-            this.#vertexBuffer.destroy()
-        }
-        if (this.#depthTexture) {
-            this.#depthTexture.destroy()
-        }
-        this.#uniformBuffer.destroy()
+        this.#depthTexture?.destroy()
+        this.#buffer.vertexBuffer?.destroy()
+        this.#buffer.ballVertexBuffer.destroy()
+        this.#buffer.lineVertexBuffer.destroy()
+        this.#buffer.uniformBuffer.destroy()
+        this.#buffer.ballInstanceBuffer?.destroy()
+        this.#buffer.lineInstanceBuffer?.destroy()
     }
 }
