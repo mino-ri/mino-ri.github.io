@@ -1,4 +1,4 @@
-import { NormalPolyhedron } from "./symmetry.js"
+import { NormalPolyhedron } from "./polyhedron.js"
 import { type Vector, Vectors } from "./vector.js"
 import { clearChildren, createCircle, createLine, createPath } from "../svg_generator.js"
 import { Quaternion, Quaternions } from "./quaternion.js"
