@@ -1,13 +1,15 @@
-import { NormalPolyhedron, unitTriangles, faceSelectorMap } from "./symmetry.js";
+import { NormalPolyhedron, unitTriangles, faceSelectorMap } from "./polyhedron.js";
 import { initGpu } from "./gpu.js";
 import { buildPolyhedronMesh } from "./model.js";
 import { setCenter } from "../svg_generator.js";
 import { OriginController } from "./origin_contoroller.js";
+import { shaderSource } from "./gpu_3d.js";
 class RotationState {
     #w = 1;
     #x = 0;
     #y = 0;
     #z = 0;
+    #matrix = new Float32Array(16);
     applyDrag(deltaX, deltaY) {
         const sensitivity = 0.005;
         const angleX = deltaY * sensitivity;
@@ -47,12 +49,23 @@ class RotationState {
         const xx = this.#x * this.#x, yy = this.#y * this.#y, zz = this.#z * this.#z;
         const xy = this.#x * this.#y, xz = this.#x * this.#z, yz = this.#y * this.#z;
         const wx = this.#w * this.#x, wy = this.#w * this.#y, wz = this.#w * this.#z;
-        return new Float32Array([
-            1 - 2 * (yy + zz), 2 * (xy + wz), 2 * (xz - wy), 0,
-            2 * (xy - wz), 1 - 2 * (xx + zz), 2 * (yz + wx), 0,
-            2 * (xz + wy), 2 * (yz - wx), 1 - 2 * (xx + yy), 0,
-            0, 0, 0, 1,
-        ]);
+        this.#matrix[0] = 1 - 2 * (yy + zz);
+        this.#matrix[1] = 2 * (xy + wz);
+        this.#matrix[2] = 2 * (xz - wy);
+        this.#matrix[3] = 0;
+        this.#matrix[4] = 2 * (xy - wz);
+        this.#matrix[5] = 1 - 2 * (xx + zz);
+        this.#matrix[6] = 2 * (yz + wx);
+        this.#matrix[7] = 0;
+        this.#matrix[8] = 2 * (xz + wy);
+        this.#matrix[9] = 2 * (yz - wx);
+        this.#matrix[10] = 1 - 2 * (xx + yy);
+        this.#matrix[11] = 0;
+        this.#matrix[12] = 0;
+        this.#matrix[13] = 0;
+        this.#matrix[14] = 0;
+        this.#matrix[15] = 1;
+        return this.#matrix;
     }
 }
 class PolyhedronViewer {
@@ -76,7 +89,7 @@ class PolyhedronViewer {
     #originController;
     constructor(canvas, gpuContext, originController) {
         this.#canvas = canvas;
-        this.#renderer = gpuContext.createPolyhedronRenderer();
+        this.#renderer = gpuContext.createPolyhedronRenderer(shaderSource);
         this.#originController = originController;
         this.#setupEventListeners();
         this.#startRenderLoop();

@@ -53,11 +53,14 @@ export class CoxeterMatrix {
     static create2D(a) {
         return new CoxeterMatrix([a]);
     }
-    static create3D(p, q, r) {
-        return new CoxeterMatrix([p, r ?? 2, q]);
+    static create3D(p, q) {
+        return new CoxeterMatrix([p, 2, q]);
     }
-    static create4D(ab, bc, cd, bd, ac, ad) {
-        return new CoxeterMatrix([ab, ac ?? 2, bc, ad ?? 2, bd ?? 2, cd]);
+    static create4D(a, b, c) {
+        return new CoxeterMatrix([a, 2, b, 2, 2, c]);
+    }
+    static create4DDemicube(a, b, c) {
+        return new CoxeterMatrix([a, 2, b, 2, c, 2]);
     }
     static #getAlternatingNumbers(a, b, count) {
         const aRepr = new Array(count);

@@ -29,129 +29,6 @@ const crosses = [
     { value: null, source: [0, 0, 0] },
     { value: null, source: [0, 0, 0] },
 ];
-const ball = function () {
-    const phi = (Math.sqrt(5) + 1) / 2;
-    const phii = (Math.sqrt(5) - 1) / 2;
-    const p1 = [-phii, 0, phi];
-    const p2 = [-1, 1, 1];
-    const p3 = [0, phi, phii];
-    const p4 = [1, 1, 1];
-    const p5 = [phii, 0, phi];
-    const pc = Vectors.average([p1, p2, p3, p4, p5], [0, 0, 0]);
-    Vectors.normalizeSelf(p1);
-    Vectors.normalizeSelf(p2);
-    Vectors.normalizeSelf(p3);
-    Vectors.normalizeSelf(p4);
-    Vectors.normalizeSelf(p5);
-    Vectors.normalizeSelf(pc);
-    return {
-        p1: { point: Vectors.div(p1, 32), normal: p1 },
-        p2: { point: Vectors.div(p2, 32), normal: p2 },
-        p3: { point: Vectors.div(p3, 32), normal: p3 },
-        p4: { point: Vectors.div(p4, 32), normal: p4 },
-        p5: { point: Vectors.div(p5, 32), normal: p5 },
-        pc: { point: Vectors.div(pc, 32), normal: pc },
-    };
-}();
-const signs = [1, -1];
-function addVertex(triangles, vertex) {
-    const r = 0.95;
-    const g = 0.95;
-    const b = 0.95;
-    for (let i = 0; i < 3; i++) {
-        const xIndex = i;
-        const yIndex = (i + 1) % 3;
-        const zIndex = (i + 2) % 3;
-        for (const ys of signs) {
-            for (const zs of signs) {
-                const signs = [1, ys, zs];
-                let xSign = signs[xIndex];
-                let ySign = signs[yIndex];
-                let zSign = signs[zIndex];
-                const p1x = vertex[0] + ball.p1.point[xIndex] * xSign;
-                const p1y = vertex[1] + ball.p1.point[yIndex] * ySign;
-                const p1z = vertex[2] + ball.p1.point[zIndex] * zSign;
-                const p2x = vertex[0] + ball.p2.point[xIndex] * xSign;
-                const p2y = vertex[1] + ball.p2.point[yIndex] * ySign;
-                const p2z = vertex[2] + ball.p2.point[zIndex] * zSign;
-                const p3x = vertex[0] + ball.p3.point[xIndex] * xSign;
-                const p3y = vertex[1] + ball.p3.point[yIndex] * ySign;
-                const p3z = vertex[2] + ball.p3.point[zIndex] * zSign;
-                const p4x = vertex[0] + ball.p4.point[xIndex] * xSign;
-                const p4y = vertex[1] + ball.p4.point[yIndex] * ySign;
-                const p4z = vertex[2] + ball.p4.point[zIndex] * zSign;
-                const p5x = vertex[0] + ball.p5.point[xIndex] * xSign;
-                const p5y = vertex[1] + ball.p5.point[yIndex] * ySign;
-                const p5z = vertex[2] + ball.p5.point[zIndex] * zSign;
-                const pcx = vertex[0] + ball.pc.point[xIndex] * xSign;
-                const pcy = vertex[1] + ball.pc.point[yIndex] * ySign;
-                const pcz = vertex[2] + ball.pc.point[zIndex] * zSign;
-                if (ys * zs === -1) {
-                    triangles.push(p1x, p1y, p1z, ball.p1.normal[xIndex] * xSign, ball.p1.normal[yIndex] * ySign, ball.p1.normal[zIndex] * zSign, r, g, b, p2x, p2y, p2z, ball.p2.normal[xIndex] * xSign, ball.p2.normal[yIndex] * ySign, ball.p2.normal[zIndex] * zSign, r, g, b, pcx, pcy, pcz, ball.pc.normal[xIndex] * xSign, ball.pc.normal[yIndex] * ySign, ball.pc.normal[zIndex] * zSign, r, g, b, p2x, p2y, p2z, ball.p2.normal[xIndex] * xSign, ball.p2.normal[yIndex] * ySign, ball.p2.normal[zIndex] * zSign, r, g, b, p3x, p3y, p3z, ball.p3.normal[xIndex] * xSign, ball.p3.normal[yIndex] * ySign, ball.p3.normal[zIndex] * zSign, r, g, b, pcx, pcy, pcz, ball.pc.normal[xIndex] * xSign, ball.pc.normal[yIndex] * ySign, ball.pc.normal[zIndex] * zSign, r, g, b, p3x, p3y, p3z, ball.p3.normal[xIndex] * xSign, ball.p3.normal[yIndex] * ySign, ball.p3.normal[zIndex] * zSign, r, g, b, p4x, p4y, p4z, ball.p4.normal[xIndex] * xSign, ball.p4.normal[yIndex] * ySign, ball.p4.normal[zIndex] * zSign, r, g, b, pcx, pcy, pcz, ball.pc.normal[xIndex] * xSign, ball.pc.normal[yIndex] * ySign, ball.pc.normal[zIndex] * zSign, r, g, b, p4x, p4y, p4z, ball.p4.normal[xIndex] * xSign, ball.p4.normal[yIndex] * ySign, ball.p4.normal[zIndex] * zSign, r, g, b, p5x, p5y, p5z, ball.p5.normal[xIndex] * xSign, ball.p5.normal[yIndex] * ySign, ball.p5.normal[zIndex] * zSign, r, g, b, pcx, pcy, pcz, ball.pc.normal[xIndex] * xSign, ball.pc.normal[yIndex] * ySign, ball.pc.normal[zIndex] * zSign, r, g, b, p5x, p5y, p5z, ball.p5.normal[xIndex] * xSign, ball.p5.normal[yIndex] * ySign, ball.p5.normal[zIndex] * zSign, r, g, b, p1x, p1y, p1z, ball.p1.normal[xIndex] * xSign, ball.p1.normal[yIndex] * ySign, ball.p1.normal[zIndex] * zSign, r, g, b, pcx, pcy, pcz, ball.pc.normal[xIndex] * xSign, ball.pc.normal[yIndex] * ySign, ball.pc.normal[zIndex] * zSign, r, g, b);
-                }
-                else {
-                    triangles.push(p2x, p2y, p2z, ball.p2.normal[xIndex] * xSign, ball.p2.normal[yIndex] * ySign, ball.p2.normal[zIndex] * zSign, r, g, b, p1x, p1y, p1z, ball.p1.normal[xIndex] * xSign, ball.p1.normal[yIndex] * ySign, ball.p1.normal[zIndex] * zSign, r, g, b, pcx, pcy, pcz, ball.pc.normal[xIndex] * xSign, ball.pc.normal[yIndex] * ySign, ball.pc.normal[zIndex] * zSign, r, g, b, p3x, p3y, p3z, ball.p3.normal[xIndex] * xSign, ball.p3.normal[yIndex] * ySign, ball.p3.normal[zIndex] * zSign, r, g, b, p2x, p2y, p2z, ball.p2.normal[xIndex] * xSign, ball.p2.normal[yIndex] * ySign, ball.p2.normal[zIndex] * zSign, r, g, b, pcx, pcy, pcz, ball.pc.normal[xIndex] * xSign, ball.pc.normal[yIndex] * ySign, ball.pc.normal[zIndex] * zSign, r, g, b, p4x, p4y, p4z, ball.p4.normal[xIndex] * xSign, ball.p4.normal[yIndex] * ySign, ball.p4.normal[zIndex] * zSign, r, g, b, p3x, p3y, p3z, ball.p3.normal[xIndex] * xSign, ball.p3.normal[yIndex] * ySign, ball.p3.normal[zIndex] * zSign, r, g, b, pcx, pcy, pcz, ball.pc.normal[xIndex] * xSign, ball.pc.normal[yIndex] * ySign, ball.pc.normal[zIndex] * zSign, r, g, b, p5x, p5y, p5z, ball.p5.normal[xIndex] * xSign, ball.p5.normal[yIndex] * ySign, ball.p5.normal[zIndex] * zSign, r, g, b, p4x, p4y, p4z, ball.p4.normal[xIndex] * xSign, ball.p4.normal[yIndex] * ySign, ball.p4.normal[zIndex] * zSign, r, g, b, pcx, pcy, pcz, ball.pc.normal[xIndex] * xSign, ball.pc.normal[yIndex] * ySign, ball.pc.normal[zIndex] * zSign, r, g, b, p1x, p1y, p1z, ball.p1.normal[xIndex] * xSign, ball.p1.normal[yIndex] * ySign, ball.p1.normal[zIndex] * zSign, r, g, b, p5x, p5y, p5z, ball.p5.normal[xIndex] * xSign, ball.p5.normal[yIndex] * ySign, ball.p5.normal[zIndex] * zSign, r, g, b, pcx, pcy, pcz, ball.pc.normal[xIndex] * xSign, ball.pc.normal[yIndex] * ySign, ball.pc.normal[zIndex] * zSign, r, g, b);
-                }
-            }
-        }
-    }
-}
-function addEdgeSurface(triangles, vertex1, vertex2, left, right) {
-    const r = 0.25;
-    const g = 0.25;
-    const b = 0.25;
-    const p1x = vertex1[0] + left[0] / 96;
-    const p1y = vertex1[1] + left[1] / 96;
-    const p1z = vertex1[2] + left[2] / 96;
-    const p2x = vertex1[0] + right[0] / 96;
-    const p2y = vertex1[1] + right[1] / 96;
-    const p2z = vertex1[2] + right[2] / 96;
-    const p3x = vertex2[0] + left[0] / 96;
-    const p3y = vertex2[1] + left[1] / 96;
-    const p3z = vertex2[2] + left[2] / 96;
-    const p4x = vertex2[0] + right[0] / 96;
-    const p4y = vertex2[1] + right[1] / 96;
-    const p4z = vertex2[2] + right[2] / 96;
-    triangles.push(p1x, p1y, p1z, left[0], left[1], left[2], r, g, b, p2x, p2y, p2z, right[0], right[1], right[2], r, g, b, p3x, p3y, p3z, left[0], left[1], left[2], r, g, b, p3x, p3y, p3z, left[0], left[1], left[2], r, g, b, p2x, p2y, p2z, right[0], right[1], right[2], r, g, b, p4x, p4y, p4z, right[0], right[1], right[2], r, g, b);
-}
-function addEdge(triangles, vertex1, vertex2) {
-    Vectors.sub(vertex2, vertex1, cv);
-    if (Vectors.lengthSquared(cv) < 0.0035) {
-        return;
-    }
-    Vectors.normalizeSelf(cv);
-    if (Math.abs(cv[0]) >= 0.9) {
-        mv[0] = 0;
-        mv[1] = 1;
-        mv[2] = 0;
-    }
-    else {
-        mv[0] = 1;
-        mv[1] = 0;
-        mv[2] = 0;
-    }
-    Vectors.cross(mv, cv, nv);
-    Vectors.normalizeSelf(nv);
-    Vectors.cross(cv, nv, mv);
-    Vectors.normalizeSelf(mv);
-    Vectors.add(nv, mv, cv);
-    Vectors.normalizeSelf(cv);
-    Vectors.sub(mv, nv, ov);
-    Vectors.normalizeSelf(ov);
-    addEdgeSurface(triangles, vertex1, vertex2, nv, cv);
-    addEdgeSurface(triangles, vertex1, vertex2, cv, mv);
-    addEdgeSurface(triangles, vertex1, vertex2, mv, ov);
-    Vectors.negateSelf(nv);
-    addEdgeSurface(triangles, vertex1, vertex2, ov, nv);
-    Vectors.negateSelf(cv);
-    Vectors.negateSelf(mv);
-    Vectors.negateSelf(ov);
-    addEdgeSurface(triangles, vertex1, vertex2, nv, cv);
-    addEdgeSurface(triangles, vertex1, vertex2, cv, mv);
-    addEdgeSurface(triangles, vertex1, vertex2, mv, ov);
-    Vectors.negateSelf(nv);
-    addEdgeSurface(triangles, vertex1, vertex2, ov, nv);
-}
 function addTriangle(triangles, v0, v1, v2, r, g, b) {
     Vectors.sub(v1, v0, nv);
     Vectors.sub(v2, v0, mv);
@@ -317,7 +194,6 @@ const maxError = 1.0 / 128.0;
 const cv = [0, 0, 0];
 const nv = [0, 0, 0];
 const mv = [0, 0, 0];
-const ov = [0, 0, 0];
 const holosnubMinIndex = 30;
 export function buildPolyhedronMesh(polyhedron, faceVisibility, visibilityType, vertexVisibility, edgeVisibility, colorByConnected, holosnub, fillType) {
     const triangles = [];
@@ -431,26 +307,33 @@ export function buildPolyhedronMesh(polyhedron, faceVisibility, visibilityType, 
             addPolygon(triangles, polyhedron.vertexes, face, colorByConnected, false);
         }
     }
+    const ballInstances = [];
     if (vertexVisibility) {
         if (verfView) {
-            addVertex(triangles, polyhedron.vertexes[0]);
+            const vertex = polyhedron.vertexes[0];
+            ballInstances.push(vertex[0], vertex[1], vertex[2]);
         }
         else {
             for (let i = 0; i < polyhedron.vertexes.length; i++) {
                 if (!holosnub && polyhedron.vertexConnectedIndexes[i] >= holosnubMinIndex) {
                     continue;
                 }
-                addVertex(triangles, polyhedron.vertexes[i]);
+                const vertex = polyhedron.vertexes[i];
+                ballInstances.push(vertex[0], vertex[1], vertex[2]);
             }
         }
     }
+    const lineInstances = [];
     if (edgeVisibility) {
         for (const { index1, index2, connectedIndex } of polyhedron.edges) {
+            const vertex1 = polyhedron.vertexes[index1];
+            const vertex2 = polyhedron.vertexes[index2];
             if (verfView && !refPointIndexes.includes(index1) && !refPointIndexes.includes(index2) ||
-                !holosnub && connectedIndex >= holosnubMinIndex) {
+                !holosnub && connectedIndex >= holosnubMinIndex ||
+                Vectors.distanceSquared(vertex1, vertex2) < 0.0035) {
                 continue;
             }
-            addEdge(triangles, polyhedron.vertexes[index1], polyhedron.vertexes[index2]);
+            lineInstances.push(vertex1[0], vertex1[1], vertex1[2], vertex2[0], vertex2[1], vertex2[2]);
         }
     }
     const normalVertexCount = triangles.length / 9 - addedVertexCount;
@@ -458,5 +341,9 @@ export function buildPolyhedronMesh(polyhedron, faceVisibility, visibilityType, 
         vertexData: new Float32Array(triangles),
         stencilVertexCounts,
         normalVertexCount,
+        ballInstanceData: new Float32Array(ballInstances),
+        ballCount: ballInstances.length / 3,
+        lineInstanceData: new Float32Array(lineInstances),
+        lineCount: lineInstances.length / 6,
     };
 }
