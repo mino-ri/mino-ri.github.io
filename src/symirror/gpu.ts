@@ -114,7 +114,7 @@ class PolyhedronRendererImpl implements PolyhedronRenderer {
 
         // Uniform buffer: model matrix (64 bytes) + viewProjection matrix (64 bytes) + lightProjection matrix (64 bytes)
         this.#uniformBuffer = device.createBuffer({
-            size: 64 * 3,
+            size: constantBufferValue.byteLength + dynamicBufferByteSize,
             usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
         })
 
@@ -293,15 +293,53 @@ class PolyhedronRendererImpl implements PolyhedronRenderer {
         this.#device.queue.writeBuffer(this.#uniformBuffer, 0, modelMatrix.buffer, modelMatrix.byteOffset, modelMatrix.byteLength)
 
         const commandEncoder = this.#device.createCommandEncoder()
-        const shadowTextureView = this.#shadowTexture.createView()
-        const textureView = this.#context.getCurrentTexture().createView()
+        this.#renderShadow(commandEncoder)
+        this.#renderNormal(commandEncoder)
+        this.#device.queue.submit([commandEncoder.finish()])
+    }
 
+    #renderShadow(commandEncoder: GPUCommandEncoder) {
+        const depthTextureView = this.#shadowTexture.createView()
+        const stencilWritePipeline = this.#shadowStencilWritePipeline
+        const stencilMaskPipeline = this.#shadowStencilMaskPipeline
+        const pipeline = this.#shadowPipeline
+        const bindGroup = this.#shadowBindGroup
+        const stencilColorAttachments: GPURenderPassColorAttachment[] = []
+        const colorAttachments: GPURenderPassColorAttachment[] = []
+
+        this.#renderCore(commandEncoder, stencilColorAttachments, depthTextureView, stencilWritePipeline, bindGroup, stencilMaskPipeline, colorAttachments, pipeline)
+    }
+
+    #renderNormal(commandEncoder: GPUCommandEncoder) {
+        const depthTextureView = this.#depthTexture!.createView()
+        const textureView = this.#context.getCurrentTexture().createView()
+        const stencilWritePipeline = this.#stencilWritePipeline
+        const stencilMaskPipeline = this.#stencilMaskPipeline
+        const pipeline = this.#pipeline
+        const bindGroup = this.#bindGroup
+        const stencilColorAttachments: GPURenderPassColorAttachment[] = [{
+            view: textureView,
+            clearValue: { r: 1.0, g: 1.0, b: 1.0, a: 1.0 },
+            loadOp: "clear",
+            storeOp: "store",
+        }]
+        const colorAttachments: GPURenderPassColorAttachment[] = [{
+            view: textureView,
+            clearValue: { r: 1.0, g: 1.0, b: 1.0, a: 1.0 },
+            loadOp: this.#stencilVertexCounts.length === 0 ? "clear" : "load",
+            storeOp: "store",
+        }]
+
+        this.#renderCore(commandEncoder, stencilColorAttachments, depthTextureView, stencilWritePipeline, bindGroup, stencilMaskPipeline, colorAttachments, pipeline)
+    }
+
+    #renderCore(commandEncoder: GPUCommandEncoder, stencilColorAttachments: GPURenderPassColorAttachment[], depthTextureView: GPUTextureView, stencilWritePipeline: GPURenderPipeline, bindGroup: GPUBindGroup, stencilMaskPipeline: GPURenderPipeline, colorAttachments: GPURenderPassColorAttachment[], pipeline: GPURenderPipeline) {
         let vertexIndex = 0
         if (this.#stencilVertexCounts.length > 0) {
-            const shadowPass = commandEncoder.beginRenderPass({
-                colorAttachments: [], // カラー出力なし
+            const stencilPass = commandEncoder.beginRenderPass({
+                colorAttachments: stencilColorAttachments,
                 depthStencilAttachment: {
-                    view: shadowTextureView,
+                    view: depthTextureView,
                     depthClearValue: 1.0,
                     depthLoadOp: "clear",
                     depthStoreOp: "store",
@@ -314,106 +352,39 @@ class PolyhedronRendererImpl implements PolyhedronRenderer {
             for (let i = 0; i < this.#stencilVertexCounts.length; i++) {
                 const vertexCount = this.#stencilVertexCounts[i]!
                 // ステンシル更新
-                shadowPass.setPipeline(this.#shadowStencilWritePipeline)
-                shadowPass.setBindGroup(0, this.#shadowBindGroup)
-                shadowPass.setVertexBuffer(0, this.#vertexBuffer)
-                shadowPass.draw(vertexCount, 1, vertexIndex)
-
+                stencilPass.setPipeline(stencilWritePipeline)
+                stencilPass.setBindGroup(0, bindGroup)
+                stencilPass.setVertexBuffer(0, this.#vertexBuffer)
+                stencilPass.draw(vertexCount, 1, vertexIndex)
                 // 描画
-                shadowPass.setPipeline(this.#shadowStencilMaskPipeline)
-                shadowPass.setBindGroup(0, this.#shadowBindGroup)
-                shadowPass.setVertexBuffer(0, this.#vertexBuffer)
-                shadowPass.draw(vertexCount, 1, vertexIndex)
+                stencilPass.setPipeline(stencilMaskPipeline)
+                stencilPass.setBindGroup(0, bindGroup)
+                stencilPass.setVertexBuffer(0, this.#vertexBuffer)
+                stencilPass.draw(vertexCount, 1, vertexIndex)
                 vertexIndex += vertexCount
             }
 
-            shadowPass.end()
-        }
-
-        if (this.#normalVertexCount > 0) {
-            const shadowPass = commandEncoder.beginRenderPass({
-                colorAttachments: [], // カラー出力なし
-                depthStencilAttachment: {
-                    view: shadowTextureView,
-                    depthClearValue: 1.0,
-                    depthLoadOp: this.#stencilVertexCounts.length === 0 ? "clear" : "load",
-                    depthStoreOp: "store",
-                    stencilReadOnly: true,
-                },
-            })
-
-            // 描画
-            shadowPass.setPipeline(this.#shadowPipeline)
-            shadowPass.setBindGroup(0, this.#shadowBindGroup)
-            shadowPass.setVertexBuffer(0, this.#vertexBuffer)
-            shadowPass.draw(this.#normalVertexCount, 1, vertexIndex)
-            shadowPass.end()
-        }
-
-        vertexIndex = 0
-        if (this.#stencilVertexCounts.length > 0) {
-            const mainPass = commandEncoder.beginRenderPass({
-                colorAttachments: [{
-                    view: textureView,
-                    clearValue: { r: 1.0, g: 1.0, b: 1.0, a: 1.0 },
-                    loadOp: "clear",
-                    storeOp: "store",
-                }],
-                depthStencilAttachment: {
-                    view: this.#depthTexture!.createView(),
-                    depthClearValue: 1.0,
-                    depthLoadOp: "clear",
-                    depthStoreOp: "store",
-                    stencilClearValue: 0,
-                    stencilLoadOp: "clear",
-                    stencilStoreOp: "store",
-                },
-            })
-
-            for (let i = 0; i < this.#stencilVertexCounts.length; i++) {
-                const vertexCount = this.#stencilVertexCounts[i]!
-                // ステンシル更新
-                mainPass.setPipeline(this.#stencilWritePipeline)
-                mainPass.setBindGroup(0, this.#bindGroup)
-                mainPass.setVertexBuffer(0, this.#vertexBuffer)
-                mainPass.draw(vertexCount, 1, vertexIndex)
-                // 描画
-                mainPass.setPipeline(this.#stencilMaskPipeline)
-                mainPass.setBindGroup(0, this.#bindGroup)
-                mainPass.setVertexBuffer(0, this.#vertexBuffer)
-                mainPass.draw(vertexCount, 1, vertexIndex)
-                vertexIndex += vertexCount
-            }
-
-            mainPass.end()
+            stencilPass.end()
         }
 
         const mainPass = commandEncoder.beginRenderPass({
-            colorAttachments: [{
-                view: textureView,
-                clearValue: { r: 1.0, g: 1.0, b: 1.0, a: 1.0 },
-                loadOp: this.#stencilVertexCounts.length === 0 ? "clear" : "load",
-                storeOp: "store",
-            }],
+            colorAttachments: colorAttachments,
             depthStencilAttachment: {
-                view: this.#depthTexture!.createView(),
+                view: depthTextureView,
                 depthClearValue: 1.0,
                 depthLoadOp: this.#stencilVertexCounts.length === 0 ? "clear" : "load",
                 depthStoreOp: "store",
                 stencilReadOnly: true,
             },
         })
-
         if (this.#normalVertexCount > 0) {
             // 描画
-            mainPass.setPipeline(this.#pipeline)
-            mainPass.setBindGroup(0, this.#bindGroup)
+            mainPass.setPipeline(pipeline)
+            mainPass.setBindGroup(0, bindGroup)
             mainPass.setVertexBuffer(0, this.#vertexBuffer)
             mainPass.draw(this.#normalVertexCount, 1, vertexIndex)
         }
         mainPass.end()
-
-        this.#device.queue.submit([commandEncoder.finish()])
     }
 
     destroy(): void {
