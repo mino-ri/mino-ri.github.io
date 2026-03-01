@@ -30,14 +30,7 @@ const crosses = [
     { value: null, source: [0, 0, 0] },
 ];
 function addTriangle(triangles, v0, v1, v2, r, g, b) {
-    Vectors.sub(v1, v0, nv);
-    Vectors.sub(v2, v0, mv);
-    Vectors.cross(nv, mv, nv);
-    Vectors.normalizeSelf(nv);
-    const nx = nv[0];
-    const ny = nv[1];
-    const nz = nv[2];
-    triangles.push(v0[0], v0[1], v0[2], nx, ny, nz, r, g, b, v1[0], v1[1], v1[2], nx, ny, nz, r, g, b, v2[0], v2[1], v2[2], nx, ny, nz, r, g, b);
+    triangles.push(v0[0], v0[1], v0[2], r, g, b, v1[0], v1[1], v1[2], r, g, b, v2[0], v2[1], v2[2], r, g, b);
 }
 function addPolygon(triangles, vertexes, face, colorByConnected, evenOdd) {
     const indexes = face.vertexIndexes;
@@ -266,7 +259,7 @@ export function buildPolyhedronMesh(polyhedron, faceVisibility, visibilityType, 
                 const face = polyhedron.faces[drawIndexes[i]];
                 addPolygon(triangles, polyhedron.vertexes, face, colorByConnected, true);
                 drawnIndexSet.add(i);
-                const vertexCount = triangles.length / 9 - addedVertexCount;
+                const vertexCount = triangles.length / 6 - addedVertexCount;
                 if (vertexCount > 0) {
                     stencilVertexCounts.push(vertexCount);
                     addedVertexCount += vertexCount;
@@ -288,7 +281,7 @@ export function buildPolyhedronMesh(polyhedron, faceVisibility, visibilityType, 
                 continue;
             addPolygon(triangles, polyhedron.vertexes, face, colorByConnected, true);
             drawnIndexSet.add(i);
-            const vertexCount = triangles.length / 9 - addedVertexCount;
+            const vertexCount = triangles.length / 6 - addedVertexCount;
             if (vertexCount > 0) {
                 stencilVertexCounts.push(vertexCount);
                 addedVertexCount += vertexCount;
@@ -336,7 +329,7 @@ export function buildPolyhedronMesh(polyhedron, faceVisibility, visibilityType, 
             lineInstances.push(vertex1[0], vertex1[1], vertex1[2], vertex2[0], vertex2[1], vertex2[2]);
         }
     }
-    const normalVertexCount = triangles.length / 9 - addedVertexCount;
+    const normalVertexCount = triangles.length / 6 - addedVertexCount;
     return {
         vertexData: new Float32Array(triangles),
         stencilVertexCounts,
