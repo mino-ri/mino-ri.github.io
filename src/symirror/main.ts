@@ -1,6 +1,6 @@
 import { NormalPolyhedron, unitTriangles, faceSelectorMap } from "./polyhedron.js"
-import { initGpu, PolyhedronRenderer, type GpuContext } from "./gpu.js"
-import { buildPolyhedronMesh, type VisibilityType, FillType } from "./model.js"
+import { initGpu, IPolytopeRenderer, type GpuContext } from "./gpu.js"
+import { buildPolytopeMesh, setDimension, type VisibilityType, FillType } from "./model.js"
 import { type Vector } from "./vector.js"
 import { setCenter } from "../svg_generator.js"
 import { OriginController } from "./origin_contoroller.js"
@@ -92,7 +92,7 @@ class RotationState {
 
 // メインアプリケーションクラス
 class PolyhedronViewer {
-    #renderer: PolyhedronRenderer
+    #renderer: IPolytopeRenderer
     #rotation = new RotationState()
     #isDragging = false
     #lastMouseX = 0
@@ -117,7 +117,7 @@ class PolyhedronViewer {
         originController: OriginController,
     ) {
         this.#canvas = canvas
-        this.#renderer = gpuContext.createPolyhedronRenderer(shaderSource)
+        this.#renderer = gpuContext.createPolytopeRenderer(shaderSource)
         this.#originController = originController
         this.#setupEventListeners()
         this.#startRenderLoop()
@@ -241,7 +241,7 @@ class PolyhedronViewer {
 
     #updateMesh(): void {
         if (!this.#polyhedron) return
-        const mesh = buildPolyhedronMesh(this.#polyhedron, this.#faceVisibility, this.#visibilityType, this.#vertexVisibility, this.#edgeVisibility, this.#colorByConnected, this.#holosnub, this.#fillType)
+        const mesh = buildPolytopeMesh(this.#polyhedron, this.#faceVisibility, this.#visibilityType, this.#vertexVisibility, this.#edgeVisibility, this.#colorByConnected, this.#holosnub, this.#fillType)
         this.#renderer.updateMesh(mesh)
     }
 
@@ -319,6 +319,7 @@ window.addEventListener("load", async () => {
         return
     }
 
+    setDimension(3)
     resizeCanvas(canvas)
     window.addEventListener("resize", () => resizeCanvas(canvas))
 

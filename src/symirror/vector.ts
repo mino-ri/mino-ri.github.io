@@ -1,6 +1,7 @@
 export interface Vector {
     length: number
     [n: number]: number
+    [Symbol.iterator](): Iterator<number>
 }
 
 export class Vectors {
@@ -127,26 +128,32 @@ export class Vectors {
         return sum
     }
 
-    static #u = [0, 0, 0]
-    static #v = [0, 0, 0]
-    static #w = [0, 0, 0]
     static #epsilon = 1e-6
+    static #tempMap = new Map<number, [Vector, Vector, Vector]>()
+    static #getTempVectors(dimension: number): [Vector, Vector, Vector] {
+        let vectors = Vectors.#tempMap.get(dimension)
+        if (vectors) return vectors
+        vectors = [new Array<number>(dimension), new Array<number>(dimension), new Array<number>(dimension)]
+        Vectors.#tempMap.set(dimension, vectors)
+        return vectors
+    }
 
     static hasIntersection(a: Vector, b: Vector, c: Vector, d: Vector): boolean {
-        Vectors.sub(b, a, Vectors.#u)
-        Vectors.sub(d, c, Vectors.#v)
-        Vectors.sub(a, c, Vectors.#w)
+        const [u, v, w] = Vectors.#getTempVectors(a.length)
+        Vectors.sub(b, a, u)
+        Vectors.sub(d, c, v)
+        Vectors.sub(a, c, w)
 
-        const nrm2U = Vectors.dot(Vectors.#u, Vectors.#u)
-        const dotUv = Vectors.dot(Vectors.#u, Vectors.#v)
-        const nrm2V = Vectors.dot(Vectors.#v, Vectors.#v)
-        const dotUw = Vectors.dot(Vectors.#u, Vectors.#w)
-        const dotVw = Vectors.dot(Vectors.#v, Vectors.#w)
+        const nrm2U = Vectors.dot(u, u)
+        const dotUv = Vectors.dot(u, v)
+        const nrm2V = Vectors.dot(v, v)
+        const dotUw = Vectors.dot(u, w)
+        const dotVw = Vectors.dot(v, w)
         const delta = nrm2U * nrm2V - dotUv * dotUv
 
         // 2線分が平行か
         if (Math.abs(delta) < Vectors.#epsilon) {
-            const nrm2W = Vectors.dot(Vectors.#w, Vectors.#w)
+            const nrm2W = Vectors.dot(w, w)
             // 2線分が同一直線上にあるか
             return nrm2U * nrm2W - dotUw * dotUw < Vectors.#epsilon
         }
@@ -158,15 +165,16 @@ export class Vectors {
     }
 
     static getCrossPoint(a: Vector, b: Vector, c: Vector, d: Vector, resultTo: Vector): Vector | null {
-        Vectors.sub(b, a, Vectors.#u)
-        Vectors.sub(d, c, Vectors.#v)
-        Vectors.sub(a, c, Vectors.#w)
+        const [u, v, w] = Vectors.#getTempVectors(a.length)
+        Vectors.sub(b, a, u)
+        Vectors.sub(d, c, v)
+        Vectors.sub(a, c, w)
 
-        const nrm2U = Vectors.dot(Vectors.#u, Vectors.#u)
-        const dotUv = Vectors.dot(Vectors.#u, Vectors.#v)
-        const nrm2V = Vectors.dot(Vectors.#v, Vectors.#v)
-        const dotUw = Vectors.dot(Vectors.#u, Vectors.#w)
-        const dotVw = Vectors.dot(Vectors.#v, Vectors.#w)
+        const nrm2U = Vectors.dot(u, u)
+        const dotUv = Vectors.dot(u, v)
+        const nrm2V = Vectors.dot(v, v)
+        const dotUw = Vectors.dot(u, w)
+        const dotVw = Vectors.dot(v, w)
         const delta = nrm2U * nrm2V - dotUv * dotUv
 
         if (Math.abs(delta) < Vectors.#epsilon) {
@@ -180,13 +188,13 @@ export class Vectors {
             return null
         }
 
-        Vectors.mul(Vectors.#u, s, Vectors.#u)
-        Vectors.add(Vectors.#u, a, Vectors.#u)
-        Vectors.mul(Vectors.#v, t, Vectors.#v)
-        Vectors.add(Vectors.#v, c, Vectors.#v)
-        Vectors.add(Vectors.#u, Vectors.#v, resultTo)
+        Vectors.mul(u, s, u)
+        Vectors.add(u, a, u)
+        Vectors.mul(v, t, v)
+        Vectors.add(v, c, v)
+        Vectors.add(u, v, resultTo)
         Vectors.mul(resultTo, 0.5, resultTo)
-        return Vectors.distanceSquared(Vectors.#u, Vectors.#v) < 1e-6 ? resultTo : null
+        return Vectors.distanceSquared(u, v) < Vectors.#epsilon ? resultTo : null
     }
 
     static average(vectors: Vector[], resultTo: Vector): Vector {

@@ -2,7 +2,7 @@ import { CoxeterMatrix } from "./coxeter_matrix.js";
 import { FiniteCoxeterGroup, CoxeterGroupElement } from "./coxeter_group.js";
 import { Vector } from "./vector.js";
 import { Quaternion, Quaternions } from "./quaternion.js";
-import { IPolyhedron } from "./model.js";
+import { IPolytope } from "./model.js";
 import { SymmetryGroup3, UnitTriangle } from "./symmetry3.js";
 
 export type PolyhedronSource = {
@@ -15,7 +15,7 @@ export type PolyhedronSource = {
 export type PolyhedronFace = {
     colorIndex: number
     connectedIndex: number
-    vertexIndexes: number[]
+    faceIndexes: number[][]
 }
 
 export type PolyhedronEdge = {
@@ -29,12 +29,12 @@ export type AdditionalLengthElement = {
     length: number
 }
 
-export class NormalPolyhedron implements IPolyhedron {
+export class NormalPolyhedron implements IPolytope {
     #compoundTransforms: Quaternion[]
     vertexes: Vector[]
     vertexConnectedIndexes: number[]
     edges: PolyhedronEdge[]
-    faces: PolyhedronFace[]
+    units: PolyhedronFace[]
     symmetryGroup: SymmetryGroup3
     generators: CoxeterGroupElement[]
     #additionalLengths: CoxeterGroupElement[]
@@ -47,7 +47,7 @@ export class NormalPolyhedron implements IPolyhedron {
     ) {
         const vertexCount = source.symmetryGroup.order * (compoundTransforms?.length || 1)
         const connectedIndexMap = new Array<number | undefined>(vertexCount)
-        this.vertexes = new Array<Vector>(vertexCount)
+        this.vertexes = new Array<number[]>(vertexCount)
         this.symmetryGroup = source.symmetryGroup
         this.generators = source.generators
         this.#compoundTransforms = compoundTransforms ?? []
@@ -57,7 +57,9 @@ export class NormalPolyhedron implements IPolyhedron {
         const maxElement = source.symmetryGroup.getMaxElement()
         const isCentrosymmetry = maxElement.rank % 2 === 1
         const reflector = mirrorImageReflector ?? (isCentrosymmetry ? maxElement : undefined)
-
+        for (let i = 0; i < vertexCount; i++) {
+            this.vertexes[i] = [0, 0, 0]
+        }
         // 頂点ごとの連結成分ID
         // 連結成分Idへのマップ
         let connectedIndex = 0
@@ -163,7 +165,7 @@ export class NormalPolyhedron implements IPolyhedron {
                     faces.push({
                         colorIndex: mirrorA,
                         connectedIndex: connectedIndexMap[currentIndex] ?? 0,
-                        vertexIndexes: faceVertexIndexes,
+                        faceIndexes: [faceVertexIndexes],
                     })
                 }
             }
@@ -207,7 +209,7 @@ export class NormalPolyhedron implements IPolyhedron {
                     faces[baseFaceIndex + i] = {
                         colorIndex: face.colorIndex,
                         connectedIndex: face.connectedIndex + additionalConnectedIndex,
-                        vertexIndexes: face.vertexIndexes.map(v => v + baseIndex),
+                        faceIndexes: face.faceIndexes.map(f => f.map(v => v + baseIndex)),
                     }
                 }
             }
@@ -215,7 +217,7 @@ export class NormalPolyhedron implements IPolyhedron {
 
         this.vertexConnectedIndexes = connectedIndexMap as number[]
         this.edges = edges
-        this.faces = faces
+        this.units = faces
         this.setOrigin([0, 0, 1])
     }
 
@@ -252,14 +254,14 @@ export class NormalPolyhedron implements IPolyhedron {
     // maxRatio = 0.8
     setOrigin(newOrigin: Vector): void {
         for (let i = 0; i < this.symmetryGroup.transforms.length; i++) {
-            this.vertexes[i] = Quaternions.transform(newOrigin, this.symmetryGroup.transforms[i]!)
+            Quaternions.transform(newOrigin, this.symmetryGroup.transforms[i]!, this.vertexes[i])
         }
 
         for (let c = this.#compoundTransforms.length - 1; c >= 0; c--) {
             let baseIndex = c * this.symmetryGroup.transforms.length
             const cTransform = this.#compoundTransforms[c]!
             for (let i = 0; i < this.symmetryGroup.transforms.length; i++) {
-                this.vertexes[baseIndex + i] = Quaternions.transform(this.vertexes[i]!, cTransform)
+                Quaternions.transform(this.vertexes[i]!, cTransform, this.vertexes[baseIndex + i])
             }
         }
 
