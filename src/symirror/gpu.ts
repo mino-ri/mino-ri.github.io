@@ -271,9 +271,19 @@ class RenderBuffer {
 }
 
 class RenderPipeline {
-    static #premitiveState: GPUPrimitiveState = {
+    static #facePremitiveState: GPUPrimitiveState = {
         topology: "triangle-list",
         cullMode: "none",
+        frontFace: "ccw",
+    }
+    static #instancePremitiveState: GPUPrimitiveState = {
+        topology: "triangle-list",
+        cullMode: "back",
+        frontFace: "ccw",
+    }
+    static #instanceShadowPremitiveState: GPUPrimitiveState = {
+        topology: "triangle-list",
+        cullMode: "front",
         frontFace: "ccw",
     }
     static #instanceVertexBufferLayout: GPUVertexBufferLayout = {
@@ -328,6 +338,7 @@ class RenderPipeline {
         ballInstanceBufferLayout: GPUVertexBufferLayout,
         lineInstanceBufferLayout: GPUVertexBufferLayout,
         fragmentState?: GPUFragmentState,
+        instanceFragmentState?: GPUFragmentState,
         discardFragmentState?: GPUFragmentState,
     ) {
         this.#device = device
@@ -348,19 +359,19 @@ class RenderPipeline {
             module: shaderModule,
             entryPoint: "vertexBall" + shaderNameSuffix,
             buffers: [RenderPipeline.#instanceVertexBufferLayout, ballInstanceBufferLayout],
-        }, RenderPipeline.#ignoreDepthStencilState, fragmentState)
+        }, RenderPipeline.#ignoreDepthStencilState, instanceFragmentState, instanceFragmentState ? RenderPipeline.#instancePremitiveState : RenderPipeline.#instanceShadowPremitiveState)
         this.#linePipeline = this.#createPipeline({
             module: shaderModule,
             entryPoint: "vertexLine" + shaderNameSuffix,
             buffers: [RenderPipeline.#instanceVertexBufferLayout, lineInstanceBufferLayout],
-        }, RenderPipeline.#ignoreDepthStencilState, fragmentState)
+        }, RenderPipeline.#ignoreDepthStencilState, instanceFragmentState, instanceFragmentState ? RenderPipeline.#instancePremitiveState : RenderPipeline.#instanceShadowPremitiveState)
     }
 
-    #createPipeline(vertexState: GPUVertexState, depthStencilState: GPUDepthStencilState, fragmentState?: GPUFragmentState): GPURenderPipeline {
+    #createPipeline(vertexState: GPUVertexState, depthStencilState: GPUDepthStencilState, fragmentState: GPUFragmentState | undefined, premitiveState?: GPUPrimitiveState): GPURenderPipeline {
         const desc: GPURenderPipelineDescriptor = {
             layout: this.#layout,
             vertex: vertexState,
-            primitive: RenderPipeline.#premitiveState,
+            primitive: premitiveState ?? RenderPipeline.#facePremitiveState,
             depthStencil: depthStencilState,
         }
         if (fragmentState) desc.fragment = fragmentState
@@ -532,6 +543,11 @@ class PolyhedronRendererImpl implements PolyhedronRenderer {
             entryPoint: "fragmentMain",
             targets: [{ format: this.#format }],
         }
+        const instanceFragmentState: GPUFragmentState = {
+            module: shaderModule,
+            entryPoint: "fragmentInstanceMain",
+            targets: [{ format: this.#format }],
+        }
         const discardFragmentState: GPUFragmentState = {
             module: shaderModule,
             entryPoint: "fragmentEmpty",
@@ -548,6 +564,7 @@ class PolyhedronRendererImpl implements PolyhedronRenderer {
             ballInstanceBufferLayout,
             lineInstanceBufferLayout,
             fragmentState,
+            instanceFragmentState,
             discardFragmentState,
         )
     }
