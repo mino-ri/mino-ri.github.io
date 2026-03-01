@@ -7,7 +7,7 @@ export class NormalPolyhedron {
     vertexes;
     vertexConnectedIndexes;
     edges;
-    faces;
+    units;
     symmetryGroup;
     generators;
     #additionalLengths;
@@ -25,6 +25,9 @@ export class NormalPolyhedron {
         const maxElement = source.symmetryGroup.getMaxElement();
         const isCentrosymmetry = maxElement.rank % 2 === 1;
         const reflector = mirrorImageReflector ?? (isCentrosymmetry ? maxElement : undefined);
+        for (let i = 0; i < vertexCount; i++) {
+            this.vertexes[i] = [0, 0, 0];
+        }
         let connectedIndex = 0;
         let isHalf = null;
         for (let i = 0; i < source.symmetryGroup.order; i++) {
@@ -119,7 +122,7 @@ export class NormalPolyhedron {
                     faces.push({
                         colorIndex: mirrorA,
                         connectedIndex: connectedIndexMap[currentIndex] ?? 0,
-                        vertexIndexes: faceVertexIndexes,
+                        faceIndexes: [faceVertexIndexes],
                     });
                 }
             }
@@ -158,14 +161,14 @@ export class NormalPolyhedron {
                     faces[baseFaceIndex + i] = {
                         colorIndex: face.colorIndex,
                         connectedIndex: face.connectedIndex + additionalConnectedIndex,
-                        vertexIndexes: face.vertexIndexes.map(v => v + baseIndex),
+                        faceIndexes: face.faceIndexes.map(f => f.map(v => v + baseIndex)),
                     };
                 }
             }
         }
         this.vertexConnectedIndexes = connectedIndexMap;
         this.edges = edges;
-        this.faces = faces;
+        this.units = faces;
         this.setOrigin([0, 0, 1]);
     }
     #isExisting(existing, element) {
@@ -195,13 +198,13 @@ export class NormalPolyhedron {
     }
     setOrigin(newOrigin) {
         for (let i = 0; i < this.symmetryGroup.transforms.length; i++) {
-            this.vertexes[i] = Quaternions.transform(newOrigin, this.symmetryGroup.transforms[i]);
+            Quaternions.transform(newOrigin, this.symmetryGroup.transforms[i], this.vertexes[i]);
         }
         for (let c = this.#compoundTransforms.length - 1; c >= 0; c--) {
             let baseIndex = c * this.symmetryGroup.transforms.length;
             const cTransform = this.#compoundTransforms[c];
             for (let i = 0; i < this.symmetryGroup.transforms.length; i++) {
-                this.vertexes[baseIndex + i] = Quaternions.transform(this.vertexes[i], cTransform);
+                Quaternions.transform(this.vertexes[i], cTransform, this.vertexes[baseIndex + i]);
             }
         }
     }
