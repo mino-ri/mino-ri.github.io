@@ -8,7 +8,7 @@ const faceColors: [number, number, number][] = [
     [0.01, 0.68, 0.35], // 2: 緑
     [0.00, 0.44, 1.00], // 3: 青
     [0.25, 0.88, 1.00], // 4: 空
-    [0.75, 0.10, 0.95], // 5: 空
+    [0.75, 0.10, 0.95], // 5: 紫
 ]
 
 const crosses: { value: Vector | null, source: Vector }[] = [
@@ -44,20 +44,11 @@ function addTriangle(
     b: number,
 ) {
     // 三角形: v0, v1, v2
-    // 法線を計算 (v0 -> v1 と v0 -> v2 の外積)
-    Vectors.sub(v1, v0, nv)
-    Vectors.sub(v2, v0, mv)
-    Vectors.cross(nv, mv, nv)
-    Vectors.normalizeSelf(nv)
-    const nx = nv[0]!
-    const ny = nv[1]!
-    const nz = nv[2]!
-
-    // 頂点データ追加: position, normal, color
+    // 頂点データ追加: position, color
     triangles.push(
-        v0[0]!, v0[1]!, v0[2]!, nx, ny, nz, r, g, b,
-        v1[0]!, v1[1]!, v1[2]!, nx, ny, nz, r, g, b,
-        v2[0]!, v2[1]!, v2[2]!, nx, ny, nz, r, g, b,
+        v0[0]!, v0[1]!, v0[2]!, r, g, b,
+        v1[0]!, v1[1]!, v1[2]!, r, g, b,
+        v2[0]!, v2[1]!, v2[2]!, r, g, b,
     )
 }
 
@@ -366,7 +357,7 @@ export function buildPolyhedronMesh(
                 addPolygon(triangles, polyhedron.vertexes, face, colorByConnected, true)
 
                 drawnIndexSet.add(i)
-                const vertexCount = triangles.length / 9 - addedVertexCount
+                const vertexCount = triangles.length / 6 - addedVertexCount
                 if (vertexCount > 0) {
                     stencilVertexCounts.push(vertexCount)
                     addedVertexCount += vertexCount
@@ -389,7 +380,7 @@ export function buildPolyhedronMesh(
 
             addPolygon(triangles, polyhedron.vertexes, face, colorByConnected, true)
             drawnIndexSet.add(i)
-            const vertexCount = triangles.length / 9 - addedVertexCount
+            const vertexCount = triangles.length / 6 - addedVertexCount
             if (vertexCount > 0) {
                 stencilVertexCounts.push(vertexCount)
                 addedVertexCount += vertexCount
@@ -441,7 +432,7 @@ export function buildPolyhedronMesh(
         }
     }
 
-    const normalVertexCount = triangles.length / 9 - addedVertexCount
+    const normalVertexCount = triangles.length / 6 - addedVertexCount
 
     return {
         vertexData: new Float32Array(triangles),
