@@ -1,6 +1,6 @@
 import { NormalPolyhedron, unitTriangles, faceSelectorMap } from "./polyhedron.js";
 import { initGpu } from "./gpu.js";
-import { buildPolyhedronMesh } from "./model.js";
+import { buildPolytopeMesh, setDimension } from "./model.js";
 import { setCenter } from "../svg_generator.js";
 import { OriginController } from "./origin_contoroller.js";
 import { shaderSource } from "./gpu_3d.js";
@@ -89,7 +89,7 @@ class PolyhedronViewer {
     #originController;
     constructor(canvas, gpuContext, originController) {
         this.#canvas = canvas;
-        this.#renderer = gpuContext.createPolyhedronRenderer(shaderSource);
+        this.#renderer = gpuContext.createPolytopeRenderer(shaderSource);
         this.#originController = originController;
         this.#setupEventListeners();
         this.#startRenderLoop();
@@ -192,7 +192,7 @@ class PolyhedronViewer {
     #updateMesh() {
         if (!this.#polyhedron)
             return;
-        const mesh = buildPolyhedronMesh(this.#polyhedron, this.#faceVisibility, this.#visibilityType, this.#vertexVisibility, this.#edgeVisibility, this.#colorByConnected, this.#holosnub, this.#fillType);
+        const mesh = buildPolytopeMesh(this.#polyhedron, this.#faceVisibility, this.#visibilityType, this.#vertexVisibility, this.#edgeVisibility, this.#colorByConnected, this.#holosnub, this.#fillType);
         this.#renderer.updateMesh(mesh);
     }
     #startRenderLoop() {
@@ -259,6 +259,7 @@ window.addEventListener("load", async () => {
         console.error("Required elements not found");
         return;
     }
+    setDimension(3);
     resizeCanvas(canvas);
     window.addEventListener("resize", () => resizeCanvas(canvas));
     const gpuContext = await initGpu(canvas);

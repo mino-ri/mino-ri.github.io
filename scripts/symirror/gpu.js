@@ -33,8 +33,8 @@ class GpuContextImpl {
         this.context = context;
         this.format = format;
     }
-    createPolyhedronRenderer({ shaderCode, dynamicBufferByteSize, constantBufferValue, vertexBufferLayout, ballInstanceBufferLayout, lineInstanceBufferLayout }) {
-        return new PolyhedronRendererImpl(this.device, this.context, this.format, shaderCode, dynamicBufferByteSize, constantBufferValue, vertexBufferLayout, ballInstanceBufferLayout, lineInstanceBufferLayout);
+    createPolytopeRenderer({ shaderCode, dynamicBufferByteSize, constantBufferValue, vertexBufferLayout, ballInstanceBufferLayout, lineInstanceBufferLayout }) {
+        return new PolytopeRendererImpl(this.device, this.context, this.format, shaderCode, dynamicBufferByteSize, constantBufferValue, vertexBufferLayout, ballInstanceBufferLayout, lineInstanceBufferLayout);
     }
 }
 class RenderBuffer {
@@ -330,7 +330,7 @@ class RenderPipeline {
     }
 }
 _a = RenderPipeline;
-class PolyhedronRendererImpl {
+class PolytopeRendererImpl {
     #shadowSPipeline;
     #mainSPipeline;
     #shadowBindGroup;
