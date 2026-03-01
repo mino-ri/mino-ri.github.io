@@ -178,9 +178,19 @@ class RenderBuffer {
     }
 }
 class RenderPipeline {
-    static #premitiveState = {
+    static #facePremitiveState = {
         topology: "triangle-list",
         cullMode: "none",
+        frontFace: "ccw",
+    };
+    static #instancePremitiveState = {
+        topology: "triangle-list",
+        cullMode: "back",
+        frontFace: "ccw",
+    };
+    static #instanceShadowPremitiveState = {
+        topology: "triangle-list",
+        cullMode: "front",
         frontFace: "ccw",
     };
     static #instanceVertexBufferLayout = {
@@ -222,7 +232,7 @@ class RenderPipeline {
     #stencilWritePipeline;
     #stencilMaskPipeline;
     #buffer;
-    constructor(shaderNameSuffix, device, shaderModule, buffer, bindGroup, layout, vertexBufferLayout, ballInstanceBufferLayout, lineInstanceBufferLayout, fragmentState, discardFragmentState) {
+    constructor(shaderNameSuffix, device, shaderModule, buffer, bindGroup, layout, vertexBufferLayout, ballInstanceBufferLayout, lineInstanceBufferLayout, fragmentState, instanceFragmentState, discardFragmentState) {
         this.#device = device;
         this.#buffer = buffer;
         this.#bindGroup = bindGroup;
@@ -239,18 +249,18 @@ class RenderPipeline {
             module: shaderModule,
             entryPoint: "vertexBall" + shaderNameSuffix,
             buffers: [_a.#instanceVertexBufferLayout, ballInstanceBufferLayout],
-        }, _a.#ignoreDepthStencilState, fragmentState);
+        }, _a.#ignoreDepthStencilState, instanceFragmentState, instanceFragmentState ? _a.#instancePremitiveState : _a.#instanceShadowPremitiveState);
         this.#linePipeline = this.#createPipeline({
             module: shaderModule,
             entryPoint: "vertexLine" + shaderNameSuffix,
             buffers: [_a.#instanceVertexBufferLayout, lineInstanceBufferLayout],
-        }, _a.#ignoreDepthStencilState, fragmentState);
+        }, _a.#ignoreDepthStencilState, instanceFragmentState, instanceFragmentState ? _a.#instancePremitiveState : _a.#instanceShadowPremitiveState);
     }
-    #createPipeline(vertexState, depthStencilState, fragmentState) {
+    #createPipeline(vertexState, depthStencilState, fragmentState, premitiveState) {
         const desc = {
             layout: this.#layout,
             vertex: vertexState,
-            primitive: _a.#premitiveState,
+            primitive: premitiveState ?? _a.#facePremitiveState,
             depthStencil: depthStencilState,
         };
         if (fragmentState)
@@ -386,12 +396,17 @@ class PolyhedronRendererImpl {
             entryPoint: "fragmentMain",
             targets: [{ format: this.#format }],
         };
+        const instanceFragmentState = {
+            module: shaderModule,
+            entryPoint: "fragmentInstanceMain",
+            targets: [{ format: this.#format }],
+        };
         const discardFragmentState = {
             module: shaderModule,
             entryPoint: "fragmentEmpty",
             targets: [{ format: this.#format, writeMask: 0 }],
         };
-        this.#mainSPipeline = new RenderPipeline("Main", device, shaderModule, this.#buffer, this.#bindGroup, layout, vertexBufferLayout, ballInstanceBufferLayout, lineInstanceBufferLayout, fragmentState, discardFragmentState);
+        this.#mainSPipeline = new RenderPipeline("Main", device, shaderModule, this.#buffer, this.#bindGroup, layout, vertexBufferLayout, ballInstanceBufferLayout, lineInstanceBufferLayout, fragmentState, instanceFragmentState, discardFragmentState);
     }
     updateMesh(mesh) {
         this.#buffer.updateMesh(mesh);
