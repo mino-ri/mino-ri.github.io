@@ -1,7 +1,7 @@
 /// <reference types="@webgpu/types" />
 import { Vector, Vectors } from "./vector.js"
 
-export interface PolyhedronMesh {
+export interface IPolytopeMesh {
     // インターリーブ頂点データ: [x, y, z, nx, ny, nz, r, g, b] × 頂点数
     vertexData: Float32Array
     ballInstanceData: Float32Array
@@ -12,8 +12,8 @@ export interface PolyhedronMesh {
     lineCount: number
 }
 
-export interface PolyhedronRenderer {
-    updateMesh(mesh: PolyhedronMesh): void
+export interface IPolytopeRenderer {
+    updateMesh(mesh: IPolytopeMesh): void
     render(modelMatrix: Float32Array): void
     destroy(): void
 }
@@ -31,7 +31,7 @@ export interface GpuContext {
     readonly device: GPUDevice
     readonly context: GPUCanvasContext
     readonly format: GPUTextureFormat
-    createPolyhedronRenderer(shaderSource: ShaderSource): PolyhedronRenderer
+    createPolytopeRenderer(shaderSource: ShaderSource): IPolytopeRenderer
 }
 
 export const initGpu = async (canvas: HTMLCanvasElement): Promise<GpuContext | null> => {
@@ -70,8 +70,8 @@ class GpuContextImpl implements GpuContext {
         readonly format: GPUTextureFormat,
     ) { }
 
-    createPolyhedronRenderer({ shaderCode, dynamicBufferByteSize, constantBufferValue, vertexBufferLayout, ballInstanceBufferLayout, lineInstanceBufferLayout }: ShaderSource): PolyhedronRenderer {
-        return new PolyhedronRendererImpl(this.device, this.context, this.format, shaderCode, dynamicBufferByteSize, constantBufferValue, vertexBufferLayout, ballInstanceBufferLayout, lineInstanceBufferLayout)
+    createPolytopeRenderer({ shaderCode, dynamicBufferByteSize, constantBufferValue, vertexBufferLayout, ballInstanceBufferLayout, lineInstanceBufferLayout }: ShaderSource): IPolytopeRenderer {
+        return new PolytopeRendererImpl(this.device, this.context, this.format, shaderCode, dynamicBufferByteSize, constantBufferValue, vertexBufferLayout, ballInstanceBufferLayout, lineInstanceBufferLayout)
     }
 }
 
@@ -247,7 +247,7 @@ class RenderBuffer {
         return vertexBuffer
     }
 
-    updateMesh(mesh: PolyhedronMesh): void {
+    updateMesh(mesh: IPolytopeMesh): void {
         this.vertexBuffer = this.#setMesh(this.vertexBuffer, mesh.vertexData)
         this.ballInstanceBuffer = this.#setMesh(this.ballInstanceBuffer, mesh.ballInstanceData)
         this.lineInstanceBuffer = this.#setMesh(this.lineInstanceBuffer, mesh.lineInstanceData)
@@ -449,7 +449,7 @@ class RenderPipeline {
     }
 }
 
-class PolyhedronRendererImpl implements PolyhedronRenderer {
+class PolytopeRendererImpl implements IPolytopeRenderer {
     #shadowSPipeline: RenderPipeline
     #mainSPipeline: RenderPipeline
     #shadowBindGroup: GPUBindGroup
@@ -569,7 +569,7 @@ class PolyhedronRendererImpl implements PolyhedronRenderer {
         )
     }
 
-    updateMesh(mesh: PolyhedronMesh): void {
+    updateMesh(mesh: IPolytopeMesh): void {
         this.#buffer.updateMesh(mesh)
     }
 
