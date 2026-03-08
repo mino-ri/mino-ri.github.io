@@ -1,1 +1,98 @@
-let defaultLangCode="";const switchingElements=[];function switchLanguage(t){const e=t.value;if(e===document.documentElement.lang)return;document.documentElement.lang=e;const n=`data-ls-${e}`,a=`data-ls-${defaultLangCode}`,s=`data-ls-html-${e}`,o=`data-ls-html-${defaultLangCode}`;for(const{element:t,isContentTarget:i,isHtmlTarget:l,targetAttributes:r}of switchingElements){if(l)if(i){const e=t.getAttribute(s)??t.getAttribute(o);e?t.innerHTML=e:t.textContent=t.getAttribute(n)??t.getAttribute(a)}else t.innerHTML=t.getAttribute(s)??t.getAttribute(o)??"";else i&&(t.textContent=t.getAttribute(n)??t.getAttribute(a));if(r)for(const n of r){const a=`data-ls-${n}-${e}`,s=`data-ls-${n}-${defaultLangCode}`;t.setAttribute(n,t.getAttribute(a)??t.getAttribute(s)??"")}}}function registerElement(t){let e=null;for(const n of t.attributes){if(!n.name.startsWith("data-ls-"))continue;e=e??{element:t,isContentTarget:!1,isHtmlTarget:!1};const a=n.name.indexOf("-",8);if(-1===a)e.isContentTarget=!0,t.setAttribute(`data-ls-${defaultLangCode}`,t.textContent??"");else{const s=n.name.substring(8,a);"html"==s?(e.isHtmlTarget=!0,t.setAttribute(`data-ls-html-${defaultLangCode}`,t.innerHTML??"")):(e.targetAttributes||(e.targetAttributes=new Set),e.targetAttributes.add(s),t.setAttribute(`data-ls-${s}-${defaultLangCode}`,t.getAttribute(s)??""))}}e&&switchingElements.push(e)}export function loadLanguages(){defaultLangCode=document.documentElement.lang;for(const t of document.querySelectorAll("*"))t instanceof HTMLElement&&registerElement(t);const t=[...document.querySelectorAll("input[name='language']")].filter(t=>t instanceof HTMLInputElement);for(const e of t)e.addEventListener("click",function(){switchLanguage(this)});for(const e of window.navigator.languages)for(const n of t){const t=n.value;if(e.startsWith(t))return n.checked=!0,void(t!==defaultLangCode&&switchLanguage(n))}}
+let defaultLangCode = "";
+const switchingElements = [];
+function switchLanguage(radioButton) {
+    const langCode = radioButton.value;
+    if (langCode === document.documentElement.lang) {
+        return;
+    }
+    document.documentElement.lang = langCode;
+    const lsKey = `data-ls-${langCode}`;
+    const defaultLsKey = `data-ls-${defaultLangCode}`;
+    const lsHtmlKey = `data-ls-html-${langCode}`;
+    const defaultHtmlKey = `data-ls-html-${defaultLangCode}`;
+    for (const { element, isContentTarget, isHtmlTarget, targetAttributes } of switchingElements) {
+        if (isHtmlTarget) {
+            if (isContentTarget) {
+                const innerHtml = element.getAttribute(lsHtmlKey) ?? element.getAttribute(defaultHtmlKey);
+                if (innerHtml) {
+                    element.innerHTML = innerHtml;
+                }
+                else {
+                    element.textContent = element.getAttribute(lsKey) ?? element.getAttribute(defaultLsKey);
+                }
+            }
+            else {
+                element.innerHTML = element.getAttribute(lsHtmlKey) ?? element.getAttribute(defaultHtmlKey) ?? "";
+            }
+        }
+        else if (isContentTarget) {
+            element.textContent = element.getAttribute(lsKey) ?? element.getAttribute(defaultLsKey);
+        }
+        if (targetAttributes) {
+            for (const attr of targetAttributes) {
+                const key = `data-ls-${attr}-${langCode}`;
+                const defaultKey = `data-ls-${attr}-${defaultLangCode}`;
+                element.setAttribute(attr, element.getAttribute(key) ?? element.getAttribute(defaultKey) ?? "");
+            }
+        }
+    }
+}
+function registerElement(element) {
+    let entry = null;
+    for (const attr of element.attributes) {
+        if (!attr.name.startsWith("data-ls-")) {
+            continue;
+        }
+        entry = entry ?? {
+            element,
+            isContentTarget: false,
+            isHtmlTarget: false
+        };
+        const hyphenIndex = attr.name.indexOf("-", 8);
+        if (hyphenIndex === -1) {
+            entry.isContentTarget = true;
+            element.setAttribute(`data-ls-${defaultLangCode}`, element.textContent ?? "");
+        }
+        else {
+            const targetAttrName = attr.name.substring(8, hyphenIndex);
+            if (targetAttrName == "html") {
+                entry.isHtmlTarget = true;
+                element.setAttribute(`data-ls-html-${defaultLangCode}`, element.innerHTML ?? "");
+            }
+            else {
+                if (!entry.targetAttributes) {
+                    entry.targetAttributes = new Set();
+                }
+                entry.targetAttributes.add(targetAttrName);
+                element.setAttribute(`data-ls-${targetAttrName}-${defaultLangCode}`, element.getAttribute(targetAttrName) ?? "");
+            }
+        }
+    }
+    if (entry) {
+        switchingElements.push(entry);
+    }
+}
+export function loadLanguages() {
+    defaultLangCode = document.documentElement.lang;
+    for (const element of document.querySelectorAll("*")) {
+        if (element instanceof HTMLElement) {
+            registerElement(element);
+        }
+    }
+    const languageSwitchers = [...document.querySelectorAll("input[name='language']")].filter((e) => e instanceof HTMLInputElement);
+    for (const switcher of languageSwitchers) {
+        switcher.addEventListener("click", function () { switchLanguage(this); });
+    }
+    for (const userLang of window.navigator.languages) {
+        for (const switcher of languageSwitchers) {
+            const langCode = switcher.value;
+            if (userLang.startsWith(langCode)) {
+                switcher.checked = true;
+                if (langCode !== defaultLangCode) {
+                    switchLanguage(switcher);
+                }
+                return;
+            }
+        }
+    }
+}

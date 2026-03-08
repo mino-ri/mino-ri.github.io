@@ -1,1 +1,656 @@
-import{clearChildren,createCircle,createLine,setCenter}from"./svg_generator.js";const generatorColors=["#DF4121","#339564","#217BDF","#C3B827"],directionMap=new Map([[2,[[1,0],[0,1]]]]),positionCenter=250;class Vectors{static dot(e,t){let r=0;const n=Math.min(e.length,t.length);for(let o=0;o<n;o++)r+=e[o]*t[o];return r}static mul(e,t){const r=new Array(e.length);for(let n=0;n<e.length;n++)r[n]=e[n]*t;return r}static add(e,t){const r=Math.min(e.length,t.length),n=new Array(r);for(let o=0;o<r;o++)n[o]=e[o]+t[o];return n}static sub(e,t){const r=Math.min(e.length,t.length),n=new Array(r);for(let o=0;o<r;o++)n[o]=e[o]-t[o];return n}static normalize(e){return Vectors.mul(e,1/Math.sqrt(Vectors.dot(e,e)))}static project(e){const t=e.length;switch(t){case 0:return{x:0,y:0,z:1};case 1:return{x:150*e[0],y:0,z:1};case 2:return{x:150*e[0],y:-150*e[1],z:1}}let r=directionMap.get(t);if(!r){r=new Array(t);for(let e=0;e<t;e++){const n=2*Math.PI*(t-e-1)/t;r[e]=[150*Math.sin(n),150*-Math.cos(n)]}directionMap.set(t,r)}let n={x:0,y:0,z:0};for(let o=0;o<t;o++){const t=e[o],[s,i]=r[o];n.x+=t*s,n.y+=t*i,n.z+=t}return n.z=(n.z/t+2)/2,n.x=n.x*n.z,n.y=n.y*n.z,n}}class Mirror{normal;constructor(e){this.normal=e}reflection(e){const t=-2*Vectors.dot(e,this.normal);return Vectors.add(e,Vectors.mul(this.normal,t))}}class Representation{static beginCodePoint=97;static charMap=["a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p"];static getChar(e){return e<this.charMap.length?this.charMap[e]:String.fromCodePoint(Representation.beginCodePoint+e)}static getAlternating(e,t,r){const n=this.getChar(e),o=this.getChar(t),s=new Array(r),i=new Array(r);for(let e=0;e<r;e++)e%2==0?(s[e]=n,i[e]=o):(s[e]=o,i[e]=n);return[s.join(""),i.join("")]}static getAlternatingNumbers(e,t,r){const n=new Array(r),o=new Array(r);for(let s=0;s<r;s++)s%2==0?(n[s]=e,o[s]=t):(n[s]=t,o[s]=e);return[n,o]}}export class CoxeterMatrix{values;dimension;constructor(e){this.values=e;const t=this.values.length;this.dimension=Math.sqrt(2*t+.25)+.5}get(e,t){if(e==t)return 2;const r=e>t?e*(e-1)/2+t:t*(t-1)/2+e;return this.values[r]??2}getExchanges(){const e=new Array(3);for(let t=0;t<this.dimension;t++)e[t]=[];for(let t=0;t<this.dimension;t++)for(let r=t+1;r<this.dimension;r++){const n=this.get(t,r),[o,s]=Representation.getAlternatingNumbers(t,r,n);e[t]?.push({from:o,to:s}),e[r]?.push({from:s,to:o})}return e}static create2D(e){return new CoxeterMatrix([e])}static create3D(e,t,r){return new CoxeterMatrix([e,r??2,t])}static create4D(e,t,r){return new CoxeterMatrix([e,2,t,2,2,r])}static create4DDemicube(e,t,r){return new CoxeterMatrix([e,2,t,2,r,2])}}const dummyPosition=[];export class CoxeterGroupElement{index;rank;representation;neighbors;#e;position;constructor(e,t,r,n){this.index=e,this.rank=t,this.representation=r,this.neighbors=n,this.#e=void 0,this.position=dummyPosition}mul(e){if(0===e.rank)return this;if(0===this.rank)return e;let t=this;for(let r=0;r<e.representation.length;r++){const n=e.representation.charCodeAt(r);if(Number.isNaN(n))break;t=t.neighbors[n-Representation.beginCodePoint]}return t}calcPosition(e,t){if(this.position=e,0!==this.rank)for(let e=this.representation.length-1;e>=0;e--){const r=this.representation.charCodeAt(e);if(Number.isNaN(r))break;const n=t[r-Representation.beginCodePoint];this.position=n.reflection(this.position)}}toString(){return this.representation}get period(){if(void 0!==this.#e)return this.#e;let e=1,t=this;for(;t.rank>0;)e++,t=t.mul(this);return this.#e=e,e}}export class SubgroupElement{source;rank;representation;neighbors;constructor(e,t,r,n){this.source=e,this.rank=t,this.representation=r,this.neighbors=n}mul(e){if(0===e.rank)return this;if(0===this.rank)return e;let t=this;for(let r=0;r<e.representation.length;r++){const n=e.representation.charCodeAt(r);if(Number.isNaN(n))break;t=t.neighbors[n-Representation.beginCodePoint]}return t}toString(){return this.representation}get index(){return this.source.index}get period(){return this.source.period}get position(){return this.source.position}}export class CoxeterGroup{ranks;matrix;order;hasPosition;isLimitOver;constructor(e){const t=e.getExchanges(),r=new CoxeterGroupElement(0,0,"",new Array(e.dimension));this.ranks=[[r]],this.matrix=e;let n=1,o=1,s=!1;const i=e.dimension>=4?14401:121,a=e.dimension>=4?31:13;for(;;){const r=this.ranks.length,c=this.ranks[r-1],h=[];for(const n of c)for(let s=0;s<e.dimension;s++){if(n.neighbors[s])continue;const i=n.representation+Representation.getChar(s);let a;for(const e of t[s]){let t=CoxeterGroup.#t(n,e.from,1);if(t&&(a=h.find(r=>t===CoxeterGroup.#t(r,e.to)),a))break}a||(a=new CoxeterGroupElement(o,r,i,new Array(e.dimension)),h.push(a),o++),a.neighbors[s]=n,n.neighbors[s]=a}if(this.ranks.push(h),n+=h.length,n>=i||r>=a&&h.length>=this.ranks[this.ranks.length-2].length){s=!0;break}if(1==h.length&&h[0].neighbors.every(e=>!!e))break}r.representation="1",this.order=n,this.isLimitOver=s,this.hasPosition=!s&&CoxeterGroup.#r(this.ranks,this.matrix)}static#t(e,t,r){let n=e;for(let e=r??0;e<t.length;e++){const r=n.neighbors[t[e]];if(!r||r.rank>n.rank)return null;n=r}return n}static#r(e,t){switch(t.dimension){case 2:return CoxeterGroup.#n(e,t);case 3:return CoxeterGroup.#o(e,t);case 4:return CoxeterGroup.#s(e,t);default:return!1}}static#n(e,t){if(2!==t.dimension)return!1;const r=Math.PI/t.get(0,1)*.5,n=Math.cos(r),o=Math.sin(r),s=[0,1],i=[new Mirror([n,o]),new Mirror([n,-o])];for(const t of e)for(const e of t)e.calcPosition(s,i);return!0}static#o(e,t){if(3!==t.dimension)return!1;const r=Math.cos(Math.PI/t.get(0,1)),n=Math.cos(Math.PI/t.get(1,2)),o=1-r*r-n*n;if(o<=1e-4)return!1;const s=Math.sqrt(o),i=[new Mirror([1,0,0]),new Mirror([-r,-n,s]),new Mirror([0,1,0])],a=Vectors.normalize([s,s,1+r+n]);for(const t of e)for(const e of t)e.calcPosition(a,i);return!0}static#s(e,t){if(4!==t.dimension)return!1;const r=Math.PI/t.get(0,1),n=Math.PI/t.get(1,2),o=Math.cos(r),s=Math.cos(n),i=t.get(1,3),a=[new Mirror([1,0,0,0]),null,null,new Mirror([0,1,0,0])];let c=dummyPosition;if(i>=3){const e=Math.cos(Math.PI/i),t=1-o*o-s*s-e*e;if(t<=1e-4)return!1;const r=Math.sqrt(t);a[1]=new Mirror([-o,-e,-s,r]),a[2]=new Mirror([0,0,1,0]),c=Vectors.normalize([r,r,r,1+o+s+e])}else{const e=Math.PI/t.get(2,3),n=Math.sin(r),i=Math.sin(e),h=Math.cos(e),l=(1-s/n/i)/2;if(l<=1e-4)return!1;const u=Math.sqrt(l),p=Math.sqrt(1-l);a[1]=new Mirror([-o,0,n*p,n*u]),a[2]=new Mirror([0,-h,-i*p,i*u]);const d=2*p*u,g=(1+o)/n,m=(1+h)/i;c=Vectors.normalize([d,d,u*(g-m),p*(g+m)])}for(const t of e)for(const e of t)e.calcPosition(c,a);return!0}static parse(e){const t=e.startsWith("d");t&&(e=e.slice(1));const r=e.split(" ").filter(e=>e.length>0).map(e=>parseInt(e));return new CoxeterGroup(1==r.length?CoxeterMatrix.create2D(r[0]):2==r.length?CoxeterMatrix.create3D(r[0],r[1]):3==r.length?t?CoxeterMatrix.create4DDemicube(r[0],r[1],r[2]):CoxeterMatrix.create4D(r[0],r[1],r[2]):CoxeterMatrix.create3D(2,2))}}export class CoxeterSubgroup{parent;ranks;order;elementMap;constructor(e,t){this.parent=e;const r=t.length,n=e.ranks[0][0],o=new SubgroupElement(n,0,"",new Array(r));this.ranks=[[o]],this.elementMap=new Map,this.elementMap.set(n,o),this.order=1;let s=!0;for(;s;){s=!1;const e=this.ranks.length,n=this.ranks[e-1],o=[];for(const i of n)for(let n=0;n<r;n++){if(i.neighbors[n])continue;const a=i.source.mul(t[n]);let c=this.elementMap.get(a);if(!c){const t=i.representation+Representation.getChar(n);c=new SubgroupElement(a,e,t,new Array(r)),o.push(c),this.elementMap.set(a,c),s=!0,this.order++}i.neighbors[n]=c}this.ranks.push(o)}o.representation="1"}get hasPosition(){return this.parent.hasPosition}get isLimitOver(){return this.parent.isLimitOver}}let coxeterGroup=null,selectedElement=[];class CoxeterGroupRenderer{previewFigure;lineGroup;elementGroup;orderText;constructor(e,t,r,n){this.previewFigure=e,this.lineGroup=t,this.elementGroup=r,this.orderText=n}clear(){clearChildren(this.lineGroup,this.elementGroup)}render(e,t){const r=new Map;let n=0,o=0;if(t&&e.hasPosition){n=500,o=500,setCenter(250,250);const t=e.ranks[0][0];console.log(`${t.representation} : [${t.position}]`);for(const n of e.ranks)for(const e of n){if(e.rank%2==1&&2===e.period){const r=Vectors.normalize(Vectors.sub(e.position,t.position));console.log(`${e.representation} : [${r}]`)}r.set(e,Vectors.project(e.position))}}else{let t=0;for(let n=0;n<e.ranks.length;n++){const o=e.ranks[n],s=40*(o.length-1);t=Math.max(t,s);const i=-s/2,a=40*n;for(let e=0;e<o.length;e++)r.set(o[e],{x:i+40*e,y:a,z:1})}n=t+60+12,o=40*(e.ranks.length-1)+60+12,setCenter(n/2,36)}clearChildren(this.lineGroup,this.elementGroup);const s=new Set,i=e.ranks.flat();i.sort((e,t)=>e.index-t.index);for(const e of i){const t=r.get(e);for(let n=0;n<e.neighbors.length;n++){const o=e.neighbors[n];if(!o)continue;const i=e.index>o.index?e.index+65536*o.index:65536*e.index+o.index;if(s.has(i))continue;s.add(i);const a=r.get(o),c=generatorColors[n%generatorColors.length]??"#000000",h=createLine(t.x,t.y,a.x,a.y,c,"4"),l=createLine(t.x,t.y,a.x,a.y,"#FFFFFF","8");this.lineGroup.prepend(h),this.lineGroup.prepend(l)}}for(const e of i){const t=r.get(e),n=0===e.rank?"#000000":"#FFFFFF",o=createCircle(t.x,t.y,6*t.z,n,"#000000","2");0!==e.rank&&(o.style.cursor="pointer",o.addEventListener("click",()=>{const t=selectedElement.indexOf(e);-1===t?(selectedElement.push(e),o.setAttribute("fill","#FF00FF")):(selectedElement.splice(t,1),o.setAttribute("fill","#FFFFFF"))})),this.elementGroup.prepend(o)}this.orderText.textContent=`order = ${e.isLimitOver?"∞":e.order}`,this.previewFigure.setAttribute("viewBox",`0 0 ${n} ${o}`)}}window.addEventListener("load",()=>{const e=document.getElementById("textarea_editor"),t=document.getElementById("button_render"),r=document.getElementById("checkbox_nd"),n=document.getElementById("button_subgroup"),o=document.getElementById("preview_figure"),s=document.getElementById("line_group"),i=document.getElementById("element_group"),a=document.getElementById("order_text"),c=new CoxeterGroupRenderer(o,s,i,a);t.addEventListener("click",()=>{coxeterGroup=CoxeterGroup.parse(e.value),selectedElement.length=0,c.render(coxeterGroup,r.checked)}),n.addEventListener("click",()=>{!coxeterGroup||selectedElement.length<1||(coxeterGroup=new CoxeterSubgroup(coxeterGroup,[...selectedElement]),selectedElement.length=0,c.render(coxeterGroup,r.checked))})});
+import { clearChildren, createCircle, createLine, setCenter } from "./svg_generator.js";
+const generatorColors = ["#DF4121", "#339564", "#217BDF", "#C3B827"];
+const directionMap = new Map([[2, [[1, 0], [0, 1]]]]);
+const positionCenter = 250;
+class Vectors {
+    static dot(a, b) {
+        let result = 0;
+        const length = Math.min(a.length, b.length);
+        for (let i = 0; i < length; i++) {
+            result += a[i] * b[i];
+        }
+        return result;
+    }
+    static mul(a, s) {
+        const result = new Array(a.length);
+        for (let i = 0; i < a.length; i++) {
+            result[i] = a[i] * s;
+        }
+        return result;
+    }
+    static add(a, b) {
+        const length = Math.min(a.length, b.length);
+        const result = new Array(length);
+        for (let i = 0; i < length; i++) {
+            result[i] = a[i] + b[i];
+        }
+        return result;
+    }
+    static sub(a, b) {
+        const length = Math.min(a.length, b.length);
+        const result = new Array(length);
+        for (let i = 0; i < length; i++) {
+            result[i] = a[i] - b[i];
+        }
+        return result;
+    }
+    static normalize(v) {
+        return Vectors.mul(v, 1 / Math.sqrt(Vectors.dot(v, v)));
+    }
+    static project(v) {
+        const dimension = v.length;
+        switch (dimension) {
+            case 0:
+                return { x: 0, y: 0, z: 1 };
+            case 1:
+                return { x: v[0] * 150, y: 0, z: 1 };
+            case 2:
+                return { x: v[0] * 150, y: v[1] * -150, z: 1 };
+        }
+        let directions = directionMap.get(dimension);
+        if (!directions) {
+            directions = new Array(dimension);
+            for (let i = 0; i < dimension; i++) {
+                const theta = Math.PI * 2 * (dimension - i - 1) / dimension;
+                directions[i] = [Math.sin(theta) * 150, -Math.cos(theta) * 150];
+            }
+            directionMap.set(dimension, directions);
+        }
+        let result = { x: 0, y: 0, z: 0 };
+        for (let i = 0; i < dimension; i++) {
+            const a = v[i];
+            const [dx, dy] = directions[i];
+            result.x += a * dx;
+            result.y += a * dy;
+            result.z += a;
+        }
+        result.z = (result.z / dimension + 2) / 2;
+        result.x = result.x * result.z;
+        result.y = result.y * result.z;
+        return result;
+    }
+}
+class Mirror {
+    normal;
+    constructor(normal) {
+        this.normal = normal;
+    }
+    reflection(v) {
+        const r = -2 * Vectors.dot(v, this.normal);
+        return Vectors.add(v, Vectors.mul(this.normal, r));
+    }
+}
+class Representation {
+    static beginCodePoint = 97;
+    static charMap = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p"];
+    static getChar(a) {
+        if (a < this.charMap.length) {
+            return this.charMap[a];
+        }
+        return String.fromCodePoint(Representation.beginCodePoint + a);
+    }
+    static getAlternating(a, b, count) {
+        const aChar = this.getChar(a);
+        const bChar = this.getChar(b);
+        const aRepr = new Array(count);
+        const bRepr = new Array(count);
+        for (let i = 0; i < count; i++) {
+            if (i % 2 == 0) {
+                aRepr[i] = aChar;
+                bRepr[i] = bChar;
+            }
+            else {
+                aRepr[i] = bChar;
+                bRepr[i] = aChar;
+            }
+        }
+        return [aRepr.join(""), bRepr.join("")];
+    }
+    static getAlternatingNumbers(a, b, count) {
+        const aRepr = new Array(count);
+        const bRepr = new Array(count);
+        for (let i = 0; i < count; i++) {
+            if (i % 2 == 0) {
+                aRepr[i] = a;
+                bRepr[i] = b;
+            }
+            else {
+                aRepr[i] = b;
+                bRepr[i] = a;
+            }
+        }
+        return [aRepr, bRepr];
+    }
+}
+export class CoxeterMatrix {
+    values;
+    dimension;
+    constructor(values) {
+        this.values = values;
+        const length = this.values.length;
+        this.dimension = Math.sqrt(2 * length + 0.25) + 0.5;
+    }
+    get(a, b) {
+        if (a == b) {
+            return 2;
+        }
+        const index = a > b
+            ? a * (a - 1) / 2 + b
+            : b * (b - 1) / 2 + a;
+        return this.values[index] ?? 2;
+    }
+    getExchanges() {
+        const result = new Array(3);
+        for (let i = 0; i < this.dimension; i++) {
+            result[i] = [];
+        }
+        for (let a = 0; a < this.dimension; a++) {
+            for (let b = a + 1; b < this.dimension; b++) {
+                const m = this.get(a, b);
+                const [word0, word1] = Representation.getAlternatingNumbers(a, b, m);
+                result[a]?.push({ from: word0, to: word1 });
+                result[b]?.push({ from: word1, to: word0 });
+            }
+        }
+        return result;
+    }
+    static create2D(a) {
+        return new CoxeterMatrix([a]);
+    }
+    static create3D(a, b, c) {
+        return new CoxeterMatrix([a, c ?? 2, b]);
+    }
+    static create4D(a, b, c) {
+        return new CoxeterMatrix([a, 2, b, 2, 2, c]);
+    }
+    static create4DDemicube(a, b, c) {
+        return new CoxeterMatrix([a, 2, b, 2, c, 2]);
+    }
+}
+const dummyPosition = [];
+export class CoxeterGroupElement {
+    index;
+    rank;
+    representation;
+    neighbors;
+    #periodValue;
+    position;
+    constructor(index, rank, representation, neighbors) {
+        this.index = index;
+        this.rank = rank;
+        this.representation = representation;
+        this.neighbors = neighbors;
+        this.#periodValue = undefined;
+        this.position = dummyPosition;
+    }
+    mul(other) {
+        if (other.rank === 0) {
+            return this;
+        }
+        else if (this.rank === 0) {
+            return other;
+        }
+        let target = this;
+        for (let i = 0; i < other.representation.length; i++) {
+            const code = other.representation.charCodeAt(i);
+            if (Number.isNaN(code)) {
+                break;
+            }
+            target = target.neighbors[code - Representation.beginCodePoint];
+        }
+        return target;
+    }
+    calcPosition(origin, mirrors) {
+        this.position = origin;
+        if (this.rank === 0) {
+            return;
+        }
+        for (let i = this.representation.length - 1; i >= 0; i--) {
+            const code = this.representation.charCodeAt(i);
+            if (Number.isNaN(code)) {
+                break;
+            }
+            const mirror = mirrors[code - Representation.beginCodePoint];
+            this.position = mirror.reflection(this.position);
+        }
+    }
+    toString() {
+        return this.representation;
+    }
+    get period() {
+        if (this.#periodValue !== undefined) {
+            return this.#periodValue;
+        }
+        let period = 1;
+        let element = this;
+        while (element.rank > 0) {
+            period++;
+            element = element.mul(this);
+        }
+        this.#periodValue = period;
+        return period;
+    }
+}
+export class SubgroupElement {
+    source;
+    rank;
+    representation;
+    neighbors;
+    constructor(source, rank, representation, neighbors) {
+        this.source = source;
+        this.rank = rank;
+        this.representation = representation;
+        this.neighbors = neighbors;
+    }
+    mul(other) {
+        if (other.rank === 0) {
+            return this;
+        }
+        else if (this.rank === 0) {
+            return other;
+        }
+        let target = this;
+        for (let i = 0; i < other.representation.length; i++) {
+            const code = other.representation.charCodeAt(i);
+            if (Number.isNaN(code)) {
+                break;
+            }
+            target = target.neighbors[code - Representation.beginCodePoint];
+        }
+        return target;
+    }
+    toString() {
+        return this.representation;
+    }
+    get index() {
+        return this.source.index;
+    }
+    get period() {
+        return this.source.period;
+    }
+    get position() {
+        return this.source.position;
+    }
+}
+export class CoxeterGroup {
+    ranks;
+    matrix;
+    order;
+    hasPosition;
+    isLimitOver;
+    constructor(matrix) {
+        const exchanges = matrix.getExchanges();
+        const identity = new CoxeterGroupElement(0, 0, "", new Array(matrix.dimension));
+        this.ranks = [[identity]];
+        this.matrix = matrix;
+        let order = 1;
+        let index = 1;
+        let isLimitOver = false;
+        const maxOrder = matrix.dimension >= 4 ? 14401 : 121;
+        const maxIncrRank = matrix.dimension >= 4 ? 31 : 13;
+        while (true) {
+            const nextRank = this.ranks.length;
+            const sourceElements = this.ranks[nextRank - 1];
+            const targetElements = [];
+            for (const element of sourceElements) {
+                for (let g = 0; g < matrix.dimension; g++) {
+                    if (element.neighbors[g]) {
+                        continue;
+                    }
+                    const newRepresentation = element.representation + Representation.getChar(g);
+                    let targetElement = undefined;
+                    for (const ex of exchanges[g]) {
+                        let followed = CoxeterGroup.#follow(element, ex.from, 1);
+                        if (!followed) {
+                            continue;
+                        }
+                        targetElement = targetElements.find(target => followed === CoxeterGroup.#follow(target, ex.to));
+                        if (targetElement) {
+                            break;
+                        }
+                    }
+                    if (!targetElement) {
+                        targetElement = new CoxeterGroupElement(index, nextRank, newRepresentation, new Array(matrix.dimension));
+                        targetElements.push(targetElement);
+                        index++;
+                    }
+                    targetElement.neighbors[g] = element;
+                    element.neighbors[g] = targetElement;
+                }
+            }
+            this.ranks.push(targetElements);
+            order += targetElements.length;
+            if (order >= maxOrder || nextRank >= maxIncrRank && targetElements.length >= this.ranks[this.ranks.length - 2].length) {
+                isLimitOver = true;
+                break;
+            }
+            if (targetElements.length == 1 && targetElements[0].neighbors.every(e => !!e)) {
+                break;
+            }
+        }
+        identity.representation = "1";
+        this.order = order;
+        this.isLimitOver = isLimitOver;
+        this.hasPosition = !isLimitOver && CoxeterGroup.#setPositions(this.ranks, this.matrix);
+    }
+    static #follow(beginElement, route, routeIndex) {
+        let current = beginElement;
+        for (let i = routeIndex ?? 0; i < route.length; i++) {
+            const next = current.neighbors[route[i]];
+            if (!next || next.rank > current.rank) {
+                return null;
+            }
+            current = next;
+        }
+        return current;
+    }
+    static #setPositions(elements, matrix) {
+        switch (matrix.dimension) {
+            case 2:
+                return CoxeterGroup.#setPositions2(elements, matrix);
+            case 3:
+                return CoxeterGroup.#setPositions3(elements, matrix);
+            case 4:
+                return CoxeterGroup.#setPositions4(elements, matrix);
+            default:
+                return false;
+        }
+    }
+    static #setPositions2(elements, matrix) {
+        if (matrix.dimension !== 2) {
+            return false;
+        }
+        const theta = Math.PI / matrix.get(0, 1) * 0.5;
+        const cosP = Math.cos(theta);
+        const sinP = Math.sin(theta);
+        const origin = [0, 1];
+        const mirrors = [
+            new Mirror([cosP, sinP]),
+            new Mirror([cosP, -sinP]),
+        ];
+        for (const rank of elements) {
+            for (const element of rank) {
+                element.calcPosition(origin, mirrors);
+            }
+        }
+        return true;
+    }
+    static #setPositions3(elements, matrix) {
+        if (matrix.dimension !== 3) {
+            return false;
+        }
+        const cosP = Math.cos(Math.PI / matrix.get(0, 1));
+        const cosQ = Math.cos(Math.PI / matrix.get(1, 2));
+        const cos2P = cosP * cosP;
+        const cos2Q = cosQ * cosQ;
+        const zs = 1 - cos2P - cos2Q;
+        if (zs <= 0.0001) {
+            return false;
+        }
+        const z = Math.sqrt(zs);
+        const mirrors = [
+            new Mirror([1, 0, 0]),
+            new Mirror([-cosP, -cosQ, z]),
+            new Mirror([0, 1, 0]),
+        ];
+        const origin = Vectors.normalize([z, z, 1 + cosP + cosQ]);
+        for (const rank of elements) {
+            for (const element of rank) {
+                element.calcPosition(origin, mirrors);
+            }
+        }
+        return true;
+    }
+    static #setPositions4(elements, matrix) {
+        if (matrix.dimension !== 4) {
+            return false;
+        }
+        const thetaP = Math.PI / matrix.get(0, 1);
+        const thetaQ = Math.PI / matrix.get(1, 2);
+        const cosP = Math.cos(thetaP);
+        const cosQ = Math.cos(thetaQ);
+        const s = matrix.get(1, 3);
+        const mirrors = [
+            new Mirror([1, 0, 0, 0]),
+            null,
+            null,
+            new Mirror([0, 1, 0, 0]),
+        ];
+        let origin = dummyPosition;
+        if (s >= 3) {
+            const cosS = Math.cos(Math.PI / s);
+            const ws = 1 - cosP * cosP - cosQ * cosQ - cosS * cosS;
+            if (ws <= 0.0001) {
+                return false;
+            }
+            const w = Math.sqrt(ws);
+            mirrors[1] = new Mirror([-cosP, -cosS, -cosQ, w]);
+            mirrors[2] = new Mirror([0, 0, 1, 0]);
+            origin = Vectors.normalize([w, w, w, 1 + cosP + cosQ + cosS]);
+        }
+        else {
+            const thetaR = Math.PI / matrix.get(2, 3);
+            const sinP = Math.sin(thetaP);
+            const sinR = Math.sin(thetaR);
+            const cosR = Math.cos(thetaR);
+            const z = (1 - cosQ / sinP / sinR) / 2;
+            if (z <= 0.0001) {
+                return false;
+            }
+            const cosZ = Math.sqrt(z);
+            const sinZ = Math.sqrt(1 - z);
+            mirrors[1] = new Mirror([-cosP, 0, sinP * sinZ, sinP * cosZ]);
+            mirrors[2] = new Mirror([0, -cosR, -sinR * sinZ, sinR * cosZ]);
+            const t = 2 * sinZ * cosZ;
+            const tP = (1 + cosP) / sinP;
+            const tR = (1 + cosR) / sinR;
+            origin = Vectors.normalize([
+                t,
+                t,
+                cosZ * (tP - tR),
+                sinZ * (tP + tR),
+            ]);
+        }
+        for (const rank of elements) {
+            for (const element of rank) {
+                element.calcPosition(origin, mirrors);
+            }
+        }
+        return true;
+    }
+    static parse(text) {
+        const isDemicube = text.startsWith("d");
+        if (isDemicube) {
+            text = text.slice(1);
+        }
+        const args = text
+            .split(" ")
+            .filter(s => s.length > 0)
+            .map(s => parseInt(s));
+        return new CoxeterGroup(args.length == 1 ? CoxeterMatrix.create2D(args[0])
+            : args.length == 2 ? CoxeterMatrix.create3D(args[0], args[1])
+                : args.length == 3 ? (isDemicube
+                    ? CoxeterMatrix.create4DDemicube(args[0], args[1], args[2])
+                    : CoxeterMatrix.create4D(args[0], args[1], args[2]))
+                    : CoxeterMatrix.create3D(2, 2));
+    }
+}
+export class CoxeterSubgroup {
+    parent;
+    ranks;
+    order;
+    elementMap;
+    constructor(parent, generators) {
+        this.parent = parent;
+        const dimension = generators.length;
+        const identitySource = parent.ranks[0][0];
+        const identity = new SubgroupElement(identitySource, 0, "", new Array(dimension));
+        this.ranks = [[identity]];
+        this.elementMap = new Map();
+        this.elementMap.set(identitySource, identity);
+        this.order = 1;
+        let elementAdded = true;
+        while (elementAdded) {
+            elementAdded = false;
+            const nextRank = this.ranks.length;
+            const sourceElements = this.ranks[nextRank - 1];
+            const targetElements = [];
+            for (const element of sourceElements) {
+                for (let g = 0; g < dimension; g++) {
+                    if (element.neighbors[g]) {
+                        continue;
+                    }
+                    const newParentElement = element.source.mul(generators[g]);
+                    let targetElement = this.elementMap.get(newParentElement);
+                    if (!targetElement) {
+                        const newRepresentation = element.representation + Representation.getChar(g);
+                        targetElement = new SubgroupElement(newParentElement, nextRank, newRepresentation, new Array(dimension));
+                        targetElements.push(targetElement);
+                        this.elementMap.set(newParentElement, targetElement);
+                        elementAdded = true;
+                        this.order++;
+                    }
+                    element.neighbors[g] = targetElement;
+                }
+            }
+            this.ranks.push(targetElements);
+        }
+        identity.representation = "1";
+    }
+    get hasPosition() {
+        return this.parent.hasPosition;
+    }
+    get isLimitOver() {
+        return this.parent.isLimitOver;
+    }
+}
+let coxeterGroup = null;
+let selectedElement = [];
+class CoxeterGroupRenderer {
+    #previewFigure;
+    #lineGroup;
+    #elementGroup;
+    #orderText;
+    constructor(previewFigure, lineGroup, elementGroup, orderText) {
+        this.#previewFigure = previewFigure;
+        this.#lineGroup = lineGroup;
+        this.#elementGroup = elementGroup;
+        this.#orderText = orderText;
+    }
+    clear() {
+        clearChildren(this.#lineGroup, this.#elementGroup);
+    }
+    render(coxeterGroup, displayNd) {
+        const circleRadius = 6;
+        const horizontalSpacing = 40;
+        const verticalSpacing = 40;
+        const padding = 30;
+        const positions = new Map();
+        let viewWidth = 0;
+        let viewHeight = 0;
+        if (displayNd && coxeterGroup.hasPosition) {
+            viewWidth = positionCenter * 2;
+            viewHeight = positionCenter * 2;
+            setCenter(positionCenter, positionCenter);
+            const unit = coxeterGroup.ranks[0][0];
+            console.log(`${unit.representation} : [${unit.position}]`);
+            for (const rank of coxeterGroup.ranks) {
+                for (const element of rank) {
+                    if (element.rank % 2 === 1 && element.period === 2) {
+                        const position = Vectors.normalize(Vectors.sub(element.position, unit.position));
+                        console.log(`${element.representation} : [${position}]`);
+                    }
+                    positions.set(element, Vectors.project(element.position));
+                }
+            }
+        }
+        else {
+            let maxWidth = 0;
+            for (let rankIndex = 0; rankIndex < coxeterGroup.ranks.length; rankIndex++) {
+                const rankElements = coxeterGroup.ranks[rankIndex];
+                const rankWidth = (rankElements.length - 1) * horizontalSpacing;
+                maxWidth = Math.max(maxWidth, rankWidth);
+                const startX = -rankWidth / 2;
+                const y = rankIndex * verticalSpacing;
+                for (let i = 0; i < rankElements.length; i++) {
+                    positions.set(rankElements[i], { x: startX + i * horizontalSpacing, y, z: 1 });
+                }
+            }
+            viewWidth = maxWidth + padding * 2 + circleRadius * 2;
+            viewHeight = (coxeterGroup.ranks.length - 1) * verticalSpacing + padding * 2 + circleRadius * 2;
+            setCenter(viewWidth / 2, padding + circleRadius);
+        }
+        clearChildren(this.#lineGroup, this.#elementGroup);
+        const renderedIndexSet = new Set();
+        const allElements = coxeterGroup.ranks.flat();
+        allElements.sort((e1, e2) => e1.index - e2.index);
+        for (const element of allElements) {
+            const fromPos = positions.get(element);
+            for (let i = 0; i < element.neighbors.length; i++) {
+                const neighbor = element.neighbors[i];
+                if (!neighbor) {
+                    continue;
+                }
+                const lineIndex = element.index > neighbor.index
+                    ? element.index + neighbor.index * 65536
+                    : element.index * 65536 + neighbor.index;
+                if (renderedIndexSet.has(lineIndex)) {
+                    continue;
+                }
+                renderedIndexSet.add(lineIndex);
+                const toPos = positions.get(neighbor);
+                const color = generatorColors[i % generatorColors.length] ?? "#000000";
+                const line = createLine(fromPos.x, fromPos.y, toPos.x, toPos.y, color, "4");
+                const backLine = createLine(fromPos.x, fromPos.y, toPos.x, toPos.y, "#FFFFFF", "8");
+                this.#lineGroup.prepend(line);
+                this.#lineGroup.prepend(backLine);
+            }
+        }
+        for (const element of allElements) {
+            const pos = positions.get(element);
+            const fillColor = element.rank === 0 ? "#000000" : "#FFFFFF";
+            const circle = createCircle(pos.x, pos.y, circleRadius * pos.z, fillColor, "#000000", "2");
+            if (element.rank !== 0) {
+                circle.style.cursor = "pointer";
+                circle.addEventListener("click", () => {
+                    const index = selectedElement.indexOf(element);
+                    if (index === -1) {
+                        selectedElement.push(element);
+                        circle.setAttribute("fill", "#FF00FF");
+                    }
+                    else {
+                        selectedElement.splice(index, 1);
+                        circle.setAttribute("fill", "#FFFFFF");
+                    }
+                });
+            }
+            this.#elementGroup.prepend(circle);
+        }
+        this.#orderText.textContent = `order = ${coxeterGroup.isLimitOver ? "∞" : coxeterGroup.order}`;
+        this.#previewFigure.setAttribute("viewBox", `0 0 ${viewWidth} ${viewHeight}`);
+    }
+}
+window.addEventListener("load", () => {
+    const textEditor = document.getElementById("textarea_editor");
+    const buttonRender = document.getElementById("button_render");
+    const checkNd = document.getElementById("checkbox_nd");
+    const buttonSubgroup = document.getElementById("button_subgroup");
+    const previewFigure = document.getElementById("preview_figure");
+    const lineGroup = document.getElementById("line_group");
+    const elementGroup = document.getElementById("element_group");
+    const oerderText = document.getElementById("order_text");
+    const renderer = new CoxeterGroupRenderer(previewFigure, lineGroup, elementGroup, oerderText);
+    buttonRender.addEventListener("click", () => {
+        coxeterGroup = CoxeterGroup.parse(textEditor.value);
+        selectedElement.length = 0;
+        renderer.render(coxeterGroup, checkNd.checked);
+    });
+    buttonSubgroup.addEventListener("click", () => {
+        if (!coxeterGroup || selectedElement.length < 1) {
+            return;
+        }
+        coxeterGroup = new CoxeterSubgroup(coxeterGroup, [...selectedElement]);
+        selectedElement.length = 0;
+        renderer.render(coxeterGroup, checkNd.checked);
+    });
+});

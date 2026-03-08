@@ -1,1 +1,203 @@
-import{AudioSource,WaveData}from"./sound.js";const MAX_FREQUENCY=64,BESSEL_ITERATIONS=50,BASE_HZ=220;function besselJ(t,e){if(0===e)return 0===t?1:0;const n=Math.abs(t);let a=0,o=1,r=1;for(let t=1;t<=n;t++)r*=t;const l=e/2;let i=Math.pow(l,n);for(let t=0;t<50;t++){t>0&&(o*=t,r*=n+t,i*=l*l);const e=(t%2==0?1:-1)*i/(o*r);if(a+=e,Math.abs(e)<1e-15)break}return t<0&&t%2!=0&&(a=-a),a}function calculateSidebands(t,e,n){const a=n*Math.PI,o=new Array(64).fill(0),r=Math.ceil((64+t)/e);for(let n=-r;n<=r;n++){const r=t+n*e,l=besselJ(n,a);r>=1&&r<=64?o[r-1]+=l:r<=-1&&-r<=64&&(o[-r-1]-=l)}return o.map(Math.abs)}let inputCarrier,inputModulator,inputLevel,labelCarrier,labelModulator,labelLevel,chartContainer,waveformContainer,playingAudio=null,currentLevels=[];function renderChart(t){const e=1130,n=240,a=e/64;let o='<svg viewBox="0 0 1200 300" style="width: 100%; height: auto;">';o+='<rect x="0" y="0" width="1200" height="300" fill="#FFFFFF"/>',o+='<g transform="translate(50, 20)">';const r=[0,-10,-20,-30,-40];for(const t of r){const e=(0-t)/40*n;o+=`<line x1="0" y1="${e}" x2="1130" y2="${e}" stroke="#ccc" stroke-width="1"/>`,o+=`<text x="-8" y="${e+4}" text-anchor="end" font-size="12" fill="#666">${t}</text>`}for(let t=0;t<=64;t+=8)o+=`<text x="${t/64*e}" y="260" text-anchor="middle" font-size="12" fill="#666">${t||1}</text>`;for(let e=0;e<64;e++){const r=t[e];if(r<=0)continue;const l=20*Math.log10(r);if(l<-40)continue;const i=(Math.min(l,0)- -40)/40*n;o+=`<rect x="${e*a}" y="${n-i}" width="${a-1}" height="${i}" fill="#287950"/>`}o+='<line x1="0" y1="240" x2="1130" y2="240" stroke="#333" stroke-width="2"/>',o+="</g></svg>",chartContainer.innerHTML=o}function renderWaveform(t,e,n){const a=n*Math.PI,o=1130,r=240,l=4*Math.PI,i=1e3,u=[];for(let n=0;n<=i;n++){const o=n/i*l,r=Math.sin(t*o+a*Math.sin(e*o));u.push(r)}let d='<svg viewBox="0 0 1200 300" style="width: 100%; height: auto;">';d+='<rect x="0" y="0" width="1200" height="300" fill="#FFFFFF"/>',d+='<g transform="translate(50, 20)">';const s=[1,0,-1];for(const t of s){const e=(1-t)*r/2;d+=`<line x1="0" y1="${e}" x2="1130" y2="${e}" stroke="#ccc" stroke-width="1"/>`,d+=`<text x="-8" y="${e+4}" text-anchor="end" font-size="12" fill="#666">${t}</text>`}const c=["0","π","2π","3π","4π"];for(let t=0;t<=4;t++)d+=`<text x="${t/4*o}" y="260" text-anchor="middle" font-size="12" fill="#666">${c[t]}</text>`;let h="";for(let t=0;t<=i;t++)h+=(0===t?"M":"L")+`${t/i*o},${(1-u[t])*r/2}`;d+=`<path d="${h}" fill="none" stroke="#287950" stroke-width="2"/>`,d+='<line x1="0" y1="120" x2="1130" y2="120" stroke="#333" stroke-width="1"/>',d+="</g></svg>",waveformContainer.innerHTML=d}function playSound(){playingAudio?(playingAudio.pause(),playingAudio.currentTime=0):playingAudio=document.createElement("audio");const t=parseInt(inputCarrier.value,10),e=parseInt(inputModulator.value,10),n=parseFloat(inputLevel.value)*Math.PI,a=Math.floor(88200),o=new WaveData(a),r=220*t,l=220*e,i=Math.floor(2205);for(let t=0;t<a;t++){const e=t/44100,u=Math.sin(2*Math.PI*r*e+n*Math.sin(2*Math.PI*l*e));let d=1;t<i?d=t/i:t>a-i&&(d=(a-t)/i),o.addFloat(t,.75*u*d)}playingAudio.src=AudioSource.create(o),playingAudio.play()}function updateChart(){const t=parseInt(inputCarrier.value,10),e=parseInt(inputModulator.value,10),n=parseFloat(inputLevel.value);labelCarrier.textContent=t.toString(),labelModulator.textContent=e.toString(),labelLevel.textContent=n.toFixed(2),currentLevels=calculateSidebands(t,e,n),renderChart(currentLevels),renderWaveform(t,e,n)}window.addEventListener("load",()=>{inputCarrier=document.getElementById("input_carrier"),inputModulator=document.getElementById("input_modulator"),inputLevel=document.getElementById("input_level"),labelCarrier=document.getElementById("label_carrier"),labelModulator=document.getElementById("label_modulator"),labelLevel=document.getElementById("label_level"),chartContainer=document.getElementById("chart_container"),waveformContainer=document.getElementById("waveform_container"),inputCarrier.addEventListener("input",updateChart),inputModulator.addEventListener("input",updateChart),inputLevel.addEventListener("input",updateChart);const t=document.getElementById("button_play");t&&t.addEventListener("click",playSound),updateChart()});
+import { AudioSource, WaveData } from "./sound.js";
+const MAX_FREQUENCY = 64;
+const BESSEL_ITERATIONS = 50;
+const BASE_HZ = 220;
+function besselJ(n, x) {
+    if (x === 0) {
+        return n === 0 ? 1 : 0;
+    }
+    const absN = Math.abs(n);
+    let sum = 0;
+    let factorial_k = 1;
+    let factorial_nk = 1;
+    for (let i = 1; i <= absN; i++) {
+        factorial_nk *= i;
+    }
+    const halfX = x / 2;
+    let powHalfX = Math.pow(halfX, absN);
+    for (let k = 0; k < BESSEL_ITERATIONS; k++) {
+        if (k > 0) {
+            factorial_k *= k;
+            factorial_nk *= (absN + k);
+            powHalfX *= halfX * halfX;
+        }
+        const term = (k % 2 === 0 ? 1 : -1) * powHalfX / (factorial_k * factorial_nk);
+        sum += term;
+        if (Math.abs(term) < 1e-15) {
+            break;
+        }
+    }
+    if (n < 0 && n % 2 !== 0) {
+        sum = -sum;
+    }
+    return sum;
+}
+function calculateSidebands(carrierFreq, modulatorFreq, modulatorLevel) {
+    const beta = modulatorLevel * Math.PI;
+    const levels = new Array(MAX_FREQUENCY).fill(0);
+    const maxK = Math.ceil((MAX_FREQUENCY + carrierFreq) / modulatorFreq);
+    for (let k = -maxK; k <= maxK; k++) {
+        const freq = carrierFreq + k * modulatorFreq;
+        const amplitude = besselJ(k, beta);
+        if (freq >= 1 && freq <= MAX_FREQUENCY) {
+            levels[freq - 1] += amplitude;
+        }
+        else if (freq <= -1 && -freq <= MAX_FREQUENCY) {
+            levels[-freq - 1] -= amplitude;
+        }
+    }
+    return levels.map(Math.abs);
+}
+let inputCarrier;
+let inputModulator;
+let inputLevel;
+let labelCarrier;
+let labelModulator;
+let labelLevel;
+let chartContainer;
+let waveformContainer;
+let playingAudio = null;
+let currentLevels = [];
+function renderChart(levels) {
+    const DB_MIN = -40;
+    const DB_MAX = 0;
+    const svgWidth = 1200;
+    const svgHeight = 300;
+    const margin = { top: 20, right: 20, bottom: 40, left: 50 };
+    const chartWidth = svgWidth - margin.left - margin.right;
+    const chartHeight = svgHeight - margin.top - margin.bottom;
+    const barWidth = chartWidth / MAX_FREQUENCY;
+    let svg = `<svg viewBox="0 0 ${svgWidth} ${svgHeight}" style="width: 100%; height: auto;">`;
+    svg += `<rect x="0" y="0" width="${svgWidth}" height="${svgHeight}" fill="#FFFFFF"/>`;
+    svg += `<g transform="translate(${margin.left}, ${margin.top})">`;
+    const yGridLines = [0, -10, -20, -30, -40];
+    for (const db of yGridLines) {
+        const y = ((DB_MAX - db) / (DB_MAX - DB_MIN)) * chartHeight;
+        svg += `<line x1="0" y1="${y}" x2="${chartWidth}" y2="${y}" stroke="#ccc" stroke-width="1"/>`;
+        svg += `<text x="-8" y="${y + 4}" text-anchor="end" font-size="12" fill="#666">${db}</text>`;
+    }
+    for (let i = 0; i <= MAX_FREQUENCY; i += 8) {
+        const x = (i / MAX_FREQUENCY) * chartWidth;
+        svg += `<text x="${x}" y="${chartHeight + 20}" text-anchor="middle" font-size="12" fill="#666">${i || 1}</text>`;
+    }
+    for (let i = 0; i < MAX_FREQUENCY; i++) {
+        const level = levels[i];
+        if (level <= 0)
+            continue;
+        const db = 20 * Math.log10(level);
+        if (db < DB_MIN)
+            continue;
+        const clampedDb = Math.min(db, DB_MAX);
+        const barHeight = ((clampedDb - DB_MIN) / (DB_MAX - DB_MIN)) * chartHeight;
+        const barX = i * barWidth;
+        const barY = chartHeight - barHeight;
+        svg += `<rect x="${barX}" y="${barY}" width="${barWidth - 1}" height="${barHeight}" fill="#287950"/>`;
+    }
+    svg += `<line x1="0" y1="${chartHeight}" x2="${chartWidth}" y2="${chartHeight}" stroke="#333" stroke-width="2"/>`;
+    svg += `</g></svg>`;
+    chartContainer.innerHTML = svg;
+}
+function renderWaveform(carrierFreq, modulatorFreq, modulatorLevel) {
+    const beta = modulatorLevel * Math.PI;
+    const svgWidth = 1200;
+    const svgHeight = 300;
+    const margin = { top: 20, right: 20, bottom: 40, left: 50 };
+    const chartWidth = svgWidth - margin.left - margin.right;
+    const chartHeight = svgHeight - margin.top - margin.bottom;
+    const tMax = 4 * Math.PI;
+    const numSamples = 1000;
+    const waveform = [];
+    for (let i = 0; i <= numSamples; i++) {
+        const t = (i / numSamples) * tMax;
+        const y = Math.sin(carrierFreq * t + beta * Math.sin(modulatorFreq * t));
+        waveform.push(y);
+    }
+    let svg = `<svg viewBox="0 0 ${svgWidth} ${svgHeight}" style="width: 100%; height: auto;">`;
+    svg += `<rect x="0" y="0" width="${svgWidth}" height="${svgHeight}" fill="#FFFFFF"/>`;
+    svg += `<g transform="translate(${margin.left}, ${margin.top})">`;
+    const yGridLines = [1, 0, -1];
+    for (const v of yGridLines) {
+        const y = (1 - v) * chartHeight / 2;
+        svg += `<line x1="0" y1="${y}" x2="${chartWidth}" y2="${y}" stroke="#ccc" stroke-width="1"/>`;
+        svg += `<text x="-8" y="${y + 4}" text-anchor="end" font-size="12" fill="#666">${v}</text>`;
+    }
+    const xLabels = ["0", "π", "2π", "3π", "4π"];
+    for (let i = 0; i <= 4; i++) {
+        const x = (i / 4) * chartWidth;
+        svg += `<text x="${x}" y="${chartHeight + 20}" text-anchor="middle" font-size="12" fill="#666">${xLabels[i]}</text>`;
+    }
+    let pathD = "";
+    for (let i = 0; i <= numSamples; i++) {
+        const x = (i / numSamples) * chartWidth;
+        const y = (1 - waveform[i]) * chartHeight / 2;
+        pathD += (i === 0 ? "M" : "L") + `${x},${y}`;
+    }
+    svg += `<path d="${pathD}" fill="none" stroke="#287950" stroke-width="2"/>`;
+    svg += `<line x1="0" y1="${chartHeight / 2}" x2="${chartWidth}" y2="${chartHeight / 2}" stroke="#333" stroke-width="1"/>`;
+    svg += `</g></svg>`;
+    waveformContainer.innerHTML = svg;
+}
+function playSound() {
+    if (!playingAudio) {
+        playingAudio = document.createElement("audio");
+    }
+    else {
+        playingAudio.pause();
+        playingAudio.currentTime = 0;
+    }
+    const carrierFreq = parseInt(inputCarrier.value, 10);
+    const modulatorFreq = parseInt(inputModulator.value, 10);
+    const modulatorLevel = parseFloat(inputLevel.value);
+    const beta = modulatorLevel * Math.PI;
+    const seconds = 2;
+    const sampleRate = 44100;
+    const totalSamples = Math.floor(seconds * sampleRate);
+    const data = new WaveData(totalSamples);
+    const carrierHz = BASE_HZ * carrierFreq;
+    const modulatorHz = BASE_HZ * modulatorFreq;
+    const volume = 0.75;
+    const fadeSamples = Math.floor(sampleRate * 0.05);
+    for (let i = 0; i < totalSamples; i++) {
+        const t = i / sampleRate;
+        const y = Math.sin(2 * Math.PI * carrierHz * t + beta * Math.sin(2 * Math.PI * modulatorHz * t));
+        let envelope = 1.0;
+        if (i < fadeSamples) {
+            envelope = i / fadeSamples;
+        }
+        else if (i > totalSamples - fadeSamples) {
+            envelope = (totalSamples - i) / fadeSamples;
+        }
+        data.addFloat(i, y * volume * envelope);
+    }
+    playingAudio.src = AudioSource.create(data);
+    playingAudio.play();
+}
+function updateChart() {
+    const carrierFreq = parseInt(inputCarrier.value, 10);
+    const modulatorFreq = parseInt(inputModulator.value, 10);
+    const modulatorLevel = parseFloat(inputLevel.value);
+    labelCarrier.textContent = carrierFreq.toString();
+    labelModulator.textContent = modulatorFreq.toString();
+    labelLevel.textContent = modulatorLevel.toFixed(2);
+    currentLevels = calculateSidebands(carrierFreq, modulatorFreq, modulatorLevel);
+    renderChart(currentLevels);
+    renderWaveform(carrierFreq, modulatorFreq, modulatorLevel);
+}
+window.addEventListener("load", () => {
+    inputCarrier = document.getElementById("input_carrier");
+    inputModulator = document.getElementById("input_modulator");
+    inputLevel = document.getElementById("input_level");
+    labelCarrier = document.getElementById("label_carrier");
+    labelModulator = document.getElementById("label_modulator");
+    labelLevel = document.getElementById("label_level");
+    chartContainer = document.getElementById("chart_container");
+    waveformContainer = document.getElementById("waveform_container");
+    inputCarrier.addEventListener("input", updateChart);
+    inputModulator.addEventListener("input", updateChart);
+    inputLevel.addEventListener("input", updateChart);
+    const buttonPlay = document.getElementById("button_play");
+    if (buttonPlay) {
+        buttonPlay.addEventListener("click", playSound);
+    }
+    updateChart();
+});
