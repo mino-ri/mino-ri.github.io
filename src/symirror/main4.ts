@@ -37,7 +37,7 @@ class RotationState {
 
         // 累積回転を適用
         QuaternionPairs.mul(QuaternionPairs.rotationXW(-angleXW, this.#temp), this.#q, this.#q)
-        QuaternionPairs.mul(QuaternionPairs.rotationYW(angleYW, this.#temp), this.#q, this.#q)
+        QuaternionPairs.mul(QuaternionPairs.rotationYW(-angleYW, this.#temp), this.#q, this.#q)
     }
 
     // 自動回転を適用
