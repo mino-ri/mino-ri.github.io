@@ -4,6 +4,12 @@ export class Quaternions {
     static toVector(q) {
         return [q.x, q.y, q.z];
     }
+    static clear(a) {
+        a.w = 1;
+        a.x = 0;
+        a.y = 0;
+        a.z = 0;
+    }
     static conjugateMul(a, bConj, resultTo) {
         const result = resultTo ?? { w: 0, x: 0, y: 0, z: 0, negate: false };
         result.w = -a.w * bConj.w - a.x * bConj.x - a.y * bConj.y - a.z * bConj.z;
@@ -48,6 +54,24 @@ export class Quaternions {
         result.negate = false;
         return result;
     }
+    static rotate(ax, ay, az, angle, target) {
+        const halfAngle = angle * 0.5;
+        const s = Math.sin(halfAngle);
+        const c = Math.cos(halfAngle);
+        const qw = c;
+        const qx = ax * s;
+        const qy = ay * s;
+        const qz = az * s;
+        const nw = qw * target.w - qx * target.x - qy * target.y - qz * target.z;
+        const nx = qw * target.x + qx * target.w + qy * target.z - qz * target.y;
+        const ny = qw * target.y - qx * target.z + qy * target.w + qz * target.x;
+        const nz = qw * target.z + qx * target.y - qy * target.x + qz * target.w;
+        const len = Math.sqrt(nw * nw + nx * nx + ny * ny + nz * nz);
+        target.w = nw / len;
+        target.x = nx / len;
+        target.y = ny / len;
+        target.z = nz / len;
+    }
     static mirror(v, resultTo) {
         const result = resultTo ?? { w: 0, x: 0, y: 0, z: 0, negate: false };
         result.w = 0;
@@ -70,50 +94,25 @@ export class Quaternions {
         result.z = z / length;
         return result;
     }
-    static slerp(a, b, t, resultTo) {
-        const result = resultTo ?? { w: 0, x: 0, y: 0, z: 0, negate: false };
-        if (t <= 0) {
-            result.w = a.w;
-            result.x = a.x;
-            result.y = a.y;
-            result.z = a.z;
-            result.negate = a.negate;
-            return result;
-        }
-        if (t >= 1) {
-            result.w = b.w;
-            result.x = b.x;
-            result.y = b.y;
-            result.z = b.z;
-            result.negate = a.negate;
-            return result;
-        }
-        let bw = b.w, bx = b.x, by = b.y, bz = b.z;
-        let dot = a.w * bw + a.x * bx + a.y * by + a.z * bz;
-        if (dot < 0) {
-            bw = -bw;
-            bx = -bx;
-            by = -by;
-            bz = -bz;
-            dot = -dot;
-        }
-        let scale0;
-        let scale1;
-        if (dot > 0.9995) {
-            scale0 = 1 - t;
-            scale1 = t;
-        }
-        else {
-            const theta = Math.acos(dot);
-            const sinTheta = Math.sin(theta);
-            scale0 = Math.sin((1 - t) * theta) / sinTheta;
-            scale1 = Math.sin(t * theta) / sinTheta;
-        }
-        result.w = scale0 * a.w + scale1 * bw;
-        result.x = scale0 * a.x + scale1 * bx;
-        result.y = scale0 * a.y + scale1 * by;
-        result.z = scale0 * a.z + scale1 * bz;
-        result.negate = a.negate;
-        return result;
+    static toMatrix({ x, y, z, w }, matrix) {
+        const xx = x * x, yy = y * y, zz = z * z;
+        const xy = x * y, xz = x * z, yz = y * z;
+        const wx = w * x, wy = w * y, wz = w * z;
+        matrix[0] = 1 - 2 * (yy + zz);
+        matrix[1] = 2 * (xy + wz);
+        matrix[2] = 2 * (xz - wy);
+        matrix[3] = 0;
+        matrix[4] = 2 * (xy - wz);
+        matrix[5] = 1 - 2 * (xx + zz);
+        matrix[6] = 2 * (yz + wx);
+        matrix[7] = 0;
+        matrix[8] = 2 * (xz + wy);
+        matrix[9] = 2 * (yz - wx);
+        matrix[10] = 1 - 2 * (xx + yy);
+        matrix[11] = 0;
+        matrix[12] = 0;
+        matrix[13] = 0;
+        matrix[14] = 0;
+        matrix[15] = 1;
     }
 }
