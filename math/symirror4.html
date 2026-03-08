@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Type" content="text/html" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="author" content="mino-ri" />
+  <meta name="copyright" content="copyright(C) 2025 mino-ri All rights reserved." />
+  <meta name="viewport" content="width=device-width">
+  <link rel="stylesheet" type="text/css" href="./../styles/color_standard.css" />
+  <link rel="stylesheet" type="text/css" href="./../styles/style.css" />
+  <script type="module" src="./../scripts/symirror/main4.js"></script>
+  <script type="module" src="./../scripts/language_switcher.js"></script>
+  <title>Symirror4</title>
+</head>
+
+<body>
+  <header>
+    <a class="back" href="../">back</a>
+    <h1>Symirror4(β)</h1>
+    <nav class="language-switcher">
+      <label>
+        <input type="radio" name="language" value="ja" checked />
+        JP
+      </label>
+      <label>
+        <input type="radio" name="language" value="en" />
+        EN
+      </label>
+    </nav>
+  </header>
+  <section>
+    <article class="editor-container">
+      <div class="editor-preview" id="editor_preview">
+        <canvas id="preview_figure"></canvas>
+      </div>
+      <div class="editor-control" style="max-width: 328px;">
+        <div class="control-list">
+          <select id="select_coxeter_group" name="select_coxeter_group">
+          </select>
+        </div>
+        <!--
+        <div>
+          <svg id="origin_control" width="300" height="300" viewBox="-1.125 -1.125 2.25 2.25"
+            style="cursor: move; position: absolute; width: 300px; height: 300px;">
+            <g id="g_circles"></g>
+            <circle cx="0" cy="0" r="1" fill="#fff" stroke="#fff" fill-opacity="0" stroke-width="0.02"
+              style="cursor: crosshair;" />
+            <circle id="origin_point" cx="0" cy="0" r="0.03" fill="#fff" stroke="#000" stroke-width="0.01"
+              style="cursor: crosshair;" />
+          </svg>
+          <canvas id="origin_back" width="600" height="600"
+            style="width: 300px; height: 300px; background-color: #35A16B;"></canvas>
+        </div>
+        -->
+        <div class="control-list">
+          <label style="background-color: #FF4B0A; padding: 0px 5px;">
+            <input type="checkbox" id="checkbox_color_0" name="checkbox_color_0" checked />
+          </label>
+          <label style="background-color: #FFD700; padding: 0px 5px;">
+            <input type="checkbox" id="checkbox_color_1" name="checkbox_color_1" checked />
+          </label>
+          <label style="background-color: #03AD58; padding: 0px 5px;">
+            <input type="checkbox" id="checkbox_color_2" name="checkbox_color_2" checked />
+          </label>
+          <label style="background-color: #0070FF; padding: 0px 5px;">
+            <input type="checkbox" id="checkbox_color_3" name="checkbox_color_3" checked />
+          </label>
+          <label style="background-color: #40E0FF; padding: 0px 5px;">
+            <input type="checkbox" id="checkbox_color_4" name="checkbox_color_4" checked />
+          </label>
+          <label style="background-color: #C316F0; padding: 0px 5px;">
+            <input type="checkbox" id="checkbox_color_5" name="checkbox_color_5" checked />
+          </label>
+          <label>
+            <input type="checkbox" id="checkbox_vertex" name="checkbox_vertex" />
+            <span data-ls-en="vertex">頂点</span>
+          </label>
+          <label>
+            <input type="checkbox" id="checkbox_edge" name="checkbox_edge" />
+            <span data-ls-en="edge">辺</span>
+          </label>
+          <select id="select_fill_type" name="select_fill_type">
+            <option value="Fill" data-ls-en="fill">塗りつぶし</option>
+            <!--<option value="EvenOdd" data-ls-en="even-odd">偶奇塗り</option>
+            <option value="GlobalEvenOdd" data-ls-en="global even-odd">包括的偶奇塗り</option>-->
+          </select>
+          <select id="select_visibility_type" name="select_visibility_type">
+            <option value="All" data-ls-en="all">すべて</option>
+            <option value="VertexFigure" data-ls-en="vertex figure">頂点形状</option>
+            <option value="OneForEach" data-ls-en="one for each">各1枚</option>
+            <!--<option value="ConnectedComponent" data-ls-en="connected component">連結成分</option>-->
+          </select>
+        </div>
+        <div class="control-list">
+          <label>
+            <input type="checkbox" id="checkbox_auto_rotate_xz" name="checkbox_auto_rotate_xz" />
+            <span data-ls-en="auto rotation XZ">XZ自動回転</span>
+          </label>
+          <label>
+            <input type="checkbox" id="checkbox_auto_rotate_yw" name="checkbox_auto_rotate_yw" />
+            <span data-ls-en="auto rotation YW">YW自動回転</span>
+          </label>
+          <input type="button" id="button_reset_rotation" value="回転リセット" data-ls-value-en="reset rotation" />
+        </div>
+      </div>
+    </article>
+  </section>
+  <footer>
+    copyright&copy; 2026 mino-ri All rights reserved.
+  </footer>
+</body>
+
+</html>

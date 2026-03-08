@@ -1,8 +1,7 @@
 import { ShaderSource } from "./gpu"
 
 // シェーダー実装
-const shaderCode = /* wgsl */`
-struct Uniforms {
+const shaderCode = /* wgsl */`struct Uniforms {
     modelMatrix: mat4x4<f32>,
     viewProjectionMatrix: mat4x4<f32>,
     lightProjection: mat4x4<f32>,
@@ -13,7 +12,7 @@ struct Uniforms {
 @group(0) @binding(2) var shadowSampler: sampler_comparison;
 
 struct VertexInput {
-    @location(0) position: vec3<f32>,
+    @location(0) position: vec4<f32>,
     @location(1) color: vec3<f32>,
 }
 
@@ -24,12 +23,12 @@ struct InstanceVertexInput {
 }
 
 struct BallInput {
-    @location(3) position: vec3<f32>,
+    @location(3) position: vec4<f32>,
 }
 
 struct LineInput {
-    @location(3) positionA: vec3<f32>,
-    @location(4) positionB: vec3<f32>,
+    @location(3) positionA: vec4<f32>,
+    @location(4) positionB: vec4<f32>,
 }
 
 struct VertexOutput {
@@ -45,12 +44,20 @@ struct InstanceVertexOutput {
     @location(2) worldNormal: vec3<f32>,
 }
 
+fn lerp(start: f32, end: f32, t: f32) -> f32 {
+    return start * (1.0 - t) + end * t;
+}
+
+fn perspective4D(w: f32) -> f32 {
+    return 5 / (w + 5);
+}
+
 @vertex
 fn vertexMain(input: VertexInput) -> VertexOutput {
     var output: VertexOutput;
-    let worldPos = uniforms.modelMatrix * vec4<f32>(input.position, 1.0);
-    output.worldPos = worldPos;
-    output.position = uniforms.viewProjectionMatrix * worldPos;
+    let worldPos = uniforms.modelMatrix * input.position;
+    output.worldPos = vec4<f32>(worldPos.xyz * perspective4D(worldPos.w), 1.0);
+    output.position = uniforms.viewProjectionMatrix * output.worldPos;
     output.color = input.color;
     return output;
 }
@@ -58,9 +65,10 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
 @vertex
 fn vertexBallMain(input: InstanceVertexInput, ballInput: BallInput) -> InstanceVertexOutput {
     var output: InstanceVertexOutput;
-    let worldPos = uniforms.modelMatrix * vec4<f32>(ballInput.position, 1.0) + vec4<f32>(input.position, 0.0);
-    output.worldPos = worldPos;
-    output.position = uniforms.viewProjectionMatrix * worldPos;
+    let worldPos = uniforms.modelMatrix * ballInput.position;
+    let scale = perspective4D(worldPos.w);
+    output.worldPos = vec4<f32>((worldPos.xyz + input.position) * scale, 1.0);
+    output.position = uniforms.viewProjectionMatrix * output.worldPos;
     output.worldNormal = input.normal;
     output.color = input.color;
     return output;
@@ -68,40 +76,56 @@ fn vertexBallMain(input: InstanceVertexInput, ballInput: BallInput) -> InstanceV
 
 @vertex
 fn vertexLineMain(input: InstanceVertexInput, lineInput: LineInput) -> InstanceVertexOutput {
-    let lineDir = lineInput.positionB - lineInput.positionA;
+    var worldPositionA = uniforms.modelMatrix * lineInput.positionA;
+    var worldPositionB = uniforms.modelMatrix * lineInput.positionB;
+    let scaleA = perspective4D(worldPositionA.w);
+    let scaleB = perspective4D(worldPositionB.w);
+    let scale = lerp(scaleA, scaleB, input.position.z);
+    worldPositionA = worldPositionA * scaleA;
+    worldPositionB = worldPositionB * scaleB;
+    let lineDir = worldPositionB.xyz - worldPositionA.xyz;
     let zDir = normalize(lineDir);
     let xDir = normalize(cross(zDir, select(vec3<f32>(1, 0, 0), vec3<f32>(0, 1, 0), abs(zDir.x) > 0.9)));
     let yDir = normalize(cross(zDir, xDir));
     var output: InstanceVertexOutput;
-    let pos3 = lineInput.positionA + input.position.x * xDir + input.position.y * yDir + input.position.z * lineDir;
-    let worldPos = uniforms.modelMatrix * vec4<f32>(pos3, 1.0);
+    let pos3 = worldPositionA.xyz + input.position.x * xDir + input.position.y * yDir + input.position.z * lineDir;
+    let worldPos = vec4<f32>(pos3, 1.0);
     output.worldPos = worldPos;
     output.position = uniforms.viewProjectionMatrix * worldPos;
-    output.worldNormal = (uniforms.modelMatrix * vec4<f32>(input.normal.x * xDir + input.normal.y * yDir, 0.0)).xyz;
+    output.worldNormal = vec4<f32>(input.normal.x * xDir + input.normal.y * yDir, 0.0).xyz;
     output.color = input.color;
     return output;
 }
 
 @vertex
 fn vertexShadow(input: VertexInput) -> @builtin(position) vec4<f32> {
-    let worldPos = uniforms.modelMatrix * vec4<f32>(input.position, 1.0);
-    return uniforms.lightProjection * worldPos;
+    var worldPos = uniforms.modelMatrix * input.position;
+    return uniforms.lightProjection * vec4<f32>(worldPos.xyz * perspective4D(worldPos.w), 1.0);
 }
 
 @vertex
-fn vertexBallShadow(input: VertexInput, ballInput: BallInput) -> @builtin(position) vec4<f32> {
-    let worldPos = uniforms.modelMatrix * vec4<f32>(ballInput.position, 1.0) + vec4<f32>(input.position, 0.0);
-    return uniforms.lightProjection * worldPos;
+fn vertexBallShadow(input: InstanceVertexInput, ballInput: BallInput) -> @builtin(position) vec4<f32> {
+    let worldPos = uniforms.modelMatrix * ballInput.position;
+    let scale = perspective4D(worldPos.w);
+    return uniforms.lightProjection * vec4<f32>((worldPos.xyz + input.position) * scale, 1.0);
 }
 
 @vertex
-fn vertexLineShadow(input: VertexInput, lineInput: LineInput) -> @builtin(position) vec4<f32> {
-    let lineDir = lineInput.positionB - lineInput.positionA;
+fn vertexLineShadow(input: InstanceVertexInput, lineInput: LineInput) -> @builtin(position) vec4<f32> {
+    var worldPositionA = uniforms.modelMatrix * lineInput.positionA;
+    var worldPositionB = uniforms.modelMatrix * lineInput.positionB;
+    let scaleA = perspective4D(worldPositionA.w);
+    let scaleB = perspective4D(worldPositionB.w);
+    let scale = lerp(scaleA, scaleB, input.position.z);
+    worldPositionA = worldPositionA * scaleA;
+    worldPositionB = worldPositionB * scaleB;
+    let lineDir = worldPositionB.xyz - worldPositionA.xyz;
     let zDir = normalize(lineDir);
     let xDir = normalize(cross(zDir, select(vec3<f32>(1, 0, 0), vec3<f32>(0, 1, 0), abs(zDir.x) > 0.9)));
     let yDir = normalize(cross(zDir, xDir));
-    let pos3 = lineInput.positionA + input.position.x * xDir + input.position.y * yDir + input.position.z * lineDir;
-    let worldPos = uniforms.modelMatrix * vec4<f32>(pos3, 1.0);
+    var output: VertexOutput;
+    let pos3 = worldPositionA.xyz + input.position.x * xDir + input.position.y * yDir + input.position.z * lineDir;
+    let worldPos = vec4<f32>(pos3, 1.0);
     return uniforms.lightProjection * worldPos;
 }
 
@@ -139,7 +163,7 @@ fn fragmentInstanceMain(input: InstanceVertexOutput) -> @location(0) vec4<f32> {
 
 @fragment
 fn fragmentEmpty() {
-}  
+}
 `
 
 const constantBufferValue = new Float32Array([
@@ -147,7 +171,7 @@ const constantBufferValue = new Float32Array([
     4, 0, 0, 0,
     0, -4, 0, 0,
     0, 0, 1.75, 1,
-    -0.009765625, 0.009765625, 3.5, 5,
+    0, 0, 3.5, 5,
     // lightProjection
     8.96319, 1.025915, 0.836241245, 0.163968876,
     0, -7.548099, 2.87967658, 0.5646425,
@@ -158,27 +182,27 @@ const constantBufferValue = new Float32Array([
 
 const vertexBufferLayout: GPUVertexBufferLayout = {
     stepMode: "vertex",
-    arrayStride: 6 * 4,
+    arrayStride: 7 * 4,
     attributes: [
-        { shaderLocation: 0, offset: 0, format: "float32x3" }, // position
-        { shaderLocation: 1, offset: 12, format: "float32x3" }, // color
+        { shaderLocation: 0, offset: 0, format: "float32x4" }, // position
+        { shaderLocation: 1, offset: 16, format: "float32x3" }, // color
     ],
 }
 
 const ballInstanceBufferLayout: GPUVertexBufferLayout = {
     stepMode: "instance",
-    arrayStride: 3 * 4,
+    arrayStride: 4 * 4,
     attributes: [
-        { shaderLocation: 3, offset: 0, format: "float32x3" }, // position
+        { shaderLocation: 3, offset: 0, format: "float32x4" }, // position
     ],
 }
 
 const lineInstanceBufferLayout: GPUVertexBufferLayout = {
     stepMode: "instance",
-    arrayStride: 6 * 4,
+    arrayStride: 8 * 4,
     attributes: [
-        { shaderLocation: 3, offset: 0, format: "float32x3" }, // position
-        { shaderLocation: 4, offset: 12, format: "float32x3" }, // position
+        { shaderLocation: 3, offset: 0, format: "float32x4" }, // position
+        { shaderLocation: 4, offset: 16, format: "float32x4" }, // position
     ],
 }
 
