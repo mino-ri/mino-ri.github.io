@@ -1,1 +1,162 @@
-import{loadLanguages}from"./language_switcher_core.js";const sortOrder="#,;'xzwrhsfgdbktpqnmvyieoua";function compareBySatu(e,t){for(let n=0;;n++){const o=e.charAt(n),a=t.charAt(n);if(""===o)return-1;if(""===a)return 1;const r=sortOrder.indexOf(o),l=sortOrder.indexOf(a);if(r!==l)return l-r}}function satuToSound(e){return e.replaceAll("q","ŋ").replaceAll("f","ɸ").replaceAll("sy","ʃ").replaceAll("ty","tʃ").replaceAll("dy","dʒ").replaceAll("si","ʃi").replaceAll("y","j").replaceAll("v","əm").replaceAll("r","ɾ").replaceAll("x","ɣ").replaceAll("h","x")}const wordTypes=new Map([["名称",{ja:"名称語",en:"Name"}],["過程",{ja:"過程語",en:"Process"}],["結果",{ja:"結果語",en:"Result"}],["状態",{ja:"状態語",en:"State"}],["機能",{ja:"機能語",en:"Function"}],["補助",{ja:"補助語",en:"Complement"}],["合成",{ja:"合成語",en:"Compound"}]]),partOfSpeeches={noun:{ja:"名",en:"Noun"},verb:{ja:"動",en:"Verb"},mod:{ja:"飾",en:"Mod"},conj:{ja:"接",en:"Conj"}};function buildWord({wordType:e,paramCount:t,explain:n,noun:o,verb:a,modif:r,conj:l,antonym:c,language:s}){const d=wordTypes.get(e)?.[s]??"",p="0"===t?`【${d}】 ${n}<br />`:`【${d}-${t}】 ${n}<br />`;let i="";if(""!==o&&(i+=`【${partOfSpeeches.noun[s]}】${o}`),""!==a){""!==i&&(i+=" ");let e=partOfSpeeches.verb[s];"●"===r&&(e+=`|${partOfSpeeches.mod[s]}`),"●"===l&&(e+=`|${partOfSpeeches.conj[s]}`),i+=`【${e}】${a}`}return""!==r&&"●"!==r&&(""!==i&&(i+=" "),i+=`【${""===a&&"●"===l?`${partOfSpeeches.mod[s]}|${partOfSpeeches.conj[s]}`:partOfSpeeches.mod[s]}】${r}`),""!==l&&"●"!==l&&(""!==i&&(i+=" "),i+=`【${partOfSpeeches.conj[s]}】${l}`),""!==c&&(i+=`<br />↔ <a href='#${c}' lang='kt'>${c}</a>`),p+i}function openSelectedWord(){const e=location.hash.replace("#","");if(""===e)return;const t=document.querySelector(`details:has(a#${e})`);t&&t.setAttribute("open","open");const n=document.getElementById(e);n&&n.scrollIntoView({block:"start",behavior:"smooth"})}const loadDictionary=async()=>{const e=document.getElementById("template_word");if(!(e instanceof HTMLTemplateElement))return;const t=e.parentElement;if(!t)return;const n=await fetch("./dictionary.csv"),o=(await n.text()).split("\n").map(e=>e.split("\t"));o.sort((e,t)=>compareBySatu(e[0]??"",t[0]??""));const a=/\{(([a-z]+?)[sfv]?)\}/g;for(const n of o){const o=n[0]??"",r=n[1]??"",l=n[2]??"",c=n[3]??"",s=(n[4]??"").replaceAll(a,"<a href='#$2' lang='kt'>$1</a>"),d=n[5]??"",p=n[6]??"",i=n[7]??"",u=n[8]??"",f=n[9]??"",m=(n[10]??"").replaceAll(a,"<a href='#$2' lang='kt'>$1</a>"),y=n[11]??"",h=n[12]??"",$=n[13]??"",S=n[14]??"",g=n[15]??"",j=e.content.cloneNode(!0),b=j.querySelector("summary");if(b){b.querySelector("a")?.setAttribute("id",o),b.querySelector(":lang(kt)").textContent=o,b.querySelector(".dict-sound").textContent=`/${satuToSound(o)}/`;const e=b.querySelector(".dict-mean");e&&(e.textContent=c,e.setAttribute("data-ls-en",f))}const A=j.querySelector("p");A&&(A.innerHTML=buildWord({wordType:r,paramCount:l,explain:s,noun:d,verb:p,modif:i,conj:u,antonym:g,language:"ja"}),A.setAttribute("data-ls-html-en",buildWord({wordType:r,paramCount:l,explain:m,noun:y,verb:h,modif:$,conj:S,antonym:g,language:"en"}))),t.appendChild(j)}loadLanguages(),openSelectedWord()};window.addEventListener("DOMContentLoaded",loadDictionary),window.addEventListener("hashchange",e=>{openSelectedWord(),e.preventDefault()});
+import { loadLanguages } from "./language_switcher_core.js";
+const sortOrder = "#,;'xzwrhsfgdbktpqnmvyieoua";
+function compareBySatu(left, right) {
+    for (let i = 0;; i++) {
+        const l = left.charAt(i);
+        const r = right.charAt(i);
+        if (l === "") {
+            return -1;
+        }
+        if (r === "") {
+            return 1;
+        }
+        const lIndex = sortOrder.indexOf(l);
+        const rIndex = sortOrder.indexOf(r);
+        if (lIndex !== rIndex) {
+            return rIndex - lIndex;
+        }
+    }
+}
+function satuToSound(satu) {
+    return satu
+        .replaceAll("q", "ŋ")
+        .replaceAll("f", "ɸ")
+        .replaceAll("sy", "ʃ")
+        .replaceAll("ty", "tʃ")
+        .replaceAll("dy", "dʒ")
+        .replaceAll("si", "ʃi")
+        .replaceAll("y", "j")
+        .replaceAll("v", "əm")
+        .replaceAll("r", "ɾ")
+        .replaceAll("x", "ɣ")
+        .replaceAll("h", "x");
+}
+const wordTypes = new Map([
+    ["名称", { ja: "名称語", en: "Name" }],
+    ["過程", { ja: "過程語", en: "Process" }],
+    ["結果", { ja: "結果語", en: "Result" }],
+    ["状態", { ja: "状態語", en: "State" }],
+    ["機能", { ja: "機能語", en: "Function" }],
+    ["補助", { ja: "補助語", en: "Complement" }],
+    ["合成", { ja: "合成語", en: "Compound" }],
+]);
+const partOfSpeeches = {
+    noun: { ja: "名", en: "Noun" },
+    verb: { ja: "動", en: "Verb" },
+    mod: { ja: "飾", en: "Mod" },
+    conj: { ja: "接", en: "Conj" },
+};
+function buildWord({ wordType, paramCount, explain, noun, verb, modif, conj, antonym, language }) {
+    const wordTypeText = wordTypes.get(wordType)?.[language] ?? "";
+    const wordTitle = paramCount === "0" ? `【${wordTypeText}】 ${explain}<br />` : `【${wordTypeText}-${paramCount}】 ${explain}<br />`;
+    let body = "";
+    if (noun !== "") {
+        body += `【${partOfSpeeches.noun[language]}】${noun}`;
+    }
+    if (verb !== "") {
+        if (body !== "") {
+            body += " ";
+        }
+        let verbTitle = partOfSpeeches.verb[language];
+        if (modif === "●") {
+            verbTitle += `|${partOfSpeeches.mod[language]}`;
+        }
+        if (conj === "●") {
+            verbTitle += `|${partOfSpeeches.conj[language]}`;
+        }
+        body += `【${verbTitle}】${verb}`;
+    }
+    if (modif !== "" && modif !== "●") {
+        if (body !== "") {
+            body += " ";
+        }
+        const modifTitle = (verb === "" && conj === "●") ? `${partOfSpeeches.mod[language]}|${partOfSpeeches.conj[language]}` : partOfSpeeches.mod[language];
+        body += `【${modifTitle}】${modif}`;
+    }
+    if (conj !== "" && conj !== "●") {
+        if (body !== "") {
+            body += " ";
+        }
+        body += `【${partOfSpeeches.conj[language]}】${conj}`;
+    }
+    if (antonym !== "") {
+        body += `<br />↔ <a href='#${antonym}' lang='kt'>${antonym}</a>`;
+    }
+    return wordTitle + body;
+}
+function openSelectedWord() {
+    const hash = location.hash.replace("#", "");
+    if (hash === "") {
+        return;
+    }
+    const detail = document.querySelector(`details:has(a#${hash})`);
+    if (detail) {
+        detail.setAttribute("open", "open");
+    }
+    const target = document.getElementById(hash);
+    if (target) {
+        target.scrollIntoView({
+            block: "start",
+            behavior: "smooth",
+        });
+    }
+}
+const loadDictionary = async () => {
+    const template = document.getElementById("template_word");
+    if (!(template instanceof HTMLTemplateElement)) {
+        return;
+    }
+    const parent = template.parentElement;
+    if (!parent) {
+        return;
+    }
+    const url = "./dictionary.csv";
+    const response = await fetch(url);
+    const text = await response.text();
+    const words = text.split("\n").map((s) => s.split("\t"));
+    words.sort((a, b) => compareBySatu(a[0] ?? "", b[0] ?? ""));
+    const pattern = /\{(([a-z]+?)[sfv]?)\}/g;
+    for (const word of words) {
+        const satu = word[0] ?? "";
+        const wordType = word[1] ?? "";
+        const paramCount = word[2] ?? "";
+        const title = word[3] ?? "";
+        const explain = (word[4] ?? "").replaceAll(pattern, `<a href='#$2' lang='kt'>$1</a>`);
+        const noun = word[5] ?? "";
+        const verb = word[6] ?? "";
+        const modif = word[7] ?? "";
+        const conj = word[8] ?? "";
+        const titleEn = word[9] ?? "";
+        const explainEn = (word[10] ?? "").replaceAll(pattern, `<a href='#$2' lang='kt'>$1</a>`);
+        const nounEn = word[11] ?? "";
+        const verbEn = word[12] ?? "";
+        const modifEn = word[13] ?? "";
+        const conjEn = word[14] ?? "";
+        const antonym = word[15] ?? "";
+        const root = template.content.cloneNode(true);
+        const summary = root.querySelector("summary");
+        if (summary) {
+            summary.querySelector("a")?.setAttribute("id", satu);
+            summary.querySelector(":lang(kt)").textContent = satu;
+            summary.querySelector(".dict-sound").textContent = `/${satuToSound(satu)}/`;
+            const mean = summary.querySelector(".dict-mean");
+            if (mean) {
+                mean.textContent = title;
+                mean.setAttribute("data-ls-en", titleEn);
+            }
+        }
+        const p = root.querySelector("p");
+        if (p) {
+            p.innerHTML = buildWord({ wordType, paramCount, explain, noun, verb, modif, conj, antonym, language: "ja" });
+            p.setAttribute("data-ls-html-en", buildWord({ wordType, paramCount, explain: explainEn, noun: nounEn, verb: verbEn, modif: modifEn, conj: conjEn, antonym, language: "en" }));
+        }
+        parent.appendChild(root);
+    }
+    loadLanguages();
+    openSelectedWord();
+};
+window.addEventListener("DOMContentLoaded", loadDictionary);
+window.addEventListener("hashchange", (ev) => {
+    openSelectedWord();
+    ev.preventDefault();
+});

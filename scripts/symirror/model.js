@@ -355,7 +355,7 @@ export function buildPolytopeMesh(polytope, faceVisibility, visibilityType, vert
         stencilVertexCounts,
         normalVertexCount,
         ballInstanceData: new Float32Array(ballInstances),
-        ballCount: ballInstances.length / 3,
+        ballCount: ballInstances.length / dimension,
         lineInstanceData: new Float32Array(lineInstances),
         lineCount: lineInstances.length / (dimension * 2),
     };

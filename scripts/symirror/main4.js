@@ -1,49 +1,61 @@
-import { NormalPolyhedron, unitTriangles, faceSelectorMap } from "./polyhedron.js";
+import { Polychoron, unitTetrahedrons, cellSelectorFunctions } from "./polychoron.js";
 import { initGpu } from "./gpu.js";
 import { buildPolytopeMesh, setDimension } from "./model.js";
 import { setCenter } from "../svg_generator.js";
-import { OriginController } from "./origin_controller3.js";
-import { shaderSource } from "./gpu3.js";
-import { Quaternions } from "./quaternion.js";
+import { OriginController } from "./origin_controller4.js";
+import { shaderSource } from "./gpu4.js";
+import { QuaternionPairs } from "./quaternion_pair.js";
 class RotationState {
-    #q = { w: 1, x: 0, y: 0, z: 0, negate: false };
+    #temp = QuaternionPairs.getDefault();
+    #q = QuaternionPairs.getDefault();
     #matrix = new Float32Array(16);
-    applyDrag(deltaX, deltaY) {
+    applyDrag3D(deltaX, deltaY) {
         const sensitivity = 0.005;
-        const angleX = deltaY * sensitivity;
-        const angleY = deltaX * sensitivity;
-        Quaternions.rotate(1, 0, 0, angleX, this.#q);
-        Quaternions.rotate(0, -1, 0, angleY, this.#q);
+        const angleXZ = deltaX * sensitivity;
+        const angleYZ = deltaY * sensitivity;
+        QuaternionPairs.mul(QuaternionPairs.rotationXZ(-angleXZ, this.#temp), this.#q, this.#q);
+        QuaternionPairs.mul(QuaternionPairs.rotationYZ(angleYZ, this.#temp), this.#q, this.#q);
     }
-    applyAutoRotate(deltaTime) {
-        const rotationSpeed = 0.5;
-        Quaternions.rotate(0, -1, 0, rotationSpeed * deltaTime, this.#q);
+    applyDrag4D(deltaX, deltaY) {
+        const sensitivity = 0.005;
+        const angleXW = deltaX * sensitivity;
+        const angleYW = deltaY * sensitivity;
+        console.log("applyDrag4D");
+        QuaternionPairs.mul(QuaternionPairs.rotationXW(-angleXW, this.#temp), this.#q, this.#q);
+        QuaternionPairs.mul(QuaternionPairs.rotationYW(angleYW, this.#temp), this.#q, this.#q);
+    }
+    applyAutoRotateXZ(deltaTime) {
+        const rotationSpeed = 0.625;
+        QuaternionPairs.mul(QuaternionPairs.rotationXZ(-rotationSpeed * deltaTime, this.#temp), this.#q, this.#q);
+    }
+    applyAutoRotateYW(deltaTime) {
+        const rotationSpeed = 0.25;
+        QuaternionPairs.mul(QuaternionPairs.rotationYW(rotationSpeed * deltaTime, this.#temp), this.#q, this.#q);
     }
     reset() {
-        Quaternions.clear(this.#q);
+        QuaternionPairs.clear(this.#q);
     }
     getMatrix() {
-        Quaternions.toMatrix(this.#q, this.#matrix);
+        QuaternionPairs.toMatrix(this.#q, this.#matrix);
         return this.#matrix;
     }
 }
-class PolyhedronViewer {
+class PolychoronViewer {
     #renderer;
     #rotation = new RotationState();
-    #isDragging = false;
+    #dragMode = null;
     #lastMouseX = 0;
     #lastMouseY = 0;
     #animationFrameId = null;
     #lastTime = 0;
-    #polyhedron = null;
-    #autoRotate = false;
+    #polychoron = null;
+    #autoRotateXZ = false;
+    #autoRotateYW = false;
     #faceVisibility = [true, true, true, true, true, true];
     #visibilityType = "All";
     #fillType = "Fill";
     #vertexVisibility = false;
     #edgeVisibility = false;
-    #colorByConnected = false;
-    #holosnub = false;
     #canvas;
     #originController;
     constructor(canvas, gpuContext, originController) {
@@ -53,14 +65,18 @@ class PolyhedronViewer {
         this.#setupEventListeners();
         this.#startRenderLoop();
     }
-    setAutoRotate(enabled) {
-        this.#autoRotate = enabled;
+    setAutoRotateXZ(enabled) {
+        this.#autoRotateXZ = enabled;
+    }
+    setAutoRotateYW(enabled) {
+        this.#autoRotateYW = enabled;
     }
     resetRotation() {
         this.#rotation.reset();
     }
     #setupEventListeners() {
         this.#canvas.addEventListener("mousedown", this.#onMouseDown.bind(this));
+        this.#canvas.addEventListener("contextmenu", e => e.preventDefault());
         document.addEventListener("mousemove", this.#onMouseMove.bind(this));
         document.addEventListener("mouseup", this.#onMouseUp.bind(this));
         this.#canvas.addEventListener("touchstart", this.#onTouchStart.bind(this));
@@ -68,54 +84,82 @@ class PolyhedronViewer {
         document.addEventListener("touchend", this.#onTouchEnd.bind(this));
     }
     #onMouseDown(e) {
-        this.#isDragging = true;
         this.#lastMouseX = e.clientX;
         this.#lastMouseY = e.clientY;
+        switch (e.button) {
+            case 0:
+                this.#dragMode = "3d";
+                e.preventDefault();
+                break;
+            case 2:
+                this.#dragMode = "4d";
+                e.preventDefault();
+                break;
+        }
     }
     #onMouseMove(e) {
-        if (!this.#isDragging)
+        if (!this.#dragMode)
             return;
         const deltaX = e.clientX - this.#lastMouseX;
         const deltaY = e.clientY - this.#lastMouseY;
-        this.#rotation.applyDrag(deltaX, deltaY);
+        switch (this.#dragMode) {
+            case "3d":
+                this.#rotation.applyDrag3D(deltaX, deltaY);
+                break;
+            case "4d":
+                this.#rotation.applyDrag4D(deltaX, deltaY);
+        }
         this.#lastMouseX = e.clientX;
         this.#lastMouseY = e.clientY;
     }
     #onMouseUp() {
-        this.#isDragging = false;
+        this.#dragMode = null;
     }
     #onTouchStart(e) {
-        if (e.touches.length === 1) {
-            this.#isDragging = true;
-            this.#lastMouseX = e.touches[0].clientX;
-            this.#lastMouseY = e.touches[0].clientY;
-            e.preventDefault();
+        if (e.touches.length !== 1 && e.touches.length !== 2)
+            return;
+        switch (e.touches.length) {
+            case 1:
+                this.#dragMode = "3d";
+                break;
+            case 2:
+                this.#dragMode = "4d";
+                break;
         }
+        this.#lastMouseX = e.touches[0].clientX;
+        this.#lastMouseY = e.touches[0].clientY;
+        e.preventDefault();
     }
     #onTouchMove(e) {
-        if (!this.#isDragging || e.touches.length !== 1)
+        if (!this.#dragMode || e.touches.length !== 1 && e.touches.length !== 2)
             return;
         const deltaX = e.touches[0].clientX - this.#lastMouseX;
         const deltaY = e.touches[0].clientY - this.#lastMouseY;
-        this.#rotation.applyDrag(deltaX, deltaY);
+        switch (this.#dragMode) {
+            case "3d":
+                this.#rotation.applyDrag3D(deltaX, deltaY);
+                break;
+            case "4d":
+                this.#rotation.applyDrag4D(deltaX, deltaY);
+        }
         this.#lastMouseX = e.touches[0].clientX;
         this.#lastMouseY = e.touches[0].clientY;
         e.preventDefault();
     }
     #onTouchEnd() {
-        this.#isDragging = false;
+        this.#dragMode = null;
     }
-    setPolyhedron(selectValue, faceSelector) {
-        const { unit, compoundTransforms } = unitTriangles.find((source) => source.id === selectValue);
-        const selector = faceSelectorMap.get(faceSelector) || faceSelectorMap.get("xxx");
-        this.#polyhedron = new NormalPolyhedron(unit, selector, compoundTransforms);
+    setPolychoron(selectValue, faceSelector) {
+        const { unit } = unitTetrahedrons.find(source => source.id === selectValue);
+        const selector = cellSelectorFunctions.get(faceSelector) ?? cellSelectorFunctions.get("full");
+        this.#polychoron = new Polychoron(unit, selector);
         this.#updateMesh();
-        return this.#polyhedron;
+        return this.#polychoron;
     }
     setOrigin(origin) {
-        if (!this.#polyhedron)
+        if (!this.#polychoron)
             return;
-        this.#polyhedron.setOrigin(origin);
+        this.#polychoron.setOrigin(origin);
         this.#updateMesh();
     }
     setFaceVisibility(faceVisibility) {
@@ -132,10 +176,6 @@ class PolyhedronViewer {
         this.#vertexVisibility = vertexVisibility;
         this.#updateMesh();
     }
-    setColorByConnected(colorByConnected) {
-        this.#colorByConnected = colorByConnected;
-        this.#updateMesh();
-    }
     setVisibilityType(visibilityType) {
         this.#visibilityType = visibilityType;
         this.#updateMesh();
@@ -144,22 +184,21 @@ class PolyhedronViewer {
         this.#fillType = fillType;
         this.#updateMesh();
     }
-    setHolosnub(holosnub) {
-        this.#holosnub = holosnub;
-        this.#updateMesh();
-    }
     #updateMesh() {
-        if (!this.#polyhedron)
+        if (!this.#polychoron)
             return;
-        const mesh = buildPolytopeMesh(this.#polyhedron, this.#faceVisibility, this.#visibilityType, this.#vertexVisibility, this.#edgeVisibility, this.#colorByConnected, this.#holosnub, this.#fillType);
+        const mesh = buildPolytopeMesh(this.#polychoron, this.#faceVisibility, this.#visibilityType, this.#vertexVisibility, this.#edgeVisibility, false, false, this.#fillType);
         this.#renderer.updateMesh(mesh);
     }
     #startRenderLoop() {
         const render = (time) => {
             const deltaTime = this.#lastTime > 0 ? (time - this.#lastTime) / 1000 : 0;
             this.#lastTime = time;
-            if (this.#autoRotate && !this.#isDragging) {
-                this.#rotation.applyAutoRotate(deltaTime);
+            if (!this.#dragMode) {
+                if (this.#autoRotateXZ)
+                    this.#rotation.applyAutoRotateXZ(deltaTime);
+                if (this.#autoRotateYW)
+                    this.#rotation.applyAutoRotateYW(deltaTime);
             }
             this.#originController.applyAutoOriginMovement(deltaTime);
             this.#renderer.render(this.#rotation.getMatrix());
@@ -193,15 +232,11 @@ function resizeCanvas(canvas) {
 window.addEventListener("load", async () => {
     setCenter(0, 0);
     const canvas = document.getElementById("preview_figure");
-    const originBack = document.getElementById("origin_back");
     const select = document.getElementById("select_coxeter_group");
-    const selectFace = document.getElementById("select_face_selector");
     const selectVisibility = document.getElementById("select_visibility_type");
     const selectFillType = document.getElementById("select_fill_type");
-    const autoRotateCheckbox = document.getElementById("checkbox_auto_rotate");
-    const originControlSvg = document.getElementById("origin_control");
-    const originPoint = document.getElementById("origin_point");
-    const circleGroup = document.getElementById("g_circles");
+    const autoRotateXZCheckbox = document.getElementById("checkbox_auto_rotate_xz");
+    const autoRotateYWCheckbox = document.getElementById("checkbox_auto_rotate_yw");
     const checkColor0 = document.getElementById("checkbox_color_0");
     const checkColor1 = document.getElementById("checkbox_color_1");
     const checkColor2 = document.getElementById("checkbox_color_2");
@@ -210,15 +245,12 @@ window.addEventListener("load", async () => {
     const checkColor5 = document.getElementById("checkbox_color_5");
     const checkVertex = document.getElementById("checkbox_vertex");
     const checkEdge = document.getElementById("checkbox_edge");
-    const checkConnected = document.getElementById("checkbox_connected");
-    const checkHolosnub = document.getElementById("checkbox_holosnub");
     const buttonResetRotation = document.getElementById("button_reset_rotation");
-    if (!canvas || !select || !selectFace || !checkColor0 || !checkColor1 || !checkColor2 || !checkColor3 || !checkColor4 || !checkColor5 ||
-        !circleGroup || !originBack || !originControlSvg || !originPoint) {
+    if (!canvas || !select || !checkColor0 || !checkColor1 || !checkColor2 || !checkColor3 || !checkColor4 || !checkColor5) {
         console.error("Required elements not found");
         return;
     }
-    setDimension(3);
+    setDimension(4);
     resizeCanvas(canvas);
     window.addEventListener("resize", () => resizeCanvas(canvas));
     const gpuContext = await initGpu(canvas);
@@ -230,23 +262,21 @@ window.addEventListener("load", async () => {
         canvas.parentElement?.appendChild(errorDiv);
         return;
     }
-    const originController = new OriginController(originControlSvg, originPoint, circleGroup, originBack, (origin) => viewer.setOrigin(origin));
-    const viewer = new PolyhedronViewer(canvas, gpuContext, originController);
-    for (const source of unitTriangles) {
+    select.value = unitTetrahedrons[0].id;
+    const originController = new OriginController(origin => viewer.setOrigin(origin));
+    const viewer = new PolychoronViewer(canvas, gpuContext, originController);
+    for (const source of unitTetrahedrons) {
         const option = document.createElement("option");
         option.value = source.id;
         option.textContent = source.name;
         select.appendChild(option);
     }
-    select.value = unitTriangles[0].id;
-    originController?.setMirrorCircles(viewer.setPolyhedron(select.value, selectFace.value), selectFace.value);
-    const rebuildPolyhedron = () => {
-        const polyhedron = viewer.setPolyhedron(select.value, selectFace.value);
-        originController?.setMirrorCircles(polyhedron, selectFace.value);
+    viewer.setPolychoron(unitTetrahedrons[0].id, "full");
+    const rebuildPolychoron = () => {
+        viewer.setPolychoron(select.value, "full");
         originController?.reset();
     };
-    select.addEventListener("change", rebuildPolyhedron);
-    selectFace.addEventListener("change", rebuildPolyhedron);
+    select.addEventListener("change", rebuildPolychoron);
     checkEdge?.addEventListener("change", () => {
         viewer.setEdgeVisibility(checkEdge.checked);
     });
@@ -255,12 +285,6 @@ window.addEventListener("load", async () => {
     });
     selectVisibility?.addEventListener("change", () => {
         viewer.setVisibilityType(selectVisibility.value);
-    });
-    checkConnected?.addEventListener("change", () => {
-        viewer.setColorByConnected(checkConnected.checked);
-    });
-    checkHolosnub?.addEventListener("change", () => {
-        viewer.setHolosnub(checkHolosnub.checked);
     });
     const colorCheckChangeHandler = () => {
         viewer.setFaceVisibility([
@@ -281,8 +305,11 @@ window.addEventListener("load", async () => {
     selectFillType?.addEventListener("change", () => {
         viewer.setFillType(selectFillType.value);
     });
-    autoRotateCheckbox?.addEventListener("change", () => {
-        viewer.setAutoRotate(autoRotateCheckbox.checked);
+    autoRotateXZCheckbox?.addEventListener("change", () => {
+        viewer.setAutoRotateXZ(autoRotateXZCheckbox.checked);
+    });
+    autoRotateYWCheckbox?.addEventListener("change", () => {
+        viewer.setAutoRotateYW(autoRotateYWCheckbox.checked);
     });
     buttonResetRotation?.addEventListener("click", () => {
         viewer.resetRotation();

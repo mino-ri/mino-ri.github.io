@@ -168,4 +168,31 @@ export class Vectors {
         }
         return Vectors.div(resultTo, vectors.length, resultTo);
     }
+    static getRank(matrix) {
+        const rows = matrix.length;
+        const cols = matrix[0].length;
+        const mat = matrix.map(row => [...row]);
+        let rank = 0;
+        for (let col = 0, row = 0; col < cols && row < rows; col++) {
+            let pivot = row;
+            for (let i = row + 1; i < rows; i++) {
+                if (Math.abs(mat[i][col]) > Math.abs(mat[pivot][col]))
+                    pivot = i;
+            }
+            if (Math.abs(mat[pivot][col]) < Vectors.#epsilon)
+                continue;
+            [mat[row], mat[pivot]] = [mat[pivot], mat[row]];
+            for (let i = 0; i < rows; i++) {
+                if (i !== row) {
+                    const factor = mat[i][col] / mat[row][col];
+                    for (let j = col; j < cols; j++) {
+                        mat[i][j] -= factor * mat[row][j];
+                    }
+                }
+            }
+            row++;
+            rank++;
+        }
+        return rank;
+    }
 }

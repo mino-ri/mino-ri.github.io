@@ -5,7 +5,9 @@ import { CoxeterMatrix } from "./coxeter_matrix.js";
 export class Polychoron {
     symmetryGroup;
     vertexes;
-    cells;
+    vertexConnectedIndexes;
+    edges;
+    units;
     constructor(source, faceSelector) {
         const vertexCount = source.symmetryGroup.order;
         this.vertexes = new Array(vertexCount);
@@ -108,21 +110,52 @@ export class Polychoron {
             }
             cells.push(...edgesByCellMap.keys());
         }
-        this.cells = cells;
+        const connectedIndexMap = new Array(vertexCount);
+        for (let i = 0; i < vertexCount; i++) {
+            if (!activeVertexSet.has(i)) {
+                connectedIndexMap[i] = 31;
+            }
+        }
+        const lineSet = new Map();
+        for (let currentIndex = 0; currentIndex < source.symmetryGroup.order; currentIndex++) {
+            const element = source.symmetryGroup.getElement(currentIndex);
+            for (const cellDef of cellDefinition) {
+                for (const faceDef of cellDef) {
+                    for (const edgeElement of faceDef) {
+                        const otherIndex = element.mul(edgeElement).index;
+                        const [minIndex, maxIndex] = currentIndex < otherIndex ? [currentIndex, otherIndex] : [otherIndex, currentIndex];
+                        if (!lineSet.has(minIndex)) {
+                            lineSet.set(minIndex, { connectedIndex: connectedIndexMap[minIndex] ?? 0, vertexes: new Set() });
+                        }
+                        lineSet.get(minIndex).vertexes.add(maxIndex);
+                    }
+                }
+            }
+        }
+        const edges = [];
+        for (const [index1, bs] of lineSet) {
+            for (const index2 of bs.vertexes) {
+                edges.push({ index1, index2, connectedIndex: bs.connectedIndex });
+            }
+        }
+        this.vertexConnectedIndexes = connectedIndexMap;
+        this.edges = edges;
+        this.units = cells;
+        this.setOrigin([0, 0, 0, 1]);
     }
     setOrigin(newOrigin) {
         for (let i = 0; i < this.symmetryGroup.transforms.length; i++) {
-            this.vertexes[i] = QuaternionPairs.transform(newOrigin, this.symmetryGroup.transforms[i]);
+            this.vertexes[i] = QuaternionPairs.transform(newOrigin, this.symmetryGroup.transforms[i], this.vertexes[i]);
         }
     }
 }
 export const unitTetrahedrons = function () {
     return [
-        new SymmetryGroup4(new FiniteCoxeterGroup(CoxeterMatrix.create4D(3, 3, 3))).getDefaultGenerators(),
-        new SymmetryGroup4(new FiniteCoxeterGroup(CoxeterMatrix.create4DDemicube(3, 3, 3))).getDefaultGenerators(),
-        new SymmetryGroup4(new FiniteCoxeterGroup(CoxeterMatrix.create4D(3, 3, 4))).getDefaultGenerators(),
-        new SymmetryGroup4(new FiniteCoxeterGroup(CoxeterMatrix.create4D(3, 4, 3))).getDefaultGenerators(),
-        new SymmetryGroup4(new FiniteCoxeterGroup(CoxeterMatrix.create4D(3, 3, 5))).getDefaultGenerators(),
+        { id: "a00", name: "3 3 3", unit: new SymmetryGroup4(new FiniteCoxeterGroup(CoxeterMatrix.create4D(3, 3, 3))).getDefaultGenerators() },
+        { id: "d00", name: "3 (3 2 3)", unit: new SymmetryGroup4(new FiniteCoxeterGroup(CoxeterMatrix.create4DDemicube(3, 3, 3))).getDefaultGenerators() },
+        { id: "b00", name: "3 3 4", unit: new SymmetryGroup4(new FiniteCoxeterGroup(CoxeterMatrix.create4D(3, 3, 4))).getDefaultGenerators() },
+        { id: "f00", name: "3 4 3", unit: new SymmetryGroup4(new FiniteCoxeterGroup(CoxeterMatrix.create4D(3, 4, 3))).getDefaultGenerators() },
+        { id: "h00", name: "3 3 5", unit: new SymmetryGroup4(new FiniteCoxeterGroup(CoxeterMatrix.create4D(3, 3, 5))).getDefaultGenerators() },
     ];
 }();
 export const cellSelectorFunctions = function () {
@@ -138,4 +171,4 @@ export const cellSelectorFunctions = function () {
                 };
             }]
     ]);
-};
+}();
