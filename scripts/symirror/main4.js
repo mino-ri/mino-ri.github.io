@@ -22,7 +22,7 @@ class RotationState {
         const angleYW = deltaY * sensitivity;
         console.log("applyDrag4D");
         QuaternionPairs.mul(QuaternionPairs.rotationXW(-angleXW, this.#temp), this.#q, this.#q);
-        QuaternionPairs.mul(QuaternionPairs.rotationYW(angleYW, this.#temp), this.#q, this.#q);
+        QuaternionPairs.mul(QuaternionPairs.rotationYW(-angleYW, this.#temp), this.#q, this.#q);
     }
     applyAutoRotateXZ(deltaTime) {
         const rotationSpeed = 0.625;
