@@ -76,6 +76,7 @@ class PolychoronViewer {
     }
     #setupEventListeners() {
         this.#canvas.addEventListener("mousedown", this.#onMouseDown.bind(this));
+        this.#canvas.addEventListener("contextmenu", e => e.preventDefault());
         document.addEventListener("mousemove", this.#onMouseMove.bind(this));
         document.addEventListener("mouseup", this.#onMouseUp.bind(this));
         this.#canvas.addEventListener("touchstart", this.#onTouchStart.bind(this));
@@ -115,19 +116,32 @@ class PolychoronViewer {
         this.#dragMode = null;
     }
     #onTouchStart(e) {
-        if (e.touches.length === 1) {
-            this.#dragMode = "3d";
-            this.#lastMouseX = e.touches[0].clientX;
-            this.#lastMouseY = e.touches[0].clientY;
-            e.preventDefault();
+        if (e.touches.length !== 1 && e.touches.length !== 2)
+            return;
+        switch (e.touches.length) {
+            case 1:
+                this.#dragMode = "3d";
+                break;
+            case 2:
+                this.#dragMode = "4d";
+                break;
         }
+        this.#lastMouseX = e.touches[0].clientX;
+        this.#lastMouseY = e.touches[0].clientY;
+        e.preventDefault();
     }
     #onTouchMove(e) {
-        if (!this.#dragMode || e.touches.length !== 1)
+        if (!this.#dragMode || e.touches.length !== 1 && e.touches.length !== 2)
             return;
         const deltaX = e.touches[0].clientX - this.#lastMouseX;
         const deltaY = e.touches[0].clientY - this.#lastMouseY;
-        this.#rotation.applyDrag3D(deltaX, deltaY);
+        switch (this.#dragMode) {
+            case "3d":
+                this.#rotation.applyDrag3D(deltaX, deltaY);
+                break;
+            case "4d":
+                this.#rotation.applyDrag4D(deltaX, deltaY);
+        }
         this.#lastMouseX = e.touches[0].clientX;
         this.#lastMouseY = e.touches[0].clientY;
         e.preventDefault();
