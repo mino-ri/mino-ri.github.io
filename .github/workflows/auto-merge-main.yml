@@ -74,5 +74,5 @@ jobs:
         run: |
           git switch main
           git pull origin main
-          git merge $BRANCH --no-edit
+          git merge -Xtheirs $BRANCH --no-edit
           git push origin main
