@@ -46,7 +46,7 @@ fn lerp(start: f32, end: f32, t: f32) -> f32 {
 }
 
 fn perspective4D(w: f32) -> f32 {
-    return 5 / (w + 5);
+    return 2.75 / (w + 3);
 }
 
 @vertex
@@ -77,13 +77,13 @@ fn vertexLineMain(input: InstanceVertexInput, lineInput: LineInput) -> InstanceV
     var worldPositionB = uniforms.modelMatrix * lineInput.positionB;
     let scaleA = perspective4D(worldPositionA.w);
     let scaleB = perspective4D(worldPositionB.w);
-    let scale = lerp(scaleA, scaleB, input.position.z);
+    let scale = lerp(scaleA, scaleB, input.position.z) * 1.25;
     worldPositionA = worldPositionA * scaleA;
     worldPositionB = worldPositionB * scaleB;
     let lineDir = worldPositionB.xyz - worldPositionA.xyz;
     let zDir = normalize(lineDir);
-    let xDir = normalize(cross(zDir, select(vec3<f32>(1, 0, 0), vec3<f32>(0, 1, 0), abs(zDir.x) > 0.9)));
-    let yDir = normalize(cross(zDir, xDir));
+    let xDir = scale * normalize(cross(zDir, select(vec3<f32>(1, 0, 0), vec3<f32>(0, 1, 0), abs(zDir.x) > 0.9)));
+    let yDir = scale * normalize(cross(zDir, xDir));
     var output: InstanceVertexOutput;
     let pos3 = worldPositionA.xyz + input.position.x * xDir + input.position.y * yDir + input.position.z * lineDir;
     let worldPos = vec4<f32>(pos3, 1.0);
@@ -113,13 +113,13 @@ fn vertexLineShadow(input: InstanceVertexInput, lineInput: LineInput) -> @builti
     var worldPositionB = uniforms.modelMatrix * lineInput.positionB;
     let scaleA = perspective4D(worldPositionA.w);
     let scaleB = perspective4D(worldPositionB.w);
-    let scale = lerp(scaleA, scaleB, input.position.z);
+    let scale = lerp(scaleA, scaleB, input.position.z) * 1.25;
     worldPositionA = worldPositionA * scaleA;
     worldPositionB = worldPositionB * scaleB;
     let lineDir = worldPositionB.xyz - worldPositionA.xyz;
     let zDir = normalize(lineDir);
-    let xDir = normalize(cross(zDir, select(vec3<f32>(1, 0, 0), vec3<f32>(0, 1, 0), abs(zDir.x) > 0.9)));
-    let yDir = normalize(cross(zDir, xDir));
+    let xDir = scale * normalize(cross(zDir, select(vec3<f32>(1, 0, 0), vec3<f32>(0, 1, 0), abs(zDir.x) > 0.9)));
+    let yDir = scale * normalize(cross(zDir, xDir));
     var output: VertexOutput;
     let pos3 = worldPositionA.xyz + input.position.x * xDir + input.position.y * yDir + input.position.z * lineDir;
     let worldPos = vec4<f32>(pos3, 1.0);
