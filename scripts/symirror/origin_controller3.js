@@ -432,6 +432,7 @@ export class OriginController {
         this.#setCanvas(polyhedron);
     }
     reset() {
+        this.#targetPoint = null;
         this.#updateOrigin(0, 0);
     }
 }
