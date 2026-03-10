@@ -1,5 +1,9 @@
-var _a;
+var _a, _b;
 import { Vectors } from "./vector.js";
+export class ClearColor {
+    static white = 0;
+    static black = 1;
+}
 export const initGpu = async (canvas) => {
     if (!navigator.gpu) {
         console.error("WebGPU is not supported");
@@ -344,6 +348,10 @@ class PolytopeRendererImpl {
     #device;
     #context;
     #format;
+    static #clearColors = [
+        { r: 1.0, g: 1.0, b: 1.0, a: 1.0 },
+        { r: 0.0, g: 0.0, b: 0.0, a: 1.0 },
+    ];
     constructor(device, context, format, code, dynamicBufferByteSize, constantBufferValue, vertexBufferLayout, ballInstanceBufferLayout, lineInstanceBufferLayout) {
         this.#device = device;
         this.#context = context;
@@ -411,7 +419,7 @@ class PolytopeRendererImpl {
     updateMesh(mesh) {
         this.#buffer.updateMesh(mesh);
     }
-    render(modelMatrix) {
+    render(modelMatrix, clearColor) {
         if (!this.#buffer.vertexBuffer) {
             return;
         }
@@ -433,23 +441,24 @@ class PolytopeRendererImpl {
         this.#device.queue.writeBuffer(this.#buffer.uniformBuffer, 0, modelMatrix.buffer, modelMatrix.byteOffset, modelMatrix.byteLength);
         const commandEncoder = this.#device.createCommandEncoder();
         this.#renderShadow(commandEncoder);
-        this.#renderNormal(commandEncoder);
+        this.#renderNormal(commandEncoder, clearColor);
         this.#device.queue.submit([commandEncoder.finish()]);
     }
     #renderShadow(commandEncoder) {
         this.#shadowSPipeline.render(commandEncoder, this.#shadowTexture.createView(), [], []);
     }
-    #renderNormal(commandEncoder) {
+    #renderNormal(commandEncoder, clearColor) {
+        const gpuColor = _b.#clearColors[clearColor];
         const textureView = this.#context.getCurrentTexture().createView();
         const stencilColorAttachments = [{
                 view: textureView,
-                clearValue: { r: 1.0, g: 1.0, b: 1.0, a: 1.0 },
+                clearValue: gpuColor,
                 loadOp: "clear",
                 storeOp: "store",
             }];
         const colorAttachments = [{
                 view: textureView,
-                clearValue: { r: 1.0, g: 1.0, b: 1.0, a: 1.0 },
+                clearValue: gpuColor,
                 loadOp: this.#buffer.stencilVertexCounts.length === 0 ? "clear" : "load",
                 storeOp: "store",
             }];
@@ -465,3 +474,4 @@ class PolytopeRendererImpl {
         this.#buffer.lineInstanceBuffer?.destroy();
     }
 }
+_b = PolytopeRendererImpl;

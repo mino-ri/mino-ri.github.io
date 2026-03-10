@@ -8,7 +8,7 @@ import { QuaternionPairs } from "./quaternion_pair.js";
 class RotationState {
     #temp = QuaternionPairs.getDefault();
     #q = QuaternionPairs.getDefault();
-    #matrix = new Float32Array(16);
+    #matrix = new Float32Array(17);
     applyDrag3D(deltaX, deltaY) {
         const sensitivity = 0.005;
         const angleXZ = deltaX * sensitivity;
@@ -57,6 +57,8 @@ class PolychoronViewer {
     #vertexVisibility = false;
     #edgeVisibility = false;
     #cellSize = 1.0;
+    #wGradiation = 0.0;
+    #backgroundColor = 0;
     #canvas;
     #originController;
     constructor(canvas, gpuContext, originController) {
@@ -189,6 +191,12 @@ class PolychoronViewer {
         this.#cellSize = cellSize;
         this.#updateMesh();
     }
+    setWGradiation(wGradiation) {
+        this.#wGradiation = wGradiation;
+    }
+    setBackgroundColor(backgroundColor) {
+        this.#backgroundColor = backgroundColor;
+    }
     #updateMesh() {
         if (!this.#polychoron)
             return;
@@ -206,7 +214,9 @@ class PolychoronViewer {
                     this.#rotation.applyAutoRotateYW(deltaTime);
             }
             this.#originController.applyAutoOriginMovement(deltaTime);
-            this.#renderer.render(this.#rotation.getMatrix());
+            const matrix = this.#rotation.getMatrix();
+            matrix[16] = this.#wGradiation;
+            this.#renderer.render(matrix, this.#backgroundColor);
             this.#animationFrameId = requestAnimationFrame(render);
         };
         this.#animationFrameId = requestAnimationFrame(render);
@@ -240,6 +250,7 @@ window.addEventListener("load", async () => {
     const select = document.getElementById("select_coxeter_group");
     const selectVisibility = document.getElementById("select_visibility_type");
     const selectFillType = document.getElementById("select_fill_type");
+    const selectBackgroundColor = document.getElementById("select_background_color");
     const autoRotateXZCheckbox = document.getElementById("checkbox_auto_rotate_xz");
     const autoRotateYWCheckbox = document.getElementById("checkbox_auto_rotate_yw");
     const checkColor0 = document.getElementById("checkbox_color_0");
@@ -249,6 +260,7 @@ window.addEventListener("load", async () => {
     const checkVertex = document.getElementById("checkbox_vertex");
     const checkEdge = document.getElementById("checkbox_edge");
     const rangeCellSize = document.getElementById("range_cell_size");
+    const rangeWGradiation = document.getElementById("range_w_gradiation");
     const buttonResetRotation = document.getElementById("button_reset_rotation");
     const radioStruct0001 = document.getElementById("radio_struct_0001");
     const radioStruct0010 = document.getElementById("radio_struct_0010");
@@ -350,11 +362,16 @@ window.addEventListener("load", async () => {
     radioStruct1111?.addEventListener("change", () => { if (radioStruct1111.checked)
         originController.setOriginPoint(0b1111); });
     rangeCellSize?.addEventListener("input", () => {
-        console.log(Number(rangeCellSize.value));
         viewer.setCellSize(Number(rangeCellSize.value));
+    });
+    rangeWGradiation?.addEventListener("input", () => {
+        viewer.setWGradiation(Number(rangeWGradiation.value));
     });
     selectFillType?.addEventListener("change", () => {
         viewer.setFillType(selectFillType.value);
+    });
+    selectBackgroundColor?.addEventListener("change", () => {
+        viewer.setBackgroundColor(Number(selectBackgroundColor.value));
     });
     autoRotateXZCheckbox?.addEventListener("change", () => {
         viewer.setAutoRotateXZ(autoRotateXZCheckbox.checked);
