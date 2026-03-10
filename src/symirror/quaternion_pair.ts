@@ -107,6 +107,15 @@ export class QuaternionPairs {
         return result
     }
 
+    static mirrorNormal(q: QuaternionPair, resultTo?: Vector): Vector {
+        const result = resultTo ?? [0, 0, 0, 0]
+        result[0] = q.rx
+        result[1] = q.ry
+        result[2] = q.rz
+        result[3] = q.rw
+        return result
+    }
+
     static rotationXZ(angle: number, resultTo?: QuaternionPair): QuaternionPair {
         const halfAngle = angle * 0.5
         const s = Math.sin(halfAngle)

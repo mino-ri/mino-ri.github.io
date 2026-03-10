@@ -13,6 +13,17 @@
   <script type="module" src="./../scripts/symirror/main4.js"></script>
   <script type="module" src="./../scripts/language_switcher.js"></script>
   <title>Symirror4</title>
+  <style>
+    label.coxeter-ring {
+      position: absolute;
+      width: 26px;
+      height: 26px;
+      border-radius: 13px;
+      padding: 0;
+      text-align: center;
+      vertical-align: middle;
+    }
+  </style>
 </head>
 
 <body>
@@ -33,33 +44,105 @@
   <section>
     <article class="editor-container">
       <div class="editor-preview" id="editor_preview">
-        <canvas id="preview_figure"></canvas>
+        <canvas id="preview_figure" style="z-index: 2;"></canvas>
       </div>
       <div class="editor-control" style="max-width: 328px;">
         <div class="control-list">
           <select id="select_coxeter_group" name="select_coxeter_group">
           </select>
         </div>
-        <!--
         <div>
-          <svg id="origin_control" width="300" height="300" viewBox="-1.125 -1.125 2.25 2.25"
-            style="cursor: move; position: absolute; width: 300px; height: 300px;">
-            <g id="g_circles"></g>
-            <circle cx="0" cy="0" r="1" fill="#fff" stroke="#fff" fill-opacity="0" stroke-width="0.02"
-              style="cursor: crosshair;" />
-            <circle id="origin_point" cx="0" cy="0" r="0.03" fill="#fff" stroke="#000" stroke-width="0.01"
-              style="cursor: crosshair;" />
+          <div style="position: absolute; width: 300px; height: 300px; padding: auto auto; z-index: 1;">
+            <label class="coxeter-ring" style="background-color: #EEC010; left: 218px; top: 77px;">
+              <input type="radio" id="radio_struct_0001" name="radio_struct" value="0001" />
+            </label>
+            <label class="coxeter-ring" style="background-color: #0070FF; left: 164px; top: 197px;">
+              <input type="radio" id="radio_struct_0010" name="radio_struct" value="0010" />
+            </label>
+            <label class="coxeter-ring" style="left: 245px; top: 137px;">
+              <input type="radio" id="radio_struct_0011" name="radio_struct" value="0011" />
+            </label>
+            <label class="coxeter-ring" style="background-color: #03AD58; left: 110px; top: 197px;">
+              <input type="radio" id="radio_struct_0100" name="radio_struct" value="0100" />
+            </label>
+            <label class="coxeter-ring" style="left: 191px; top: 137px;">
+              <input type="radio" id="radio_struct_0101" name="radio_struct" value="0101" />
+            </label>
+            <label class="coxeter-ring" style="left: 137px; top: 257px;">
+              <input type="radio" id="radio_struct_0110" name="radio_struct" value="0110" checked />
+            </label>
+            <label class="coxeter-ring" style="background-color: silver; left: 218px; top: 197px;">
+              <input type="radio" id="radio_struct_0111" name="radio_struct" value="0111" />
+            </label>
+            <label class="coxeter-ring" style="background-color: #FF4B0A; left: 56px; top: 77px;">
+              <input type="radio" id="radio_struct_1000" name="radio_struct" value="1000" />
+            </label>
+            <label class="coxeter-ring" style="left: 137px; top: 17px;">
+              <input type="radio" id="radio_struct_1001" name="radio_struct" value="1001" />
+            </label>
+            <label class="coxeter-ring" style="left: 83px; top: 137px;">
+              <input type="radio" id="radio_struct_1010" name="radio_struct" value="1010" />
+            </label>
+            <label class="coxeter-ring" style="background-color: silver; left: 164px; top: 77px;">
+              <input type="radio" id="radio_struct_1011" name="radio_struct" value="1011" />
+            </label>
+            <label class="coxeter-ring" style="left: 29px; top: 137px;">
+              <input type="radio" id="radio_struct_1100" name="radio_struct" value="1100" />
+            </label>
+            <label class="coxeter-ring" style="background-color: silver; left: 110px; top: 77px;">
+              <input type="radio" id="radio_struct_1101" name="radio_struct" value="1101" />
+            </label>
+            <label class="coxeter-ring" style="background-color: silver; left: 56px; top: 197px;">
+              <input type="radio" id="radio_struct_1110" name="radio_struct" value="1110" />
+            </label>
+            <label class="coxeter-ring" style="background-color: black; left: 137px; top: 137px;">
+              <input type="radio" id="radio_struct_1111" name="radio_struct" value="1111" />
+            </label>
+          </div>
+          <svg width="300" height="300" viewBox="-150 -150 300 300"
+            style="position: relative; width: 300px; height: 300px;">
+            <line x1="0" y1="-120" x2="27" y2="-60" stroke="#0070FF" stroke-width="2" opacity="0.3" />
+            <line x1="-54" y1="0" x2="-81" y2="-60" stroke="#0070FF" stroke-width="2" opacity="0.3" />
+            <line x1="-54" y1="0" x2="27" y2="-60" stroke="#EEC010" stroke-width="2" opacity="0.3" />
+            <line x1="108" y1="0" x2="27" y2="-60" stroke="#FF4B0A" stroke-width="2" opacity="0.3" />
+            <line x1="-54" y1="0" x2="-81" y2="60" stroke="#03AD58" stroke-width="2" opacity="0.3" />
+            <line x1="-54" y1="0" x2="27" y2="60" stroke="#FF4B0A" stroke-width="2" opacity="0.3" />
+            <line x1="108" y1="0" x2="27" y2="60" stroke="#EEC010" stroke-width="2" opacity="0.3" />
+            <line x1="0" y1="120" x2="27" y2="60" stroke="#03AD58" stroke-width="2" opacity="0.3" />
+
+            <line x1="0" y1="0" x2="-27" y2="-60" stroke="#0070FF" stroke-width="2" stroke-dasharray="2 2"
+              opacity="0.5" />
+            <line x1="0" y1="0" x2="27" y2="-60" stroke="#03AD58" stroke-width="2" stroke-dasharray="2 2"
+              opacity="0.5" />
+            <line x1="0" y1="0" x2="-81" y2="60" stroke="#EEC010" stroke-width="2" stroke-dasharray="2 2"
+              opacity="0.5" />
+            <line x1="0" y1="0" x2="81" y2="60" stroke="#FF4B0A" stroke-width="2" stroke-dasharray="2 2"
+              opacity="0.5" />
+
+            <line x1="0" y1="-120" x2="-81" y2="-60" stroke="#EEC010" stroke-width="3" />
+            <line x1="0" y1="-120" x2="-27" y2="-60" stroke="#03AD58" stroke-width="3" />
+            <line x1="0" y1="-120" x2="81" y2="-60" stroke="#FF4B0A" stroke-width="3" />
+
+            <line x1="-108" y1="0" x2="-81" y2="-60" stroke="#03AD58" stroke-width="3" />
+            <line x1="-108" y1="0" x2="-27" y2="-60" stroke="#EEC010" stroke-width="3" />
+            <line x1="54" y1="0" x2="-27" y2="-60" stroke="#FF4B0A" stroke-width="3" />
+            <line x1="54" y1="0" x2="81" y2="-60" stroke="#03AD58" stroke-width="3" />
+            <line x1="108" y1="0" x2="81" y2="-60" stroke="#0070FF" stroke-width="3" />
+
+            <line x1="-108" y1="0" x2="-81" y2="60" stroke="#0070FF" stroke-width="3" />
+            <line x1="-108" y1="0" x2="-27" y2="60" stroke="#FF4B0A" stroke-width="3" />
+            <line x1="54" y1="0" x2="-27" y2="60" stroke="#EEC010" stroke-width="3" />
+            <line x1="54" y1="0" x2="81" y2="60" stroke="#0070FF" stroke-width="3" />
+            <line x1="108" y1="0" x2="81" y2="60" stroke="#03AD58" stroke-width="3" />
+
+            <line x1="0" y1="120" x2="-81" y2="60" stroke="#FF4B0A" stroke-width="3" />
+            <line x1="0" y1="120" x2="-27" y2="60" stroke="#0070FF" stroke-width="3" />
+            <line x1="0" y1="120" x2="81" y2="60" stroke="#EEC010" stroke-width="3" />
           </svg>
-          <canvas id="origin_back" width="600" height="600"
-            style="width: 300px; height: 300px; background-color: #35A16B;"></canvas>
         </div>
-        -->
         <div class="control-list">
           <label style="background-color: #FF4B0A; padding: 0px 5px;">
             <input type="checkbox" id="checkbox_color_0" name="checkbox_color_0" checked />
-          </label>
-          <label style="background-color: #FFD700; padding: 0px 5px;">
-            <input type="checkbox" id="checkbox_color_1" name="checkbox_color_1" checked />
           </label>
           <label style="background-color: #03AD58; padding: 0px 5px;">
             <input type="checkbox" id="checkbox_color_2" name="checkbox_color_2" checked />
@@ -67,11 +150,8 @@
           <label style="background-color: #0070FF; padding: 0px 5px;">
             <input type="checkbox" id="checkbox_color_3" name="checkbox_color_3" checked />
           </label>
-          <label style="background-color: #40E0FF; padding: 0px 5px;">
-            <input type="checkbox" id="checkbox_color_4" name="checkbox_color_4" checked />
-          </label>
-          <label style="background-color: #C316F0; padding: 0px 5px;">
-            <input type="checkbox" id="checkbox_color_5" name="checkbox_color_5" checked />
+          <label style="background-color: #FFD700; padding: 0px 5px;">
+            <input type="checkbox" id="checkbox_color_1" name="checkbox_color_1" checked />
           </label>
           <label>
             <input type="checkbox" id="checkbox_vertex" name="checkbox_vertex" />
@@ -104,8 +184,8 @@
           <input type="button" id="button_reset_rotation" value="回転リセット" data-ls-value-en="reset rotation" />
         </div>
         <p>
-            <span data-ls-en="left drag/one-finger swipe for 3D rotation">左ドラッグ/1本指スワイプで3次元的回転</span><br />
-            <span data-ls-en="right drag/two-finger swipe for 4D rotation">右ドラッグ/2本指スワイプで4次元的回転</span>
+          <span data-ls-en="left drag/one-finger swipe for 3D rotation">左ドラッグ/1本指スワイプで3次元的回転</span><br />
+          <span data-ls-en="right drag/two-finger swipe for 4D rotation">右ドラッグ/2本指スワイプで4次元的回転</span>
         </p>
       </div>
     </article>
