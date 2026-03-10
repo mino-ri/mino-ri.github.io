@@ -56,6 +56,7 @@ class PolychoronViewer {
     #fillType = "Fill";
     #vertexVisibility = false;
     #edgeVisibility = false;
+    #cellSize = 1.0;
     #canvas;
     #originController;
     constructor(canvas, gpuContext, originController) {
@@ -184,10 +185,14 @@ class PolychoronViewer {
         this.#fillType = fillType;
         this.#updateMesh();
     }
+    setCellSize(cellSize) {
+        this.#cellSize = cellSize;
+        this.#updateMesh();
+    }
     #updateMesh() {
         if (!this.#polychoron)
             return;
-        const mesh = buildPolytopeMesh(this.#polychoron, this.#faceVisibility, this.#visibilityType, this.#vertexVisibility, this.#edgeVisibility, false, false, this.#fillType);
+        const mesh = buildPolytopeMesh(this.#polychoron, this.#faceVisibility, this.#visibilityType, this.#vertexVisibility, this.#edgeVisibility, false, false, this.#fillType, this.#cellSize);
         this.#renderer.updateMesh(mesh);
     }
     #startRenderLoop() {
@@ -243,6 +248,7 @@ window.addEventListener("load", async () => {
     const checkColor3 = document.getElementById("checkbox_color_3");
     const checkVertex = document.getElementById("checkbox_vertex");
     const checkEdge = document.getElementById("checkbox_edge");
+    const rangeCellSize = document.getElementById("range_cell_size");
     const buttonResetRotation = document.getElementById("button_reset_rotation");
     const radioStruct0001 = document.getElementById("radio_struct_0001");
     const radioStruct0010 = document.getElementById("radio_struct_0010");
@@ -343,6 +349,10 @@ window.addEventListener("load", async () => {
         originController.setOriginPoint(0b1110); });
     radioStruct1111?.addEventListener("change", () => { if (radioStruct1111.checked)
         originController.setOriginPoint(0b1111); });
+    rangeCellSize?.addEventListener("input", () => {
+        console.log(Number(rangeCellSize.value));
+        viewer.setCellSize(Number(rangeCellSize.value));
+    });
     selectFillType?.addEventListener("change", () => {
         viewer.setFillType(selectFillType.value);
     });
