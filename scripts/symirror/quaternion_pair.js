@@ -83,6 +83,14 @@ export class QuaternionPairs {
         result.conjugate = true;
         return result;
     }
+    static mirrorNormal(q, resultTo) {
+        const result = resultTo ?? [0, 0, 0, 0];
+        result[0] = q.rx;
+        result[1] = q.ry;
+        result[2] = q.rz;
+        result[3] = q.rw;
+        return result;
+    }
     static rotationXZ(angle, resultTo) {
         const halfAngle = angle * 0.5;
         const s = Math.sin(halfAngle);

@@ -18,6 +18,17 @@ export class Vectors {
         resultTo[1] = c1;
         resultTo[2] = c2;
     }
+    static cross4(a, b, c, resultTo) {
+        const result = resultTo ?? [0, 0, 0, 0];
+        const a0 = a[0], a1 = a[1], a2 = a[2], a3 = a[3];
+        const b0 = b[0], b1 = b[1], b2 = b[2], b3 = b[3];
+        const c0 = c[0], c1 = c[1], c2 = c[2], c3 = c[3];
+        result[0] = a1 * (b2 * c3 - b3 * c2) - a2 * (b1 * c3 - b3 * c1) + a3 * (b1 * c2 - b2 * c1);
+        result[1] = -a0 * (b2 * c3 - b3 * c2) + a2 * (b0 * c3 - b3 * c0) - a3 * (b0 * c2 - b2 * c0);
+        result[2] = a0 * (b1 * c3 - b3 * c1) - a1 * (b0 * c3 - b3 * c0) + a3 * (b0 * c1 - b1 * c0);
+        result[3] = -a0 * (b1 * c2 - b2 * c1) + a1 * (b0 * c2 - b2 * c0) - a2 * (b0 * c1 - b1 * c0);
+        return result;
+    }
     static copy(from, to) {
         const length = Math.min(from.length, to.length);
         for (let i = 0; i < length; i++) {

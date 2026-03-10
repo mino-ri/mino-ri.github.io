@@ -241,12 +241,25 @@ window.addEventListener("load", async () => {
     const checkColor1 = document.getElementById("checkbox_color_1");
     const checkColor2 = document.getElementById("checkbox_color_2");
     const checkColor3 = document.getElementById("checkbox_color_3");
-    const checkColor4 = document.getElementById("checkbox_color_4");
-    const checkColor5 = document.getElementById("checkbox_color_5");
     const checkVertex = document.getElementById("checkbox_vertex");
     const checkEdge = document.getElementById("checkbox_edge");
     const buttonResetRotation = document.getElementById("button_reset_rotation");
-    if (!canvas || !select || !checkColor0 || !checkColor1 || !checkColor2 || !checkColor3 || !checkColor4 || !checkColor5) {
+    const radioStruct0001 = document.getElementById("radio_struct_0001");
+    const radioStruct0010 = document.getElementById("radio_struct_0010");
+    const radioStruct0011 = document.getElementById("radio_struct_0011");
+    const radioStruct0100 = document.getElementById("radio_struct_0100");
+    const radioStruct0101 = document.getElementById("radio_struct_0101");
+    const radioStruct0110 = document.getElementById("radio_struct_0110");
+    const radioStruct0111 = document.getElementById("radio_struct_0111");
+    const radioStruct1000 = document.getElementById("radio_struct_1000");
+    const radioStruct1001 = document.getElementById("radio_struct_1001");
+    const radioStruct1010 = document.getElementById("radio_struct_1010");
+    const radioStruct1011 = document.getElementById("radio_struct_1011");
+    const radioStruct1100 = document.getElementById("radio_struct_1100");
+    const radioStruct1101 = document.getElementById("radio_struct_1101");
+    const radioStruct1110 = document.getElementById("radio_struct_1110");
+    const radioStruct1111 = document.getElementById("radio_struct_1111");
+    if (!canvas || !select || !checkColor0 || !checkColor1 || !checkColor2 || !checkColor3) {
         console.error("Required elements not found");
         return;
     }
@@ -271,10 +284,12 @@ window.addEventListener("load", async () => {
         option.textContent = source.name;
         select.appendChild(option);
     }
-    viewer.setPolychoron(unitTetrahedrons[0].id, "full");
+    originController?.setPolychoron(viewer.setPolychoron(unitTetrahedrons[0].id, "full"));
     const rebuildPolychoron = () => {
-        viewer.setPolychoron(select.value, "full");
+        originController?.setPolychoron(viewer.setPolychoron(select.value, "full"));
         originController?.reset();
+        if (radioStruct0110)
+            radioStruct0110.checked = true;
     };
     select.addEventListener("change", rebuildPolychoron);
     checkEdge?.addEventListener("change", () => {
@@ -292,16 +307,42 @@ window.addEventListener("load", async () => {
             checkColor1.checked,
             checkColor2.checked,
             checkColor3.checked,
-            checkColor4.checked,
-            checkColor5.checked,
         ]);
     };
     checkColor0.addEventListener("change", colorCheckChangeHandler);
     checkColor1.addEventListener("change", colorCheckChangeHandler);
     checkColor2.addEventListener("change", colorCheckChangeHandler);
     checkColor3.addEventListener("change", colorCheckChangeHandler);
-    checkColor4.addEventListener("change", colorCheckChangeHandler);
-    checkColor5.addEventListener("change", colorCheckChangeHandler);
+    radioStruct0001?.addEventListener("change", () => { if (radioStruct0001.checked)
+        originController.setOriginPoint(0b0001); });
+    radioStruct0010?.addEventListener("change", () => { if (radioStruct0010.checked)
+        originController.setOriginPoint(0b0010); });
+    radioStruct0011?.addEventListener("change", () => { if (radioStruct0011.checked)
+        originController.setOriginPoint(0b0011); });
+    radioStruct0100?.addEventListener("change", () => { if (radioStruct0100.checked)
+        originController.setOriginPoint(0b0100); });
+    radioStruct0101?.addEventListener("change", () => { if (radioStruct0101.checked)
+        originController.setOriginPoint(0b0101); });
+    radioStruct0110?.addEventListener("change", () => { if (radioStruct0110.checked)
+        originController.setOriginPoint(0b0110); });
+    radioStruct0111?.addEventListener("change", () => { if (radioStruct0111.checked)
+        originController.setOriginPoint(0b0111); });
+    radioStruct1000?.addEventListener("change", () => { if (radioStruct1000.checked)
+        originController.setOriginPoint(0b1000); });
+    radioStruct1001?.addEventListener("change", () => { if (radioStruct1001.checked)
+        originController.setOriginPoint(0b1001); });
+    radioStruct1010?.addEventListener("change", () => { if (radioStruct1010.checked)
+        originController.setOriginPoint(0b1010); });
+    radioStruct1011?.addEventListener("change", () => { if (radioStruct1011.checked)
+        originController.setOriginPoint(0b1011); });
+    radioStruct1100?.addEventListener("change", () => { if (radioStruct1100.checked)
+        originController.setOriginPoint(0b1100); });
+    radioStruct1101?.addEventListener("change", () => { if (radioStruct1101.checked)
+        originController.setOriginPoint(0b1101); });
+    radioStruct1110?.addEventListener("change", () => { if (radioStruct1110.checked)
+        originController.setOriginPoint(0b1110); });
+    radioStruct1111?.addEventListener("change", () => { if (radioStruct1111.checked)
+        originController.setOriginPoint(0b1111); });
     selectFillType?.addEventListener("change", () => {
         viewer.setFillType(selectFillType.value);
     });
