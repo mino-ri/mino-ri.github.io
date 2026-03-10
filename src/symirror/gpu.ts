@@ -1,6 +1,11 @@
 /// <reference types="@webgpu/types" />
 import { Vector, Vectors } from "./vector.js"
 
+export class ClearColor {
+    static white = 0
+    static black = 1
+}
+
 export interface IPolytopeMesh {
     // インターリーブ頂点データ: [x, y, z, nx, ny, nz, r, g, b] × 頂点数
     vertexData: Float32Array
@@ -14,7 +19,7 @@ export interface IPolytopeMesh {
 
 export interface IPolytopeRenderer {
     updateMesh(mesh: IPolytopeMesh): void
-    render(modelMatrix: Float32Array): void
+    render(modelMatrix: Float32Array, clearColor: number): void
     destroy(): void
 }
 
@@ -464,6 +469,11 @@ class PolytopeRendererImpl implements IPolytopeRenderer {
     #context: GPUCanvasContext
     #format: GPUTextureFormat
 
+    static #clearColors: GPUColor[] = [
+        { r: 1.0, g: 1.0, b: 1.0, a: 1.0 },
+        { r: 0.0, g: 0.0, b: 0.0, a: 1.0 },
+    ]
+
     constructor(
         device: GPUDevice,
         context: GPUCanvasContext,
@@ -573,7 +583,7 @@ class PolytopeRendererImpl implements IPolytopeRenderer {
         this.#buffer.updateMesh(mesh)
     }
 
-    render(modelMatrix: Float32Array): void {
+    render(modelMatrix: Float32Array, clearColor: number): void {
         if (!this.#buffer.vertexBuffer) {
             return
         }
@@ -602,7 +612,7 @@ class PolytopeRendererImpl implements IPolytopeRenderer {
 
         const commandEncoder = this.#device.createCommandEncoder()
         this.#renderShadow(commandEncoder)
-        this.#renderNormal(commandEncoder)
+        this.#renderNormal(commandEncoder, clearColor)
         this.#device.queue.submit([commandEncoder.finish()])
     }
 
@@ -610,17 +620,18 @@ class PolytopeRendererImpl implements IPolytopeRenderer {
         this.#shadowSPipeline.render(commandEncoder, this.#shadowTexture.createView(), [], [])
     }
 
-    #renderNormal(commandEncoder: GPUCommandEncoder) {
+    #renderNormal(commandEncoder: GPUCommandEncoder, clearColor: number) {
+        const gpuColor = PolytopeRendererImpl.#clearColors[clearColor]!
         const textureView = this.#context.getCurrentTexture().createView()
         const stencilColorAttachments: GPURenderPassColorAttachment[] = [{
             view: textureView,
-            clearValue: { r: 1.0, g: 1.0, b: 1.0, a: 1.0 },
+            clearValue: gpuColor,
             loadOp: "clear",
             storeOp: "store",
         }]
         const colorAttachments: GPURenderPassColorAttachment[] = [{
             view: textureView,
-            clearValue: { r: 1.0, g: 1.0, b: 1.0, a: 1.0 },
+            clearValue: gpuColor,
             loadOp: this.#buffer.stencilVertexCounts.length === 0 ? "clear" : "load",
             storeOp: "store",
         }]
