@@ -29,18 +29,25 @@ const crosses = [
     { value: null, source: [0] },
     { value: null, source: [0] },
 ];
-function addTriangle(triangles, v0, v1, v2, r, g, b) {
-    triangles.push(...v0, r, g, b, ...v1, r, g, b, ...v2, r, g, b);
+function addTriangle(triangles, v0, v1, v2, r, g, b, center, size) {
+    if (center && size) {
+        triangles.push(...Vectors.lerp(center, v0, size, tv), r, g, b, ...Vectors.lerp(center, v1, size, tv), r, g, b, ...Vectors.lerp(center, v2, size, tv), r, g, b);
+    }
+    else {
+        triangles.push(...v0, r, g, b, ...v1, r, g, b, ...v2, r, g, b);
+    }
 }
 let dimension = 3;
 const cv = [0];
 const nv = [0];
 const mv = [0];
+const tv = [0];
 export function setDimension(d) {
     dimension = d;
     cv.length = d;
     nv.length = d;
     mv.length = d;
+    tv.length = d;
     for (const cross of crosses) {
         cross.source.length = d;
     }
@@ -48,10 +55,10 @@ export function setDimension(d) {
 function getColorIndex(unit, colorByConnected) {
     return (colorByConnected ? unit.connectedIndex : unit.colorIndex) % (faceColors.length);
 }
-function addPolygon(triangles, vertexes, indexes, colorIndex, evenOdd) {
+function addPolygon(triangles, vertexes, indexes, colorIndex, evenOdd, center, size) {
     const [r, g, b] = faceColors[colorIndex];
     if (indexes.length === 3) {
-        addTriangle(triangles, vertexes[indexes[0]], vertexes[indexes[1]], vertexes[indexes[2]], r, g, b);
+        addTriangle(triangles, vertexes[indexes[0]], vertexes[indexes[1]], vertexes[indexes[2]], r, g, b, center, size);
         return;
     }
     else if (indexes.length === 4) {
@@ -60,16 +67,16 @@ function addPolygon(triangles, vertexes, indexes, colorIndex, evenOdd) {
         const v2 = vertexes[indexes[2]];
         const v3 = vertexes[indexes[3]];
         if (Vectors.getCrossPoint(v0, v1, v2, v3, cv)) {
-            addTriangle(triangles, v1, v2, cv, r, g, b);
-            addTriangle(triangles, v3, v0, cv, r, g, b);
+            addTriangle(triangles, v1, v2, cv, r, g, b, center, size);
+            addTriangle(triangles, v3, v0, cv, r, g, b, center, size);
         }
         else if (Vectors.getCrossPoint(v1, v2, v3, v0, cv)) {
-            addTriangle(triangles, v0, v1, cv, r, g, b);
-            addTriangle(triangles, v2, v3, cv, r, g, b);
+            addTriangle(triangles, v0, v1, cv, r, g, b, center, size);
+            addTriangle(triangles, v2, v3, cv, r, g, b, center, size);
         }
         else if (Vectors.getCrossPoint(v0, v2, v1, v3, cv)) {
-            addTriangle(triangles, v0, v1, v2, r, g, b);
-            addTriangle(triangles, v2, v3, v0, r, g, b);
+            addTriangle(triangles, v0, v1, v2, r, g, b, center, size);
+            addTriangle(triangles, v2, v3, v0, r, g, b, center, size);
         }
         else {
             cv.fill(0);
@@ -78,10 +85,10 @@ function addPolygon(triangles, vertexes, indexes, colorIndex, evenOdd) {
                 Vectors.add(cv, v, cv);
             }
             Vectors.div(cv, indexes.length, cv);
-            addTriangle(triangles, v0, v1, cv, r, g, b);
-            addTriangle(triangles, v1, v2, cv, r, g, b);
-            addTriangle(triangles, v2, v3, cv, r, g, b);
-            addTriangle(triangles, v3, v0, cv, r, g, b);
+            addTriangle(triangles, v0, v1, cv, r, g, b, center, size);
+            addTriangle(triangles, v1, v2, cv, r, g, b, center, size);
+            addTriangle(triangles, v2, v3, cv, r, g, b, center, size);
+            addTriangle(triangles, v3, v0, cv, r, g, b, center, size);
         }
         return;
     }
@@ -96,13 +103,13 @@ function addPolygon(triangles, vertexes, indexes, colorIndex, evenOdd) {
         }
         if (hasCross) {
             for (let i = 0; i < indexes.length; i++) {
-                addTriangle(triangles, vertexes[indexes[i]], crosses[(i + 4) % indexes.length].value ?? vertexes[indexes[(i + 4) % indexes.length]], crosses[(i + 1) % indexes.length].value ?? vertexes[indexes[(i + 1) % indexes.length]], r, g, b);
+                addTriangle(triangles, vertexes[indexes[i]], crosses[(i + 4) % indexes.length].value ?? vertexes[indexes[(i + 4) % indexes.length]], crosses[(i + 1) % indexes.length].value ?? vertexes[indexes[(i + 1) % indexes.length]], r, g, b, center, size);
             }
         }
         else {
-            addTriangle(triangles, vertexes[indexes[0]], vertexes[indexes[1]], vertexes[indexes[2]], r, g, b);
-            addTriangle(triangles, vertexes[indexes[0]], vertexes[indexes[2]], vertexes[indexes[3]], r, g, b);
-            addTriangle(triangles, vertexes[indexes[0]], vertexes[indexes[3]], vertexes[indexes[4]], r, g, b);
+            addTriangle(triangles, vertexes[indexes[0]], vertexes[indexes[1]], vertexes[indexes[2]], r, g, b, center, size);
+            addTriangle(triangles, vertexes[indexes[0]], vertexes[indexes[2]], vertexes[indexes[3]], r, g, b, center, size);
+            addTriangle(triangles, vertexes[indexes[0]], vertexes[indexes[3]], vertexes[indexes[4]], r, g, b, center, size);
         }
         return;
     }
@@ -132,7 +139,7 @@ function addPolygon(triangles, vertexes, indexes, colorIndex, evenOdd) {
         const v0 = crosses[i].value ?? cv;
         const v1 = crosses[beforeIndex].value ?? vertexes[indexes[i]];
         const v2 = crosses[afterIndex].value ?? vertexes[indexes[afterIndex]];
-        addTriangle(triangles, v0, v1, v2, r, g, b);
+        addTriangle(triangles, v0, v1, v2, r, g, b, center, size);
     }
 }
 function hasSelfIntersection(vertexes, vertexIndexes) {
@@ -195,11 +202,12 @@ function isSamePlain(currentPlain, targetPlain, isNearlyZero) {
 const maxNormalError = 1.0 / 1024.0;
 const maxError = 1.0 / 128.0;
 const holosnubMinIndex = 30;
-export function buildPolytopeMesh(polytope, faceVisibility, visibilityType, vertexVisibility, edgeVisibility, colorByConnected, holosnub, fillType) {
+export function buildPolytopeMesh(polytope, faceVisibility, visibilityType, vertexVisibility, edgeVisibility, colorByConnected, holosnub, fillType, size) {
     const triangles = [];
     const verfView = visibilityType === "VertexFigure";
     const eachForOne = visibilityType === "OneForEach";
     const refPointIndexes = [];
+    const unitSize = size ?? 1;
     if (verfView) {
         polytope.vertexes.forEach((vertex, i) => {
             if (Vectors.distanceSquared(vertex, polytope.vertexes[0]) < 0.005) {
@@ -313,10 +321,29 @@ export function buildPolytopeMesh(polytope, faceVisibility, visibilityType, vert
         }
     }
     else {
+        const unitCenter = [0, 0, 0, 0];
+        const unitVertexMap = new Set();
         for (const i of drawIndexes) {
             const unit = polytope.units[i];
-            for (const face of unit.faceIndexes) {
-                addPolygon(triangles, polytope.vertexes, face, getColorIndex(unit, colorByConnected), false);
+            if (unitSize < 1) {
+                unitVertexMap.clear();
+                for (const face of unit.faceIndexes) {
+                    for (const vert of face) {
+                        unitVertexMap.add(vert);
+                    }
+                }
+                for (const index of unitVertexMap) {
+                    Vectors.add(unitCenter, polytope.vertexes[index], unitCenter);
+                }
+                Vectors.div(unitCenter, unitVertexMap.size, unitCenter);
+                for (const face of unit.faceIndexes) {
+                    addPolygon(triangles, polytope.vertexes, face, getColorIndex(unit, colorByConnected), false, unitCenter, unitSize);
+                }
+            }
+            else {
+                for (const face of unit.faceIndexes) {
+                    addPolygon(triangles, polytope.vertexes, face, getColorIndex(unit, colorByConnected), false);
+                }
             }
         }
     }
