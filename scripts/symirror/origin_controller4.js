@@ -7,11 +7,33 @@ export class OriginController {
         [0, 0, 0, 1], [0, 0, 0, 1], [0, 0, 0, 1], [0, 0, 0, 1],
         [0, 0, 0, 1], [0, 0, 0, 1], [0, 0, 0, 1], [0, 0, 0, 1],
     ];
+    #currentPoint = [0, 0, 0, 1];
+    #targetPoint = null;
     #onOriginChange;
     constructor(onOriginChange) {
         this.#onOriginChange = onOriginChange;
     }
-    applyAutoOriginMovement(_) { }
+    applyAutoOriginMovement(deltaTime) {
+        if (!this.#targetPoint)
+            return;
+        const anglePerSec = Math.PI * 0.25;
+        const deltaAngle = anglePerSec * deltaTime;
+        const deltaCos = Math.cos(deltaAngle);
+        const cos = Vectors.dot(this.#targetPoint, this.#currentPoint);
+        if (deltaCos <= cos) {
+            Vectors.copy(this.#targetPoint, this.#currentPoint);
+            this.#onOriginChange(this.#currentPoint);
+            this.#targetPoint = null;
+            return;
+        }
+        const deltaSin = Math.sin(deltaAngle);
+        const subSin = Math.sin(Math.acos(cos) - deltaAngle);
+        for (let i = 0; i < 4; i++) {
+            this.#currentPoint[i] = this.#currentPoint[i] * subSin + this.#targetPoint[i] * deltaSin;
+        }
+        Vectors.normalizeSelf(this.#currentPoint);
+        this.#onOriginChange(this.#currentPoint);
+    }
     setPolychoron(polychoron) {
         const mirror1 = QuaternionPairs.mirrorNormal(polychoron.symmetryGroup.transforms[1]);
         const mirror2 = QuaternionPairs.mirrorNormal(polychoron.symmetryGroup.transforms[2]);
@@ -52,9 +74,14 @@ export class OriginController {
         }
     }
     setOriginPoint(index) {
-        this.#onOriginChange(this.#specialPoints[index]);
+        this.#targetPoint = this.#specialPoints[index];
     }
     reset() {
-        this.#onOriginChange([0, 0, 0, 1]);
+        this.#currentPoint[0] = 0;
+        this.#currentPoint[1] = 0;
+        this.#currentPoint[2] = 0;
+        this.#currentPoint[3] = 1;
+        this.#targetPoint = null;
+        this.#onOriginChange(this.#currentPoint);
     }
 }
