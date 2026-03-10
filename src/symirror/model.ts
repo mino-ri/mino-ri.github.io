@@ -42,22 +42,33 @@ function addTriangle(
     r: number,
     g: number,
     b: number,
+    center?: Vector,
+    size?: number,
 ) {
-    // 三角形: v0, v1, v2
-    // 頂点データ追加: position, color
-    triangles.push(...v0, r, g, b, ...v1, r, g, b, ...v2, r, g, b)
+    if (center && size) {
+        triangles.push(
+            ...Vectors.lerp(center, v0, size, tv), r, g, b,
+            ...Vectors.lerp(center, v1, size, tv), r, g, b,
+            ...Vectors.lerp(center, v2, size, tv), r, g, b)
+    } else {
+        // 三角形: v0, v1, v2
+        // 頂点データ追加: position, color
+        triangles.push(...v0, r, g, b, ...v1, r, g, b, ...v2, r, g, b)
+    }
 }
 
 let dimension = 3
 const cv = [0]
 const nv = [0]
 const mv = [0]
+const tv = [0]
 
 export function setDimension(d: number) {
     dimension = d
     cv.length = d
     nv.length = d
     mv.length = d
+    tv.length = d
     for (const cross of crosses) {
         cross.source.length = d
     }
@@ -73,10 +84,12 @@ function addPolygon(
     indexes: number[],
     colorIndex: number,
     evenOdd: boolean,
+    center?: Vector,
+    size?: number,
 ) {
     const [r, g, b] = faceColors[colorIndex]!
     if (indexes.length === 3) {
-        addTriangle(triangles, vertexes[indexes[0]!]!, vertexes[indexes[1]!]!, vertexes[indexes[2]!]!, r, g, b)
+        addTriangle(triangles, vertexes[indexes[0]!]!, vertexes[indexes[1]!]!, vertexes[indexes[2]!]!, r, g, b, center, size)
         return
     } else if (indexes.length === 4) {
         const v0 = vertexes[indexes[0]!]!
@@ -84,14 +97,14 @@ function addPolygon(
         const v2 = vertexes[indexes[2]!]!
         const v3 = vertexes[indexes[3]!]!
         if (Vectors.getCrossPoint(v0, v1, v2, v3, cv)) {
-            addTriangle(triangles, v1, v2, cv, r, g, b)
-            addTriangle(triangles, v3, v0, cv, r, g, b)
+            addTriangle(triangles, v1, v2, cv, r, g, b, center, size)
+            addTriangle(triangles, v3, v0, cv, r, g, b, center, size)
         } else if (Vectors.getCrossPoint(v1, v2, v3, v0, cv)) {
-            addTriangle(triangles, v0, v1, cv, r, g, b)
-            addTriangle(triangles, v2, v3, cv, r, g, b)
+            addTriangle(triangles, v0, v1, cv, r, g, b, center, size)
+            addTriangle(triangles, v2, v3, cv, r, g, b, center, size)
         } else if (Vectors.getCrossPoint(v0, v2, v1, v3, cv)) {
-            addTriangle(triangles, v0, v1, v2, r, g, b)
-            addTriangle(triangles, v2, v3, v0, r, g, b)
+            addTriangle(triangles, v0, v1, v2, r, g, b, center, size)
+            addTriangle(triangles, v2, v3, v0, r, g, b, center, size)
         } else {
             cv.fill(0)
             // 多角形の重心を計算
@@ -100,10 +113,10 @@ function addPolygon(
                 Vectors.add(cv, v, cv)
             }
             Vectors.div(cv, indexes.length, cv)
-            addTriangle(triangles, v0, v1, cv, r, g, b)
-            addTriangle(triangles, v1, v2, cv, r, g, b)
-            addTriangle(triangles, v2, v3, cv, r, g, b)
-            addTriangle(triangles, v3, v0, cv, r, g, b)
+            addTriangle(triangles, v0, v1, cv, r, g, b, center, size)
+            addTriangle(triangles, v1, v2, cv, r, g, b, center, size)
+            addTriangle(triangles, v2, v3, cv, r, g, b, center, size)
+            addTriangle(triangles, v3, v0, cv, r, g, b, center, size)
         }
         return
     } else if (evenOdd && indexes.length === 5) {
@@ -128,12 +141,12 @@ function addPolygon(
                     vertexes[indexes[i]!]!,
                     crosses[(i + 4) % indexes.length]!.value ?? vertexes[indexes[(i + 4) % indexes.length]!]!,
                     crosses[(i + 1) % indexes.length]!.value ?? vertexes[indexes[(i + 1) % indexes.length]!]!,
-                    r, g, b)
+                    r, g, b, center, size)
             }
         } else {
-            addTriangle(triangles, vertexes[indexes[0]!]!, vertexes[indexes[1]!]!, vertexes[indexes[2]!]!, r, g, b)
-            addTriangle(triangles, vertexes[indexes[0]!]!, vertexes[indexes[2]!]!, vertexes[indexes[3]!]!, r, g, b)
-            addTriangle(triangles, vertexes[indexes[0]!]!, vertexes[indexes[3]!]!, vertexes[indexes[4]!]!, r, g, b)
+            addTriangle(triangles, vertexes[indexes[0]!]!, vertexes[indexes[1]!]!, vertexes[indexes[2]!]!, r, g, b, center, size)
+            addTriangle(triangles, vertexes[indexes[0]!]!, vertexes[indexes[2]!]!, vertexes[indexes[3]!]!, r, g, b, center, size)
+            addTriangle(triangles, vertexes[indexes[0]!]!, vertexes[indexes[3]!]!, vertexes[indexes[4]!]!, r, g, b, center, size)
         }
         return
     }
@@ -177,7 +190,7 @@ function addPolygon(
         const v0 = crosses[i]!.value ?? cv
         const v1 = crosses[beforeIndex]!.value ?? vertexes[indexes[i]!]!
         const v2 = crosses[afterIndex]!.value ?? vertexes[indexes[afterIndex]!]!
-        addTriangle(triangles, v0, v1, v2, r, g, b)
+        addTriangle(triangles, v0, v1, v2, r, g, b, center, size)
     }
 }
 
@@ -283,11 +296,13 @@ export function buildPolytopeMesh(
     colorByConnected: boolean,
     holosnub: boolean,
     fillType: FillType,
+    size?: number,
 ): IPolytopeMesh {
     const triangles: number[] = []
     const verfView = visibilityType === "VertexFigure"
     const eachForOne = visibilityType === "OneForEach"
     const refPointIndexes: number[] = []
+    const unitSize = size ?? 1
     if (verfView) {
         polytope.vertexes.forEach((vertex, i) => {
             if (Vectors.distanceSquared(vertex, polytope.vertexes[0]!) < 0.005) {
@@ -411,11 +426,32 @@ export function buildPolytopeMesh(
             }
         }
     } else {
+        const unitCenter = [0, 0, 0, 0]
+        const unitVertexMap = new Set<number>()
         // 塗りつぶし
         for (const i of drawIndexes) {
             const unit = polytope.units[i]!
-            for (const face of unit.faceIndexes) {
-                addPolygon(triangles, polytope.vertexes, face, getColorIndex(unit, colorByConnected), false)
+            if (unitSize < 1) {
+                unitVertexMap.clear()
+                for (const face of unit.faceIndexes) {
+                    for (const vert of face) {
+                        unitVertexMap.add(vert)
+                    }
+                }
+
+                for (const index of unitVertexMap) {
+                    Vectors.add(unitCenter, polytope.vertexes[index]!, unitCenter)
+                }
+                // ユニットの重心
+                Vectors.div(unitCenter, unitVertexMap.size, unitCenter)
+
+                for (const face of unit.faceIndexes) {
+                    addPolygon(triangles, polytope.vertexes, face, getColorIndex(unit, colorByConnected), false, unitCenter, unitSize)
+                }
+            } else {
+                for (const face of unit.faceIndexes) {
+                    addPolygon(triangles, polytope.vertexes, face, getColorIndex(unit, colorByConnected), false)
+                }
             }
         }
     }

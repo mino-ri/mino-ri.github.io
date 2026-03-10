@@ -81,6 +81,7 @@ class PolychoronViewer {
     #fillType: FillType = "Fill"
     #vertexVisibility = false
     #edgeVisibility = false
+    #cellSize = 1.0
     #canvas: HTMLCanvasElement
     #originController: OriginController
 
@@ -237,9 +238,14 @@ class PolychoronViewer {
         this.#updateMesh()
     }
 
+    setCellSize(cellSize: number): void {
+        this.#cellSize = cellSize
+        this.#updateMesh()
+    }
+
     #updateMesh(): void {
         if (!this.#polychoron) return
-        const mesh = buildPolytopeMesh(this.#polychoron, this.#faceVisibility, this.#visibilityType, this.#vertexVisibility, this.#edgeVisibility, false, false, this.#fillType)
+        const mesh = buildPolytopeMesh(this.#polychoron, this.#faceVisibility, this.#visibilityType, this.#vertexVisibility, this.#edgeVisibility, false, false, this.#fillType, this.#cellSize)
         this.#renderer.updateMesh(mesh)
     }
 
@@ -302,6 +308,7 @@ window.addEventListener("load", async () => {
     const checkColor3 = document.getElementById("checkbox_color_3") as HTMLInputElement | null
     const checkVertex = document.getElementById("checkbox_vertex") as HTMLInputElement | null
     const checkEdge = document.getElementById("checkbox_edge") as HTMLInputElement | null
+    const rangeCellSize = document.getElementById("range_cell_size") as HTMLInputElement | null
     const buttonResetRotation = document.getElementById("button_reset_rotation") as HTMLInputElement | null
 
     const radioStruct0001 = document.getElementById("radio_struct_0001") as HTMLInputElement | null
@@ -403,6 +410,11 @@ window.addEventListener("load", async () => {
     radioStruct1101?.addEventListener("change", () => { if (radioStruct1101.checked) originController.setOriginPoint(0b1101) })
     radioStruct1110?.addEventListener("change", () => { if (radioStruct1110.checked) originController.setOriginPoint(0b1110) })
     radioStruct1111?.addEventListener("change", () => { if (radioStruct1111.checked) originController.setOriginPoint(0b1111) })
+
+    rangeCellSize?.addEventListener("input", () => {
+        console.log(Number(rangeCellSize.value))
+        viewer.setCellSize(Number(rangeCellSize.value))
+    })
 
     selectFillType?.addEventListener("change", () => {
         viewer.setFillType(selectFillType.value as FillType)
