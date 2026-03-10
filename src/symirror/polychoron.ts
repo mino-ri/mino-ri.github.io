@@ -213,9 +213,9 @@ export const cellSelectorFunctions = function (): Map<string, CellSelectorFuncti
             return {
                 cellDefinition: [
                     [[a, b], [b, c], [c, a]],
+                    [[b, c], [c, d], [d, b]],
                     [[d, a], [a, b], [b, d]],
                     [[c, d], [d, a], [a, c]],
-                    [[b, c], [c, d], [d, b]],
                 ]
             }
         }]

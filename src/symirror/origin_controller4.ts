@@ -45,12 +45,12 @@ export class OriginController {
         Vectors.cross4(mirror1, mirror2, mirror3, this.#specialPoints[0b1000])
 
         // Edge
-        Vectors.cross4(mirror3, mirror4, inter12, this.#specialPoints[0b1100])
-        Vectors.cross4(mirror2, mirror4, inter13, this.#specialPoints[0b1010])
-        Vectors.cross4(mirror2, mirror3, inter14, this.#specialPoints[0b1001])
+        Vectors.cross4(mirror1, mirror2, inter34, this.#specialPoints[0b1100])
+        Vectors.cross4(mirror1, mirror3, inter24, this.#specialPoints[0b1010])
         Vectors.cross4(mirror1, mirror4, inter23, this.#specialPoints[0b0110])
-        Vectors.cross4(mirror1, mirror3, inter24, this.#specialPoints[0b0101])
-        Vectors.cross4(mirror1, mirror2, inter34, this.#specialPoints[0b0011])
+        Vectors.cross4(mirror2, mirror3, inter14, this.#specialPoints[0b1001])
+        Vectors.cross4(mirror2, mirror4, inter13, this.#specialPoints[0b0101])
+        Vectors.cross4(mirror3, mirror4, inter12, this.#specialPoints[0b0011])
 
         // Face
         Vectors.cross4(mirror1, inter23, inter34, this.#specialPoints[0b1110])
