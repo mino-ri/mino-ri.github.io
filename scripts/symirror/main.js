@@ -1,5 +1,5 @@
 import { NormalPolyhedron, unitTriangles, faceSelectorMap } from "./polyhedron.js";
-import { initGpu } from "./gpu.js";
+import { ClearColor, initGpu } from "./gpu.js";
 import { buildPolytopeMesh, setDimension } from "./model.js";
 import { setCenter } from "../svg_generator.js";
 import { OriginController } from "./origin_controller3.js";
@@ -162,7 +162,7 @@ class PolyhedronViewer {
                 this.#rotation.applyAutoRotate(deltaTime);
             }
             this.#originController.applyAutoOriginMovement(deltaTime);
-            this.#renderer.render(this.#rotation.getMatrix());
+            this.#renderer.render(this.#rotation.getMatrix(), ClearColor.white);
             this.#animationFrameId = requestAnimationFrame(render);
         };
         this.#animationFrameId = requestAnimationFrame(render);
