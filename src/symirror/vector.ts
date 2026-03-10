@@ -99,6 +99,15 @@ export class Vectors {
         }
     }
 
+    static lerp(v1: Vector, v2: Vector, amount: number, resultTo?: Vector): Vector {
+        const result = resultTo ?? new Array<number>(v1.length)
+        const remaining = 1 - amount
+        for (let i = 0; i < v1.length; i++) {
+            result[i] = v1[i]! * remaining + v2[i]! * amount
+        }
+        return result
+    }
+
     static negateSelf(v: Vector) {
         for (let i = 0; i < v.length; i++) {
             v[i]! = -v[i]!
