@@ -467,6 +467,7 @@ export class OriginController {
     }
 
     reset(): void {
+        this.#targetPoint = null
         this.#updateOrigin(0, 0)
     }
 }
