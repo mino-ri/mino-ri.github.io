@@ -3,6 +3,10 @@ import { ShaderSource } from "./gpu"
 // シェーダー実装
 const shaderCode = /* wgsl */`struct Uniforms {
     modelMatrix: mat4x4<f32>,
+    wLighting: f32,
+    dummy0: f32,
+    dummy1: f32,
+    dummy2: f32,
     viewProjectionMatrix: mat4x4<f32>,
     lightProjection: mat4x4<f32>,
 }
@@ -58,7 +62,8 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
     let worldPos = uniforms.modelMatrix * input.position;
     output.worldPos = vec4<f32>(worldPos.xyz * perspective4D(worldPos.w), 1.0);
     output.position = uniforms.viewProjectionMatrix * output.worldPos;
-    output.color = input.color;
+    let colorFactor = -sin(worldPos.w) * uniforms.wLighting;
+    output.color = input.color + vec3<f32>(colorFactor, colorFactor, colorFactor);
     return output;
 }
 
@@ -70,7 +75,8 @@ fn vertexBallMain(input: InstanceVertexInput, ballInput: BallInput) -> InstanceV
     output.worldPos = vec4<f32>((worldPos.xyz + input.position) * scale, 1.0);
     output.position = uniforms.viewProjectionMatrix * output.worldPos;
     output.worldNormal = input.normal;
-    output.color = input.color;
+    let colorFactor = -sin(worldPos.w) * uniforms.wLighting;
+    output.color = input.color + vec3<f32>(colorFactor, colorFactor, colorFactor);
     return output;
 }
 
@@ -93,7 +99,8 @@ fn vertexLineMain(input: InstanceVertexInput, lineInput: LineInput) -> InstanceV
     output.worldPos = worldPos;
     output.position = uniforms.viewProjectionMatrix * worldPos;
     output.worldNormal = vec4<f32>(input.normal.x * xDir + input.normal.y * yDir, 0.0).xyz;
-    output.color = input.color;
+    let colorFactor = -sin(lerp(worldPositionA.w, worldPositionB.w, input.position.z)) * uniforms.wLighting;
+    output.color = input.color + vec3<f32>(colorFactor, colorFactor, colorFactor);
     return output;
 }
 
@@ -208,7 +215,7 @@ const lineInstanceBufferLayout: GPUVertexBufferLayout = {
 
 export const shaderSource: ShaderSource = {
     shaderCode,
-    dynamicBufferByteSize: 64,
+    dynamicBufferByteSize: 20 * 4,
     constantBufferValue,
     vertexBufferLayout,
     ballInstanceBufferLayout,

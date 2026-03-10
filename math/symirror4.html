@@ -48,8 +48,11 @@
       </div>
       <div class="editor-control" style="max-width: 328px;">
         <div class="control-list">
-          <select id="select_coxeter_group" name="select_coxeter_group">
-          </select>
+          <label>
+            <span data-ls-en="generator:">ジェネレーター:</span>
+            <select id="select_coxeter_group" name="select_coxeter_group">
+            </select>
+          </label>
         </div>
         <div>
           <div style="position: absolute; width: 300px; height: 300px; padding: auto auto; z-index: 1;">
@@ -161,7 +164,7 @@
             <input type="checkbox" id="checkbox_edge" name="checkbox_edge" />
             <span data-ls-en="edge">辺</span>
           </label>
-          <select id="select_fill_type" name="select_fill_type">
+          <select id="select_fill_type" name="select_fill_type" style="display: none;">
             <option value="Fill" data-ls-en="fill">塗りつぶし</option>
             <!--<option value="EvenOdd" data-ls-en="even-odd">偶奇塗り</option>
             <option value="GlobalEvenOdd" data-ls-en="global even-odd">包括的偶奇塗り</option>-->
@@ -188,12 +191,38 @@
             <span data-ls-en="cell size:">胞のサイズ:</span>
             <input id="range_cell_size" name="range_cell_size" type="range" min="0.05" max="1" step="0.01" value="1" />
           </label>
+          <label>
+            <span data-ls-en="gradation by W:">W成分によるグラデーション:</span>
+            <input id="range_w_gradiation" name="range_w_gradiation" type="range" min="0" max="1" step="0.01"
+              value="0" />
+          </label>
+          <label>
+            <span data-ls-en="background:">背景色:</span>
+            <select id="select_background_color" name="select_background_color">
+              <option value="0" data-ls-en="white">白</option>
+              <option value="1" data-ls-en="black">黒</option>
+            </select>
+          </label>
         </div>
         <p>
           <span data-ls-en="left drag/one-finger swipe for 3D rotation">左ドラッグ/1本指スワイプで3次元的回転</span><br />
           <span data-ls-en="right drag/two-finger swipe for 4D rotation">右ドラッグ/2本指スワイプで4次元的回転</span>
         </p>
       </div>
+    </article>
+    <article>
+      <h3 data-ls-en="Hints">ヒント</h3>
+      <h5 data-ls-en="Generator">ジェネレーター</h4>
+      <p>
+        <span data-ls-en="The 'Generator' represents the numbers that label the edges of the Coxeter-Dynkin diagram.">「ジェネレーター」は、コクセター・ディンキン図形の辺にラベル付けする数を表します。</span><br />
+        <span data-ls-en="When you select a vertex in the figure below, the corresponding 4-dimensional figure is displayed.">その下の図形の頂点を選択すると、それに対応する4次元図形が表示されます。</span>
+      </p>
+      <h5 data-ls-en="Understanding 4D Depth">4次元的な奥行きの把握</h5>
+      <p>
+        <span data-ls-en="Objects that are 'behind' in 4D are displayed shrinking toward the center in 3D.">4次元的に「奥」にあるものは、3次元の中央に向かって縮んで表示されます。</span>
+        <span data-ls-en="By sliding 'Gradation by W' to the right, you can display objects that are 4-dimensionally behind darker.">「W成分によるグラデーション」を右にスライドすることで、4次元的に奥にあるものを暗く表示することができます。</span>
+        <span data-ls-en="Furthermore, darkening the background makes distant objects harder to see, making it easier to intuitively understand perspective.">さらに背景を暗くすると奥にあるものが見えにくくなるため、遠近感を直感的に把握しやすくなります。</span>
+      </p>
     </article>
   </section>
   <footer>

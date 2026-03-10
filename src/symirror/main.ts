@@ -1,5 +1,5 @@
 import { NormalPolyhedron, unitTriangles, faceSelectorMap } from "./polyhedron.js"
-import { initGpu, IPolytopeRenderer, type GpuContext } from "./gpu.js"
+import { ClearColor, initGpu, IPolytopeRenderer, type GpuContext } from "./gpu.js"
 import { buildPolytopeMesh, setDimension, type VisibilityType, FillType } from "./model.js"
 import { type Vector } from "./vector.js"
 import { setCenter } from "../svg_generator.js"
@@ -207,7 +207,7 @@ class PolyhedronViewer {
             }
 
             this.#originController.applyAutoOriginMovement(deltaTime)
-            this.#renderer.render(this.#rotation.getMatrix())
+            this.#renderer.render(this.#rotation.getMatrix(), ClearColor.white)
             this.#animationFrameId = requestAnimationFrame(render)
         }
         this.#animationFrameId = requestAnimationFrame(render)

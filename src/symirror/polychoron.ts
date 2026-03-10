@@ -204,6 +204,13 @@ export const unitTetrahedrons = function (): PolychoronSource[] {
         { id: "b00", name: "3 3 4", unit: new SymmetryGroup4(new FiniteCoxeterGroup(CoxeterMatrix.create4D(3, 3, 4))).getDefaultGenerators() },
         { id: "f00", name: "3 4 3", unit: new SymmetryGroup4(new FiniteCoxeterGroup(CoxeterMatrix.create4D(3, 4, 3))).getDefaultGenerators() },
         { id: "h00", name: "3 3 5", unit: new SymmetryGroup4(new FiniteCoxeterGroup(CoxeterMatrix.create4D(3, 3, 5))).getDefaultGenerators() },
+        { id: "ta0", name: "2 3 3", unit: new SymmetryGroup4(new FiniteCoxeterGroup(CoxeterMatrix.create4D(2, 3, 3))).getDefaultGenerators() },
+        { id: "tb0", name: "2 3 4", unit: new SymmetryGroup4(new FiniteCoxeterGroup(CoxeterMatrix.create4D(2, 3, 4))).getDefaultGenerators() },
+        { id: "th0", name: "2 3 5", unit: new SymmetryGroup4(new FiniteCoxeterGroup(CoxeterMatrix.create4D(2, 3, 5))).getDefaultGenerators() },
+        { id: "3x3", name: "3 2 3", unit: new SymmetryGroup4(new FiniteCoxeterGroup(CoxeterMatrix.create4D(3, 2, 3))).getDefaultGenerators() },
+        { id: "4x4", name: "4 2 4", unit: new SymmetryGroup4(new FiniteCoxeterGroup(CoxeterMatrix.create4D(4, 2, 4))).getDefaultGenerators() },
+        { id: "5x5", name: "5 2 5", unit: new SymmetryGroup4(new FiniteCoxeterGroup(CoxeterMatrix.create4D(5, 2, 5))).getDefaultGenerators() },
+        { id: "6x6", name: "6 2 6", unit: new SymmetryGroup4(new FiniteCoxeterGroup(CoxeterMatrix.create4D(6, 2, 6))).getDefaultGenerators() },
     ]
 }()
 

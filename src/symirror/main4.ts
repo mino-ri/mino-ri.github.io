@@ -13,7 +13,8 @@ class RotationState {
     #temp = QuaternionPairs.getDefault()
     // 現在のクォータニオン (w, x, y, z)
     #q = QuaternionPairs.getDefault()
-    #matrix: Float32Array = new Float32Array(16)
+    // 動的バッファ (モデル行列 + 最後1要素はW成分による色付け用)
+    #matrix: Float32Array = new Float32Array(17)
 
     // ドラッグによる回転を適用
     applyDrag3D(deltaX: number, deltaY: number): void {
@@ -82,6 +83,8 @@ class PolychoronViewer {
     #vertexVisibility = false
     #edgeVisibility = false
     #cellSize = 1.0
+    #wGradiation = 0.0
+    #backgroundColor = 0
     #canvas: HTMLCanvasElement
     #originController: OriginController
 
@@ -243,6 +246,14 @@ class PolychoronViewer {
         this.#updateMesh()
     }
 
+    setWGradiation(wGradiation: number): void {
+        this.#wGradiation = wGradiation
+    }
+
+    setBackgroundColor(backgroundColor: number): void {
+        this.#backgroundColor = backgroundColor
+    }
+
     #updateMesh(): void {
         if (!this.#polychoron) return
         const mesh = buildPolytopeMesh(this.#polychoron, this.#faceVisibility, this.#visibilityType, this.#vertexVisibility, this.#edgeVisibility, false, false, this.#fillType, this.#cellSize)
@@ -261,7 +272,9 @@ class PolychoronViewer {
             }
 
             this.#originController.applyAutoOriginMovement(deltaTime)
-            this.#renderer.render(this.#rotation.getMatrix())
+            const matrix = this.#rotation.getMatrix()
+            matrix[16] = this.#wGradiation
+            this.#renderer.render(matrix, this.#backgroundColor)
             this.#animationFrameId = requestAnimationFrame(render)
         }
         this.#animationFrameId = requestAnimationFrame(render)
@@ -300,6 +313,7 @@ window.addEventListener("load", async () => {
     const select = document.getElementById("select_coxeter_group") as HTMLSelectElement | null
     const selectVisibility = document.getElementById("select_visibility_type") as HTMLSelectElement | null
     const selectFillType = document.getElementById("select_fill_type") as HTMLSelectElement | null
+    const selectBackgroundColor = document.getElementById("select_background_color") as HTMLSelectElement | null
     const autoRotateXZCheckbox = document.getElementById("checkbox_auto_rotate_xz") as HTMLInputElement | null
     const autoRotateYWCheckbox = document.getElementById("checkbox_auto_rotate_yw") as HTMLInputElement | null
     const checkColor0 = document.getElementById("checkbox_color_0") as HTMLInputElement | null
@@ -309,6 +323,7 @@ window.addEventListener("load", async () => {
     const checkVertex = document.getElementById("checkbox_vertex") as HTMLInputElement | null
     const checkEdge = document.getElementById("checkbox_edge") as HTMLInputElement | null
     const rangeCellSize = document.getElementById("range_cell_size") as HTMLInputElement | null
+    const rangeWGradiation = document.getElementById("range_w_gradiation") as HTMLInputElement | null
     const buttonResetRotation = document.getElementById("button_reset_rotation") as HTMLInputElement | null
 
     const radioStruct0001 = document.getElementById("radio_struct_0001") as HTMLInputElement | null
@@ -412,12 +427,18 @@ window.addEventListener("load", async () => {
     radioStruct1111?.addEventListener("change", () => { if (radioStruct1111.checked) originController.setOriginPoint(0b1111) })
 
     rangeCellSize?.addEventListener("input", () => {
-        console.log(Number(rangeCellSize.value))
         viewer.setCellSize(Number(rangeCellSize.value))
+    })
+    rangeWGradiation?.addEventListener("input", () => {
+        viewer.setWGradiation(Number(rangeWGradiation.value))
     })
 
     selectFillType?.addEventListener("change", () => {
         viewer.setFillType(selectFillType.value as FillType)
+    })
+
+    selectBackgroundColor?.addEventListener("change", () => {
+        viewer.setBackgroundColor(Number(selectBackgroundColor.value))
     })
 
     autoRotateXZCheckbox?.addEventListener("change", () => {
