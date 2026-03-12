@@ -60,7 +60,7 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
     output.worldPos = vec4<f32>(worldPos.xyz * perspective4D(worldPos.w), 1.0);
     output.position = uniforms.viewProjectionMatrix * output.worldPos;
     let colorFactor = -sin(worldPos.w) * uniforms.wLighting;
-    output.color = input.color + vec3<f32>(colorFactor, colorFactor, colorFactor);
+    output.color = clamp(input.color + vec3<f32>(colorFactor, colorFactor, colorFactor), vec3<f32>(0.0, 0.0, 0.0), vec3<f32>(1.0, 1.0, 1.0));
     return output;
 }
 
@@ -73,7 +73,7 @@ fn vertexBallMain(input: InstanceVertexInput, ballInput: BallInput) -> InstanceV
     output.position = uniforms.viewProjectionMatrix * output.worldPos;
     output.worldNormal = input.normal;
     let colorFactor = -sin(worldPos.w) * uniforms.wLighting;
-    output.color = input.color + vec3<f32>(colorFactor, colorFactor, colorFactor);
+    output.color = clamp(input.color + vec3<f32>(colorFactor, colorFactor, colorFactor), vec3<f32>(0.0, 0.0, 0.0), vec3<f32>(1.0, 1.0, 1.0));
     return output;
 }
 
@@ -97,7 +97,7 @@ fn vertexLineMain(input: InstanceVertexInput, lineInput: LineInput) -> InstanceV
     output.position = uniforms.viewProjectionMatrix * worldPos;
     output.worldNormal = vec4<f32>(input.normal.x * xDir + input.normal.y * yDir, 0.0).xyz;
     let colorFactor = -sin(lerp(worldPositionA.w, worldPositionB.w, input.position.z)) * uniforms.wLighting;
-    output.color = input.color + vec3<f32>(colorFactor, colorFactor, colorFactor);
+    output.color = clamp(input.color + vec3<f32>(colorFactor, colorFactor, colorFactor), vec3<f32>(0.0, 0.0, 0.0), vec3<f32>(1.0, 1.0, 1.0));
     return output;
 }
 

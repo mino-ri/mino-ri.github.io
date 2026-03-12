@@ -1,5 +1,5 @@
 import { NormalPolyhedron, unitTriangles, faceSelectorMap } from "./polyhedron.js";
-import { ClearColor, initGpu } from "./gpu.js";
+import { initGpu } from "./gpu.js";
 import { buildPolytopeMesh, setDimension } from "./model.js";
 import { setCenter } from "../svg_generator.js";
 import { OriginController } from "./origin_controller3.js";
@@ -7,7 +7,7 @@ import { shaderSource } from "./gpu3.js";
 import { Quaternions } from "./quaternion.js";
 class RotationState {
     #q = { w: 1, x: 0, y: 0, z: 0, negate: false };
-    #matrix = new Float32Array(16);
+    #matrix = new Float32Array(17);
     applyDrag(deltaX, deltaY) {
         const sensitivity = 0.005;
         const angleX = deltaY * sensitivity;
@@ -44,6 +44,9 @@ class PolyhedronViewer {
     #edgeVisibility = false;
     #colorByConnected = false;
     #holosnub = false;
+    #faceSize = 1.0;
+    #zGradiation = 0.0;
+    #backgroundColor = 0;
     #canvas;
     #originController;
     constructor(canvas, gpuContext, originController) {
@@ -148,10 +151,20 @@ class PolyhedronViewer {
         this.#holosnub = holosnub;
         this.#updateMesh();
     }
+    setCellSize(faceSize) {
+        this.#faceSize = faceSize;
+        this.#updateMesh();
+    }
+    setWGradiation(zGradiation) {
+        this.#zGradiation = zGradiation;
+    }
+    setBackgroundColor(backgroundColor) {
+        this.#backgroundColor = backgroundColor;
+    }
     #updateMesh() {
         if (!this.#polyhedron)
             return;
-        const mesh = buildPolytopeMesh(this.#polyhedron, this.#faceVisibility, this.#visibilityType, this.#vertexVisibility, this.#edgeVisibility, this.#colorByConnected, this.#holosnub, this.#fillType);
+        const mesh = buildPolytopeMesh(this.#polyhedron, this.#faceVisibility, this.#visibilityType, this.#vertexVisibility, this.#edgeVisibility, this.#colorByConnected, this.#holosnub, this.#fillType, this.#faceSize);
         this.#renderer.updateMesh(mesh);
     }
     #startRenderLoop() {
@@ -162,7 +175,9 @@ class PolyhedronViewer {
                 this.#rotation.applyAutoRotate(deltaTime);
             }
             this.#originController.applyAutoOriginMovement(deltaTime);
-            this.#renderer.render(this.#rotation.getMatrix(), ClearColor.white);
+            const matrix = this.#rotation.getMatrix();
+            matrix[16] = this.#zGradiation;
+            this.#renderer.render(matrix, this.#backgroundColor);
             this.#animationFrameId = requestAnimationFrame(render);
         };
         this.#animationFrameId = requestAnimationFrame(render);
@@ -198,6 +213,7 @@ window.addEventListener("load", async () => {
     const selectFace = document.getElementById("select_face_selector");
     const selectVisibility = document.getElementById("select_visibility_type");
     const selectFillType = document.getElementById("select_fill_type");
+    const selectBackgroundColor = document.getElementById("select_background_color");
     const autoRotateCheckbox = document.getElementById("checkbox_auto_rotate");
     const originControlSvg = document.getElementById("origin_control");
     const originPoint = document.getElementById("origin_point");
@@ -212,6 +228,8 @@ window.addEventListener("load", async () => {
     const checkEdge = document.getElementById("checkbox_edge");
     const checkConnected = document.getElementById("checkbox_connected");
     const checkHolosnub = document.getElementById("checkbox_holosnub");
+    const rangeFaceSize = document.getElementById("range_face_size");
+    const rangeZGradiation = document.getElementById("range_z_gradiation");
     const buttonResetRotation = document.getElementById("button_reset_rotation");
     if (!canvas || !select || !selectFace || !checkColor0 || !checkColor1 || !checkColor2 || !checkColor3 || !checkColor4 || !checkColor5 ||
         !circleGroup || !originBack || !originControlSvg || !originPoint) {
@@ -278,8 +296,17 @@ window.addEventListener("load", async () => {
     checkColor3.addEventListener("change", colorCheckChangeHandler);
     checkColor4.addEventListener("change", colorCheckChangeHandler);
     checkColor5.addEventListener("change", colorCheckChangeHandler);
+    rangeFaceSize?.addEventListener("input", () => {
+        viewer.setCellSize(Number(rangeFaceSize.value));
+    });
+    rangeZGradiation?.addEventListener("input", () => {
+        viewer.setWGradiation(Number(rangeZGradiation.value));
+    });
     selectFillType?.addEventListener("change", () => {
         viewer.setFillType(selectFillType.value);
+    });
+    selectBackgroundColor?.addEventListener("change", () => {
+        viewer.setBackgroundColor(Number(selectBackgroundColor.value));
     });
     autoRotateCheckbox?.addEventListener("change", () => {
         viewer.setAutoRotate(autoRotateCheckbox.checked);

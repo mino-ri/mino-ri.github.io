@@ -207,12 +207,10 @@ class PolychoronViewer {
         const render = (time) => {
             const deltaTime = this.#lastTime > 0 ? (time - this.#lastTime) / 1000 : 0;
             this.#lastTime = time;
-            if (!this.#dragMode) {
-                if (this.#autoRotateXZ)
-                    this.#rotation.applyAutoRotateXZ(deltaTime);
-                if (this.#autoRotateYW)
-                    this.#rotation.applyAutoRotateYW(deltaTime);
-            }
+            if (this.#dragMode !== "3d" && this.#autoRotateXZ)
+                this.#rotation.applyAutoRotateXZ(deltaTime);
+            if (this.#dragMode !== "4d" && this.#autoRotateYW)
+                this.#rotation.applyAutoRotateYW(deltaTime);
             this.#originController.applyAutoOriginMovement(deltaTime);
             const matrix = this.#rotation.getMatrix();
             matrix[16] = this.#wGradiation;
