@@ -321,7 +321,7 @@ export function buildPolytopeMesh(polytope, faceVisibility, visibilityType, vert
         }
     }
     else {
-        const unitCenter = [0, 0, 0, 0];
+        const unitCenter = new Array(dimension);
         const unitVertexMap = new Set();
         for (const i of drawIndexes) {
             const unit = polytope.units[i];
@@ -332,6 +332,7 @@ export function buildPolytopeMesh(polytope, faceVisibility, visibilityType, vert
                         unitVertexMap.add(vert);
                     }
                 }
+                unitCenter.fill(0);
                 for (const index of unitVertexMap) {
                     Vectors.add(unitCenter, polytope.vertexes[index], unitCenter);
                 }
