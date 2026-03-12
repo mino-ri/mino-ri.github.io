@@ -4,6 +4,10 @@ import { ShaderSource } from "./gpu"
 const shaderCode = /* wgsl */`
 struct Uniforms {
     modelMatrix: mat4x4<f32>,
+    wLighting: f32,
+    dummy0: f32,
+    dummy1: f32,
+    dummy2: f32,
     viewProjectionMatrix: mat4x4<f32>,
     lightProjection: mat4x4<f32>,
 }
@@ -51,7 +55,8 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
     let worldPos = uniforms.modelMatrix * vec4<f32>(input.position, 1.0);
     output.worldPos = worldPos;
     output.position = uniforms.viewProjectionMatrix * worldPos;
-    output.color = input.color;
+    let colorFactor = -sin(worldPos.z) * uniforms.wLighting;
+    output.color = clamp(input.color + vec3<f32>(colorFactor, colorFactor, colorFactor), vec3<f32>(0.0, 0.0, 0.0), vec3<f32>(1.0, 1.0, 1.0));
     return output;
 }
 
@@ -62,7 +67,8 @@ fn vertexBallMain(input: InstanceVertexInput, ballInput: BallInput) -> InstanceV
     output.worldPos = worldPos;
     output.position = uniforms.viewProjectionMatrix * worldPos;
     output.worldNormal = input.normal;
-    output.color = input.color;
+    let colorFactor = -sin(worldPos.z) * uniforms.wLighting;
+    output.color = clamp(input.color + vec3<f32>(colorFactor, colorFactor, colorFactor), vec3<f32>(0.0, 0.0, 0.0), vec3<f32>(1.0, 1.0, 1.0));
     return output;
 }
 
@@ -78,7 +84,8 @@ fn vertexLineMain(input: InstanceVertexInput, lineInput: LineInput) -> InstanceV
     output.worldPos = worldPos;
     output.position = uniforms.viewProjectionMatrix * worldPos;
     output.worldNormal = (uniforms.modelMatrix * vec4<f32>(input.normal.x * xDir + input.normal.y * yDir, 0.0)).xyz;
-    output.color = input.color;
+    let colorFactor = -sin(worldPos.z) * uniforms.wLighting;
+    output.color = clamp(input.color + vec3<f32>(colorFactor, colorFactor, colorFactor), vec3<f32>(0.0, 0.0, 0.0), vec3<f32>(1.0, 1.0, 1.0));
     return output;
 }
 
@@ -184,7 +191,7 @@ const lineInstanceBufferLayout: GPUVertexBufferLayout = {
 
 export const shaderSource: ShaderSource = {
     shaderCode,
-    dynamicBufferByteSize: 64,
+    dynamicBufferByteSize: 20 * 4,
     constantBufferValue,
     vertexBufferLayout,
     ballInstanceBufferLayout,

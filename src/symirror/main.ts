@@ -1,5 +1,5 @@
 import { NormalPolyhedron, unitTriangles, faceSelectorMap } from "./polyhedron.js"
-import { ClearColor, initGpu, IPolytopeRenderer, type GpuContext } from "./gpu.js"
+import { initGpu, IPolytopeRenderer, type GpuContext } from "./gpu.js"
 import { buildPolytopeMesh, setDimension, type VisibilityType, FillType } from "./model.js"
 import { type Vector } from "./vector.js"
 import { setCenter } from "../svg_generator.js"
@@ -11,7 +11,8 @@ import { Quaternion, Quaternions } from "./quaternion.js"
 class RotationState {
     // 現在のクォータニオン (w, x, y, z)
     #q: Quaternion = { w: 1, x: 0, y: 0, z: 0, negate: false }
-    #matrix: Float32Array = new Float32Array(16)
+    // 動的バッファ (モデル行列 + 最後1要素はW成分による色付け用)
+    #matrix: Float32Array = new Float32Array(17)
 
     // ドラッグによる回転を適用
     applyDrag(deltaX: number, deltaY: number): void {
@@ -59,6 +60,9 @@ class PolyhedronViewer {
     #edgeVisibility = false
     #colorByConnected = false
     #holosnub = false
+    #faceSize = 1.0
+    #zGradiation = 0.0
+    #backgroundColor = 0
     #canvas: HTMLCanvasElement
     #originController: OriginController
 
@@ -190,9 +194,22 @@ class PolyhedronViewer {
         this.#updateMesh()
     }
 
+    setCellSize(faceSize: number): void {
+        this.#faceSize = faceSize
+        this.#updateMesh()
+    }
+
+    setWGradiation(zGradiation: number): void {
+        this.#zGradiation = zGradiation
+    }
+
+    setBackgroundColor(backgroundColor: number): void {
+        this.#backgroundColor = backgroundColor
+    }
+
     #updateMesh(): void {
         if (!this.#polyhedron) return
-        const mesh = buildPolytopeMesh(this.#polyhedron, this.#faceVisibility, this.#visibilityType, this.#vertexVisibility, this.#edgeVisibility, this.#colorByConnected, this.#holosnub, this.#fillType)
+        const mesh = buildPolytopeMesh(this.#polyhedron, this.#faceVisibility, this.#visibilityType, this.#vertexVisibility, this.#edgeVisibility, this.#colorByConnected, this.#holosnub, this.#fillType, this.#faceSize)
         this.#renderer.updateMesh(mesh)
     }
 
@@ -207,7 +224,9 @@ class PolyhedronViewer {
             }
 
             this.#originController.applyAutoOriginMovement(deltaTime)
-            this.#renderer.render(this.#rotation.getMatrix(), ClearColor.white)
+            const matrix = this.#rotation.getMatrix()
+            matrix[16] = this.#zGradiation
+            this.#renderer.render(matrix, this.#backgroundColor)
             this.#animationFrameId = requestAnimationFrame(render)
         }
         this.#animationFrameId = requestAnimationFrame(render)
@@ -248,6 +267,7 @@ window.addEventListener("load", async () => {
     const selectFace = document.getElementById("select_face_selector") as HTMLSelectElement | null
     const selectVisibility = document.getElementById("select_visibility_type") as HTMLSelectElement | null
     const selectFillType = document.getElementById("select_fill_type") as HTMLSelectElement | null
+    const selectBackgroundColor = document.getElementById("select_background_color") as HTMLSelectElement | null
     const autoRotateCheckbox = document.getElementById("checkbox_auto_rotate") as HTMLInputElement | null
     const originControlSvg = document.getElementById("origin_control") as unknown as SVGSVGElement | null
     const originPoint = document.getElementById("origin_point") as unknown as SVGCircleElement | null
@@ -262,6 +282,8 @@ window.addEventListener("load", async () => {
     const checkEdge = document.getElementById("checkbox_edge") as HTMLInputElement | null
     const checkConnected = document.getElementById("checkbox_connected") as HTMLInputElement | null
     const checkHolosnub = document.getElementById("checkbox_holosnub") as HTMLInputElement | null
+    const rangeFaceSize = document.getElementById("range_face_size") as HTMLInputElement | null
+    const rangeZGradiation = document.getElementById("range_z_gradiation") as HTMLInputElement | null
     const buttonResetRotation = document.getElementById("button_reset_rotation") as HTMLInputElement | null
 
     if (!canvas || !select || !selectFace || !checkColor0 || !checkColor1 || !checkColor2 || !checkColor3 || !checkColor4 || !checkColor5 ||
@@ -351,8 +373,19 @@ window.addEventListener("load", async () => {
     checkColor4.addEventListener("change", colorCheckChangeHandler)
     checkColor5.addEventListener("change", colorCheckChangeHandler)
 
+    rangeFaceSize?.addEventListener("input", () => {
+        viewer.setCellSize(Number(rangeFaceSize.value))
+    })
+    rangeZGradiation?.addEventListener("input", () => {
+        viewer.setWGradiation(Number(rangeZGradiation.value))
+    })
+
     selectFillType?.addEventListener("change", () => {
         viewer.setFillType(selectFillType.value as FillType)
+    })
+
+    selectBackgroundColor?.addEventListener("change", () => {
+        viewer.setBackgroundColor(Number(selectBackgroundColor.value))
     })
 
     autoRotateCheckbox?.addEventListener("change", () => {

@@ -426,7 +426,7 @@ export function buildPolytopeMesh(
             }
         }
     } else {
-        const unitCenter = [0, 0, 0, 0]
+        const unitCenter = new Array<number>(dimension)
         const unitVertexMap = new Set<number>()
         // 塗りつぶし
         for (const i of drawIndexes) {
@@ -439,6 +439,7 @@ export function buildPolytopeMesh(
                     }
                 }
 
+                unitCenter.fill(0)
                 for (const index of unitVertexMap) {
                     Vectors.add(unitCenter, polytope.vertexes[index]!, unitCenter)
                 }
