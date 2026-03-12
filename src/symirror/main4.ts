@@ -266,10 +266,8 @@ class PolychoronViewer {
             this.#lastTime = time
 
             // 自動回転が有効かつドラッグ中でない場合に回転
-            if (!this.#dragMode) {
-                if (this.#autoRotateXZ) this.#rotation.applyAutoRotateXZ(deltaTime)
-                if (this.#autoRotateYW) this.#rotation.applyAutoRotateYW(deltaTime)
-            }
+            if (this.#dragMode !== "3d" && this.#autoRotateXZ) this.#rotation.applyAutoRotateXZ(deltaTime)
+            if (this.#dragMode !== "4d" && this.#autoRotateYW) this.#rotation.applyAutoRotateYW(deltaTime)
 
             this.#originController.applyAutoOriginMovement(deltaTime)
             const matrix = this.#rotation.getMatrix()
