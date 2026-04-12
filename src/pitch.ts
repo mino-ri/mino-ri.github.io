@@ -1,11 +1,5 @@
 import { Monzo } from "./monzo.js"
 
-const primes = [
-    2, 3, 5, 7, 11, 13, 17, 19, 23, 29,
-    31, 37, 41, 43, 47, 53, 59, 61, 67,
-    71, 73, 79, 83, 89, 97,
-]
-
 export class XLengthType {
     static Integer = new XLengthType(126.185950714291, null)
     static OctaveReduced = new XLengthType(341.902258270291, Monzo.getOctaveFactor)
@@ -47,29 +41,8 @@ export function parsePitches(text: string, ignoreOctave: boolean, xLengthType: X
             token = token.substring(1)
         }
 
-        let monzo = null
-        if (token.startsWith('[') && token.includes(',') && token.endsWith('>')) {
-            // モンゾ表記の場合
-            const factors = token.substring(1, token.length - 1).split(',').map(Number)
-            const factorMap = new Map<number, number>()
-            for (let i = 0; i < factors.length; i++) {
-                const prime = primes[i]
-                const factor = factors[i]
-                if (factor !== undefined && factor !== 0 && prime !== undefined) {
-                    factorMap.set(prime, factor)
-                }
-            }
-            monzo = new Monzo(factorMap)
-        } else if (token.includes('/')) {
-            // 分数の場合
-            const [num, denom] = token.split('/').map(Number)
-            monzo = Monzo.fromFraction(num ?? 1, denom ?? 1)
-        } else {
-            // 整数の場合
-            monzo = Monzo.fromInt(Number(token))
-        }
-        let originalMonzo = monzo
-        monzo = xLengthType.toStructual(monzo)
+        let originalMonzo = Monzo.parseMonzo(token)
+        let monzo = xLengthType.toStructual(originalMonzo)
         if (ignoreOctave) {
             monzo.factors.delete(2)
             originalMonzo = xLengthType.fromStructual(monzo)

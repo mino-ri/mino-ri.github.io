@@ -1,6 +1,5 @@
 import { PitchInfo } from "./pitch.js"
-import { ColorScheme } from "./svg_generator.js"
-import { clearChildren, createCircle, createLine } from "./svg_generator.js"
+import { ColorScheme, clearChildren, createCircle, createLine } from "./svg_generator.js"
 import { Monzo } from "./monzo.js"
 
 const baseSize = 800

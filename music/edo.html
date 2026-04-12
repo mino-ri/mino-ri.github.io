@@ -9,14 +9,14 @@
   <meta name="viewport" content="width=device-width">
   <link rel="stylesheet" type="text/css" href="./../styles/color_standard.css" />
   <link rel="stylesheet" type="text/css" href="./../styles/style.css" />
-  <script type="module" src="./../scripts/pitch_class.js"></script>
+  <script type="module" src="./../scripts/edo.js"></script>
   <script type="module" src="./../scripts/language_switcher.js"></script>
-  <title>ピッチクラス図</title>
+  <title>平均律近似図</title>
 </head>
 <body>
   <header>
     <a class="back" href="../">back</a>
-    <h1 data-ls-en="Pitch Class Diagram">ピッチクラス図</h1>
+    <h1 data-ls-en="EDO Approximation Diagram">平均律近似図</h1>
     <nav class="language-switcher">
       <label>
         <input type="radio" name="language" value="ja" checked />
@@ -30,43 +30,38 @@
   </header>
   <section>
     <article class="editor-container">
-      <div class="editor-preview" id="editor_preview" style="background: #FEFAEE">
-        <svg id="preview_figure" viewBox="0 0 1920 1920">
-          <g id="line_group"></g>
-          <g id="grid"></g>
-          <g id="pitch_class_group"></g>
+      <div class="editor-preview" id="editor_preview" style="background:#FEFAEE; max-height:80vh; position:unset">
+        <svg id="preview_figure" viewBox="0 0 1280 1920" style=" max-height:calc(80vh - 1rem); position:unset">
+          <g id="group_grid"></g>
+          <g id="group_3"></g>
+          <g id="group_5"></g>
+          <g id="group_7"></g>
+          <g id="group_11"></g>
+          <g id="group_13"></g>
+          <g id="group_others"></g>
+          <g id="group_text"></g>
         </svg>
       </div>
       <div class="editor-control">
-        <div>
-          <textarea id="textarea_editor" name="textarea_editor" rows="2" placeholder="integers, fractions or monzos">1 6/5 3 [0,2,-1&gt;</textarea>
-        </div>
-        <ul class="link-list">
-          <li><input id="button_play" type="button" value="再生" data-ls-value-en="Play" /></li>
-          <li><a id="a_download_svg" href="#" download="chordGraph.svg" data-ls-en="Download SVG">SVGダウンロード</a></li>
-          <li><a id="a_download_png" href="#" data-ls-en="Download PNG">PNGダウンロード</a></li>
-        </ul>
+          <div class="control-list">
+            <label>
+              <span data-ls-en="EDO:">平均律:</span>
+              <input type="number" id="number_edo" name="number_edo" min="1" value="12" style="width: 4rem;" />
+            </label>
+            <label>
+              <input type="checkbox" id="check_ignore_octave" name="check_ignore_octave" />
+              <span data-ls-en="Ignore octave:">オクターブを無視</span>
+            </label>
+          </div>
         <details>
-          <summary data-ls-en="Options">オプション</summary>
-          <div class="control-list">
-            <label>
-              <input type="checkbox" id="checkbox_quantize" name="checkbox_quantize" />
-              <span data-ls-en="Quantize to EDO:">次の平均律に量子化:</span>
-            </label>
-            <input type="number" id="text_edo" name="text_edo" min="1" value="12" style="width: 4rem;" />
-          </div>
-          <div class="control-list">
-            <label>
-              <input type="checkbox" id="checkbox_show_step" name="checkbox_show_step" />
-              <span data-ls-en="Show EDO steps">平均律のステップを表示</span>
-            </label>
-          </div>
-          <div class="control-list">
-            <label>
-              <input type="checkbox" id="checkbox_limit_interval" name="checkbox_limit_interval" />
-              <span data-ls-en="Auto complete intervals in prime limit:">次の素数限界の音程を補完:</span>
-            </label>
-            <input type="number" id="text_prime" name="text_prime" min="3" max="31" value="5" style="width: 4rem;" />
+          <summary data-ls-en="Interval List">音程リスト</summary>
+          <div>
+            <textarea id="textarea_editor" name="textarea_editor" rows="7" placeholder="integers, fractions or monzos">243 81 27 9 3 1/3 1/9 1/27 1/81 1/243 
+45 15 5 5/3 5/9 5/27 27/5 9/5 3/5 1/5 1/15 1/45 25 1/25
+63 21 7/3 7 7/9 7/27 27/7 9/7 3/7 1/7 1/21 1/63
+297 99 33 11 11/3 11/9 9/11 3/11 1/11 1/33 1/99 1/297
+351 117 39 13 13/3 13/9 9/13 3/13 1/13 1/39 1/117 1/351
+7/5 7/15 15/7 11/5 11/7 5/11 7/11 13/5 13/7 13/11 5/13 7/13 11/13</textarea>
           </div>
         </details>
         <details>
@@ -113,7 +108,7 @@
     </article>
   </section>
   <footer>
-    copyright&copy; 2025 mino-ri All rights reserved.
+    copyright&copy; 2026 mino-ri All rights reserved.
   </footer>
 </body>
 </html>

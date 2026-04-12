@@ -5,16 +5,20 @@ type HslValue = { h: number, s: number, l: number }
 
 type ColorScalePart = { amount: number, h: number, s: number, l: number }
 
+export type StrokeLineCap = "butt" | "round" | "square"
+
 export class ColorScheme {
     gridStroke: string
     noteStroke: string
     noteFill: string
+    back: string
     pitchScheme: ColorScalePart[]
 
     constructor() {
         this.gridStroke = "#FDC6FE"
         this.noteStroke = "#2B2F75"
         this.noteFill = "#FFFFFF"
+        this.back = "#FEFAEE"
         this.pitchScheme = [
             { amount: 0.000, h: 180, s: 220, l: 124 },
             { amount: 0.250, h: 177, s: 152, l: 92 },
@@ -207,3 +211,29 @@ export function createLine(x1: number, y1: number, x2: number, y2: number, strok
     line.setAttribute("stroke-width", strokeWidth)
     return line
 }
+
+
+export function createPolyLine(points: [number, number][], stroke: string, strokeWidth: string, strokeLineCap: StrokeLineCap) {
+    const polyline = document.createElementNS("http://www.w3.org/2000/svg", "polyline")
+    polyline.setAttribute("points", points.map(([x, y]) => `${x + centerX},${y + centerY}`).join(" "))
+    polyline.setAttribute("stroke", stroke)
+    polyline.setAttribute("stroke-width", strokeWidth)
+    polyline.setAttribute("stroke-linecap", strokeLineCap)
+    polyline.setAttribute("fill", "none")
+    return polyline
+}
+
+export function createText(x: number, y: number, text: string, fontSize: string, fill: string, stroke: string = "", strokeWidth: string = "", textAnchor: "start" | "middle" | "end" = "start", dominantBaseline: "auto" | "middle" | "hanging" = "auto") {
+    const textElement = document.createElementNS("http://www.w3.org/2000/svg", "text")
+    textElement.setAttribute("x", (x + centerX).toString())
+    textElement.setAttribute("y", (y + centerY).toString())
+    textElement.setAttribute("fill", fill)
+    textElement.setAttribute("stroke", stroke)
+    textElement.setAttribute("stroke-width", strokeWidth)
+    textElement.setAttribute("font-size", fontSize)
+    textElement.setAttribute("text-anchor", textAnchor)
+    textElement.setAttribute("dominant-baseline", dominantBaseline)
+    textElement.textContent = text
+    return textElement
+}
+

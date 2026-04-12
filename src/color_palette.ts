@@ -112,6 +112,7 @@ export class ColorControl {
         this.colorScheme.noteStroke = palette.main
         this.colorScheme.gridStroke = palette.sub
         this.colorScheme.noteFill = palette.fill
+        this.colorScheme.back = palette.back
         this.colorScheme.setPitchClassColor(0, palette.pitchClass0)
         this.colorScheme.setPitchClassColor(1, palette.pitchClass1)
         this.colorScheme.setPitchClassColor(2, palette.pitchClass2)
