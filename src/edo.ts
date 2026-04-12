@@ -14,6 +14,7 @@ class Renderer {
     #textArea: HTMLTextAreaElement
     #numberEdo: HTMLInputElement
     #checkIgnoreOctave: HTMLInputElement
+    #rangeFontSize: HTMLInputElement
     #colorScheme: ColorScheme
     #groupGrid: SVGGElement
     #group3: SVGGElement
@@ -31,11 +32,13 @@ class Renderer {
         const textArea = document.getElementById("textarea_editor") as HTMLTextAreaElement
         const numberEdo = document.getElementById("number_edo") as HTMLInputElement
         const checkIgnoreOctave = document.getElementById("check_ignore_octave") as HTMLInputElement
+        const rangeFontSize = document.getElementById("range_font_size") as HTMLInputElement
         const editorPreview = document.getElementById("editor_preview") as HTMLElement
         const previewSvg = document.getElementById("preview_figure") as unknown as SVGSVGElement
         this.#textArea = textArea
         this.#numberEdo = numberEdo
         this.#checkIgnoreOctave = checkIgnoreOctave
+        this.#rangeFontSize = rangeFontSize
         this.#colorScheme = new ColorScheme()
         this.#groupGrid = previewSvg.getElementById("group_grid") as SVGGElement
         this.#group3 = previewSvg.getElementById("group_3") as SVGGElement
@@ -51,6 +54,7 @@ class Renderer {
         textArea.addEventListener("input", () => { this.setMonzos(); this.render() })
         numberEdo.addEventListener("input", () => this.render())
         checkIgnoreOctave.addEventListener("input", () => this.render())
+        rangeFontSize.addEventListener("input", () => this.render())
     }
 
     setMonzos() {
@@ -90,12 +94,12 @@ class Renderer {
 
     static #getMonzoKeyX(key: MonzoKey): number {
         switch (key) {
-            case "p3": return width * 8 / 8
-            case "p5": return width * 7 / 8
-            case "p7": return width * 6 / 8
-            case "p11": return width * 5 / 8
-            case "p13": return width * 4 / 8
-            default: return width * 3 / 8
+            case "p3": return width * 7.5 / 7.5
+            case "p5": return width * 6.5 / 7.5
+            case "p7": return width * 5.5 / 7.5
+            case "p11": return width * 4.5 / 7.5
+            case "p13": return width * 3.5 / 7.5
+            default: return width * 2.5 / 7.5
         }
     }
 
@@ -122,8 +126,9 @@ class Renderer {
     }
 
     render() {
-        const edo = Number(this.#numberEdo.value ?? 1)
+        const edo = Number(this.#numberEdo.value ?? "1")
         const ignoreOctave = this.#checkIgnoreOctave.checked
+        const fontSize = Number(this.#rangeFontSize.value ?? "10")
 
         clearChildren(this.#groupGrid)
         clearChildren(this.#group3)
@@ -135,24 +140,24 @@ class Renderer {
         clearChildren(this.#groupText)
 
         this.#renderGrid(edo)
-        this.#renderMonzos(edo, ignoreOctave)
+        this.#renderMonzos(edo, ignoreOctave, fontSize)
     }
 
     #renderGrid(edo: number) {
         const lineHeight = height / edo
         const textSize = Math.min(32, Math.max(lineHeight - 8, 8)).toString()
-        for (let i = 0; i < edo; i++) {
+        for (let i = 0; i <= edo; i++) {
             const y = (edo - i) / edo * height
             const line = createLine(0, y, width, y, this.#colorScheme.gridStroke, "2")
             line.setAttribute("stroke-opacity", "0.5")
             this.#groupGrid.appendChild(line)
             this.#groupGrid.appendChild(createText(4, y - 4, i.toString(), textSize, this.#colorScheme.noteStroke))
         }
-
-        this.#groupGrid.appendChild(createLine(0, 0, width, 0, this.#colorScheme.gridStroke, "2"))
     }
 
-    #renderMonzos(edo: number, ignoreOctave: boolean) {
+    #renderMonzos(edo: number, ignoreOctave: boolean, fontSize: number) {
+        const space = fontSize + 2
+        const fontSizeText = fontSize.toString()
         for (const [monzoKey, monzos] of this.#monzoEntries) {
             const color = this.#getMonzoColor(monzoKey)
             const group = this.#getGroupByMonzoKey(monzoKey)
@@ -176,10 +181,10 @@ class Renderer {
                 const prev = pitchClasses[i - 1]
                 const current = pitchClasses[i]!
                 const next = pitchClasses[i + 1]!
-                if (current.yText < next.yText + 40) {
-                    const prevY = prev?.yText ?? height + 40
-                    current.yText = Math.min(prevY, (current.yText + next.yText) / 2 + 20)
-                    next.yText = current.yText - 40
+                if (current.yText < next.yText + space) {
+                    const prevY = prev?.yText ?? height + space
+                    current.yText = Math.min(prevY, (current.yText + next.yText + space) / 2)
+                    next.yText = current.yText - space
                 }
             }
 
@@ -187,17 +192,17 @@ class Renderer {
             for (let i = 0; i < pitchClasses.length; i++) {
                 const { text, y, yText, yQuantized } = pitchClasses[i]!
                 const polyline = createPolyLine([
-                    [width / 8, yQuantized],
-                    [width / 4, y],
+                    [width * 0.5 / 7.5, yQuantized],
+                    [width * 1.5 / 7.5, y],
                     [x, y],
                 ], color, "8", "round")
                 group.appendChild(polyline)
 
-                const textEdgeElement = createText(x, yText, text, "38", this.#colorScheme.back, this.#colorScheme.back, "8", "end", "middle")
+                const textEdgeElement = createText(x, yText, text, fontSizeText, this.#colorScheme.back, this.#colorScheme.back, "8", "end", "middle")
                 textEdgeElement.setAttribute("font-weight", "bold")
                 this.#groupText.appendChild(textEdgeElement)
 
-                const textElement = createText(x, yText, text, "38", color, "", "", "end", "middle")
+                const textElement = createText(x, yText, text, fontSizeText, color, "", "", "end", "middle")
                 textElement.setAttribute("font-weight", "bold")
                 this.#groupText.appendChild(textElement)
             }

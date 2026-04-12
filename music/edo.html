@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
   <meta charset="UTF-8" />
   <meta http-equiv="Content-Type" content="text/html" />
@@ -13,6 +14,7 @@
   <script type="module" src="./../scripts/language_switcher.js"></script>
   <title>平均律近似図</title>
 </head>
+
 <body>
   <header>
     <a class="back" href="../">back</a>
@@ -43,16 +45,20 @@
         </svg>
       </div>
       <div class="editor-control">
-          <div class="control-list">
-            <label>
-              <span data-ls-en="EDO:">平均律:</span>
-              <input type="number" id="number_edo" name="number_edo" min="1" value="12" style="width: 4rem;" />
-            </label>
-            <label>
-              <input type="checkbox" id="check_ignore_octave" name="check_ignore_octave" />
-              <span data-ls-en="Ignore octave:">オクターブを無視</span>
-            </label>
-          </div>
+        <div class="control-list">
+          <label>
+            <span data-ls-en="EDO:">平均律:</span>
+            <input type="number" id="number_edo" name="number_edo" min="1" value="12" style="width: 4rem;" />
+          </label>
+          <label>
+            <input type="checkbox" id="check_ignore_octave" name="check_ignore_octave" />
+            <span data-ls-en="Ignore octave:">オクターブを無視</span>
+          </label>
+          <label>
+            <span data-ls-en="Font size">フォントサイズ</span>:
+            <input type="range" id="range_font_size" name="range_font_size" min="10" max="80" value="38" />
+          </label>
+        </div>
         <details>
           <summary data-ls-en="Interval List">音程リスト</summary>
           <div>
@@ -111,4 +117,5 @@
     copyright&copy; 2026 mino-ri All rights reserved.
   </footer>
 </body>
+
 </html>
