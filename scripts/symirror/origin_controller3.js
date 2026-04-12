@@ -1,4 +1,3 @@
-var _a;
 import { Vectors } from "./vector.js";
 import { clearChildren, createCircle, createLine, createPath } from "../svg_generator.js";
 import { Quaternions } from "./quaternion.js";
@@ -246,7 +245,7 @@ export class OriginController {
                     continue;
                 }
                 const colorIndex = this.#getColorIndex(distances, edgeGenerators.length);
-                const { r, g, b } = _a.#colors[colorIndex];
+                const { r, g, b } = OriginController.#colors[colorIndex];
                 const baseIndex = (py * width + px) * 4;
                 imageData.data[baseIndex + 0] = r;
                 imageData.data[baseIndex + 1] = g;
@@ -436,4 +435,3 @@ export class OriginController {
         this.#updateOrigin(0, 0);
     }
 }
-_a = OriginController;
