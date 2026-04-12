@@ -1,4 +1,3 @@
-var _a, _b;
 import { Vectors } from "./vector.js";
 export class ClearColor {
     static white = 0;
@@ -246,25 +245,25 @@ class RenderPipeline {
             entryPoint: "vertex" + shaderNameSuffix,
             buffers: [vertexBufferLayout],
         };
-        this.#pipeline = this.#createPipeline(vertexState, _a.#ignoreDepthStencilState, fragmentState);
-        this.#stencilWritePipeline = this.#createPipeline(vertexState, _a.#writeDepthStencilState, discardFragmentState);
-        this.#stencilMaskPipeline = this.#createPipeline(vertexState, _a.#readDepthStencilState, fragmentState);
+        this.#pipeline = this.#createPipeline(vertexState, RenderPipeline.#ignoreDepthStencilState, fragmentState);
+        this.#stencilWritePipeline = this.#createPipeline(vertexState, RenderPipeline.#writeDepthStencilState, discardFragmentState);
+        this.#stencilMaskPipeline = this.#createPipeline(vertexState, RenderPipeline.#readDepthStencilState, fragmentState);
         this.#ballPipeline = this.#createPipeline({
             module: shaderModule,
             entryPoint: "vertexBall" + shaderNameSuffix,
-            buffers: [_a.#instanceVertexBufferLayout, ballInstanceBufferLayout],
-        }, _a.#ignoreDepthStencilState, instanceFragmentState, instanceFragmentState ? _a.#instancePremitiveState : _a.#instanceShadowPremitiveState);
+            buffers: [RenderPipeline.#instanceVertexBufferLayout, ballInstanceBufferLayout],
+        }, RenderPipeline.#ignoreDepthStencilState, instanceFragmentState, instanceFragmentState ? RenderPipeline.#instancePremitiveState : RenderPipeline.#instanceShadowPremitiveState);
         this.#linePipeline = this.#createPipeline({
             module: shaderModule,
             entryPoint: "vertexLine" + shaderNameSuffix,
-            buffers: [_a.#instanceVertexBufferLayout, lineInstanceBufferLayout],
-        }, _a.#ignoreDepthStencilState, instanceFragmentState, instanceFragmentState ? _a.#instancePremitiveState : _a.#instanceShadowPremitiveState);
+            buffers: [RenderPipeline.#instanceVertexBufferLayout, lineInstanceBufferLayout],
+        }, RenderPipeline.#ignoreDepthStencilState, instanceFragmentState, instanceFragmentState ? RenderPipeline.#instancePremitiveState : RenderPipeline.#instanceShadowPremitiveState);
     }
     #createPipeline(vertexState, depthStencilState, fragmentState, premitiveState) {
         const desc = {
             layout: this.#layout,
             vertex: vertexState,
-            primitive: premitiveState ?? _a.#facePremitiveState,
+            primitive: premitiveState ?? RenderPipeline.#facePremitiveState,
             depthStencil: depthStencilState,
         };
         if (fragmentState)
@@ -333,7 +332,6 @@ class RenderPipeline {
         mainPass.end();
     }
 }
-_a = RenderPipeline;
 class PolytopeRendererImpl {
     #shadowSPipeline;
     #mainSPipeline;
@@ -448,7 +446,7 @@ class PolytopeRendererImpl {
         this.#shadowSPipeline.render(commandEncoder, this.#shadowTexture.createView(), [], []);
     }
     #renderNormal(commandEncoder, clearColor) {
-        const gpuColor = _b.#clearColors[clearColor];
+        const gpuColor = PolytopeRendererImpl.#clearColors[clearColor];
         const textureView = this.#context.getCurrentTexture().createView();
         const stencilColorAttachments = [{
                 view: textureView,
@@ -474,4 +472,3 @@ class PolytopeRendererImpl {
         this.#buffer.lineInstanceBuffer?.destroy();
     }
 }
-_b = PolytopeRendererImpl;
