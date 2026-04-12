@@ -2,8 +2,8 @@
   "compilerOptions": {
     /* see https://aka.ms/tsconfig */
 
-    "target": "ES2022",
-    "module": "ES2022",
+    "target": "esnext",
+    "module": "esnext",
     "moduleResolution": "bundler",
     "rootDir": "./",
     "outDir": "./../scripts",
@@ -12,8 +12,6 @@
     "noEmitOnError": true,
     "removeComments": true,
     "newLine": "lf",
-    "allowSyntheticDefaultImports": false,
-    "esModuleInterop": false,
     "forceConsistentCasingInFileNames": true,
 
     /* Type Checking */

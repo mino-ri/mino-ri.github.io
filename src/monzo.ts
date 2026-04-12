@@ -77,7 +77,7 @@ export class Monzo {
         if (edo < 1) {
             return this.pitch
         }
-        
+
         return this.quantizedStepCount(edo) / edo
     }
 
@@ -85,7 +85,7 @@ export class Monzo {
         if (edo < 1) {
             return 0
         }
-        
+
         let result = 0
         for (const [prime, factor] of this.factors) {
             result += Math.round(Math.log2(prime) * edo) * factor
@@ -98,7 +98,7 @@ export class Monzo {
         if (edo < 1) {
             return this.pitchClass
         }
-        
+
         let result = 0
         for (const [prime, factor] of this.factors) {
             result += Math.round(Math.log2(prime) * edo) * factor
@@ -125,6 +125,24 @@ export class Monzo {
             }
         }
         return result.trim()
+    }
+
+    toFractionString() {
+        let numerator = 1
+        let denominator = 1
+        for (const [prime, factor] of this.factors) {
+            if (factor > 0) {
+                numerator *= Math.pow(prime, factor)
+            } else if (factor < 0) {
+                denominator *= Math.pow(prime, -factor)
+            }
+        }
+
+        if (denominator === 1) {
+            return numerator.toString()
+        }
+
+        return `${numerator}/${denominator}`
     }
 
     static fromInt(value: number) {
@@ -207,20 +225,34 @@ export class Monzo {
         return power2
     }
 
+    static parseMonzo(token: string): Monzo {
+        if (token.startsWith('[') && token.includes(',') && token.endsWith('>')) {
+            // モンゾ表記の場合
+            const factors = token.substring(1, token.length - 1).split(',').map(Number)
+            const factorMap = new Map<number, number>()
+            for (let i = 0; i < factors.length; i++) {
+                const prime = Monzo.#primes[i]
+                const factor = factors[i]
+                if (factor !== undefined && factor !== 0 && prime !== undefined) {
+                    factorMap.set(prime, factor)
+                }
+            }
+            return new Monzo(factorMap)
+        } else if (token.includes('/')) {
+            // 分数の場合
+            const [num, denom] = token.split('/').map(Number)
+            return Monzo.fromFraction(num ?? 1, denom ?? 1)
+        } else {
+            // 整数の場合
+            return Monzo.fromInt(Number(token))
+        }
+    }
+
     // テキストからMonzoの配列を取得する
-    static parseMonzos(text: string) {
+    static parseMonzos(text: string): Monzo[] {
         // スペース区切りで分割
         const tokens = text.trim().split(/\s+/)
-        const monzos = tokens.map(token => {
-            if (token.includes('/')) {
-                // 分数の場合
-                const [num, denom] = token.split('/').map(Number)
-                return Monzo.fromFraction(num ?? 1, denom ?? 1)
-            } else {
-                // 整数の場合
-                return Monzo.fromInt(Number(token))
-            }
-        })
+        const monzos = tokens.map(token => Monzo.parseMonzo(token))
         return monzos
     }
 }
