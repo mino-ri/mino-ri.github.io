@@ -183,7 +183,7 @@ class Renderer {
                 const next = pitchClasses[i + 1]!
                 if (current.yText < next.yText + space) {
                     const prevY = prev?.yText ?? height + space
-                    current.yText = Math.min(prevY, (current.yText + next.yText + space) / 2)
+                    current.yText = Math.min(prevY - space, (current.yText + next.yText + space) / 2)
                     next.yText = current.yText - space
                 }
             }
