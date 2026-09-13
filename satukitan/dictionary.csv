@@ -205,7 +205,7 @@ yo	名称	0	あれら	あれら。あれらの。{o} の複数形。	あれら		
 doba	名称	0	ここ	ここ。自分が会話に出したものに対して代名詞としても使う。	ここ		ここの		here	Here; pronoun for speaker’s referent.	here		of here		
 foba	名称	0	そこ	そこ。相手が会話に出したものに対して代名詞としても使う。	そこ		そこの		there	There; pronoun for listener’s referent.	there		of there		
 oba	名称	0	あそこ	あそこ。自分にも相手にも属さないものに対して代名詞としても使う。	あそこ		あそこの		over there	Over there; pronoun for something belonging to neither speaker nor listener.	over there		of over there		
-pa	名称	0	人	人。一般的、口語的、社会的な人を表す。生物としてのヒトは[別単語]	人		人の		human	Person; general, colloquial, social human being. (Biological human is a different word.)	human		of human		
+pa	名称	0	人	人。一般的、口語的、社会的な人を表す。生物としてのヒトは{pyupa}	人		人の		human	Person; general, colloquial, social human being. (Biological human is {pyupa})	human		of human		
 ba	名称	0	場所	場所	場所		場所の		place	Place.	place		of place		
 baqya	名称	0	世界	世界。	世界		世界の		world	World.	world		of world		
 saqya	名称	0	空	空。単なる空としてだけでなく、神聖な空というニュアンスを持つ。	空		空の		sky	Sky; not just empty space but with sacred nuance.	sky		of sky		
@@ -226,3 +226,24 @@ detu	名称	0	道具、機械	道具、～機 (具体的な物としての道具
 pyuso	名称	0	動物	動物。合成語として様々な動物を表す。	動物		動物の		animal	Animal; used in compounds to denote various animals.	animal		of animal		
 pano	名称	0	家族	家族。	家族		家族の		family	Family.	family		of family		
 baspano	名称	0	家	[合成語] {ba} + {pano} 家。	家		家の		home; house	[Compound] {ba} + {pano}; home; house.	home; house		of home; of house		
+pyupa	名称	0	ヒト	生物としてのヒト。一般的、社会的な人を表す語は {pa}	ヒト		ヒトの		human (Homo sapiens)	Biological human. general, social human is {pa}	human		of human		
+raba	名称	0	形	形。図形。	形		形の		shape	Shape.	shape		of shape		
+sibu	名称	0	色	色	色		色の		color	Color.	color		of color		
+sibufi	状態	0～1	黒、黒い	黒い。「暗い色」より。	黒	黒い	●		black	Black; from dark color.	black	black	●		sibudi
+sibudi	状態	0～1	白、白い	白い。「明るい色」より。	白	白い	●		white	White; from light color.	white	white	●		sibufi
+sibube	状態	0～1	赤、赤い	赤い。「砂の色」より。	赤	赤い	●		red	Red; from color of sand.	red	red	●		
+sibusa	状態	0～1	青、青い	青い。「空の色」より。	青	青い	●		blue	Blue; from color of sky.	blue	blue	●		
+sibuqya	状態	0～1	黄色、黄色い	黄色い。「神聖な色」より。	黄色	黄色い	●		yellow	Yellow; from sacred color.	yellow	yellow	●		
+sibupyo	状態	0～1	緑、緑の	緑色の。「葉の色」より。	緑	緑の	●		green	Green; from color of leaf.	green	green	●		
+baspabi	名称	0	町	町。人が集まって暮らす集合体、およびその場所。	町		町の		town	Town; a collective of people living together, as well as the place itself.	town		of town		
+bano	名称	0	道	道。複数の場所を繋ぐ経路。	道		道の		road	Road; a route connecting multiple locations.	road		of road		
+fube	名称	0	砂	砂。特に砂漠の砂を指す。	砂		砂の			Sand; especially desert sand.	sand		of sand		
+pyosabu	名称	0	葉	葉	葉		葉の			Leaf.	leaf		of leaf		
+pyake	状態	1	男	男、オス	男、オス	男である	●		male	Male.	male	be male	●		
+pyate	状態	1	女	女、メス	女、メス	女である	●		female	Female.	female	be female	●		
+panosnafityespyake	名称	0	父	[合成語] {pano} + {nafitye} + {pyake} 父。	父		父の			[Compound] {pano} + {nafitye} + {pyake} father.	father		of father; father's		
+panosnafityespyate	名称	0	母	[合成語] {pano} + {nafitye} + {pyate} 母。	母		母の			[Compound] {pano} + {nafitye} + {pyate} mother.	mother		of mother; mother's		
+panosnaditaspyake	名称	0	息子	[合成語] {pano} + {nadita} + {pyake} 息子。	息子		息子の			[Compound] {pano} + {nadita} + {pyake} son.	son		of son; son's		
+panosnaditaspyate	名称	0	娘	[合成語] {pano} + {nadita} + {pyate} 娘。	娘		娘の			[Compound] {pano} + {nadita} + {pyate} daughter.	daughter		of daughter; daughter's		
+panosnafitye	名称	0	親	[合成語] {pano} + {nafitye} 親。	親		親の		parent	[Compound] {pano} + {nafitye} parent.	parent		of parent; parent's		
+panosnadita	名称	0	子	[合成語] {pano} + {nadita} 子。	子		子の		child	[Compound] {pano} + {nadita} child.	child		of child; child's		
