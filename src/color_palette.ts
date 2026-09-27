@@ -62,6 +62,18 @@ const colorPalettes: ColorPalette[] = [
         pitchClass4: "#B33AD8",
         pitchClass5: "#3B88DD",
     },
+    {
+        back: "#2A84A8",
+        main: "#F1E833",
+        sub: "#48A7C9",
+        fill: "#2A84A8",
+        pitchClass0: "#7CF2F2",
+        pitchClass1: "#6AF095",
+        pitchClass2: "#E5BC79",
+        pitchClass3: "#E57C79",
+        pitchClass4: "#C47BF2",
+        pitchClass5: "#7BA9F2",
+    },
 ]
 
 function addEventListnerById<T extends HTMLElement>(id: string, eventName: string, listner: (target: T) => void) {
