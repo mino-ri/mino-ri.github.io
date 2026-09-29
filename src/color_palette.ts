@@ -65,14 +65,14 @@ const colorPalettes: ColorPalette[] = [
     {
         back: "#369BD0",
         main: "#FFF133",
-        sub: "#AFE5EA",
+        sub: "#91D3E3",
         fill: "#369BD0",
         pitchClass0: "#8CF7F7",
         pitchClass1: "#87FCA4",
         pitchClass2: "#FEC382",
         pitchClass3: "#FF808B",
         pitchClass4: "#F697F6",
-        pitchClass5: "#A9B6FA",
+        pitchClass5: "#94B7FC",
     },
 ]
 
