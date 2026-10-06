@@ -17,6 +17,14 @@ article 要素は、左右いっぱいに広がる h3 要素を使うために�
 直接の子要素に margin を設定することで隙間を作る。
 ただし、 .editor や .article-container のようなレスポンシブレイアウトを使う場合、 margin は更に一段階内側の要素に設定する。
 
-# JavaScript
+# JavaScript・TypeScript
 
 * 行末のセミコロンは可能な限り省略する
+
+## 最新化
+
+```shell
+cd src
+npm outdated # 古いパッケージがあるか確認
+npm update   # 最新版に更新
+```
