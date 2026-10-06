@@ -223,6 +223,19 @@ export function createPolyLine(points: [number, number][], stroke: string, strok
     return polyline
 }
 
+export function createRect(x: number, y: number, width: number, height: number, fill: string, stroke: string, strokeWidth: string) {
+    const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect")
+    rect.setAttribute("x", `${x + centerX}`)
+    rect.setAttribute("y", `${y + centerY}`)
+    rect.setAttribute("width", width.toString())
+    rect.setAttribute("height", height.toString())
+    rect.setAttribute("fill", fill)
+    rect.setAttribute("stroke", stroke)
+    rect.setAttribute("stroke-width", strokeWidth)
+    
+    return rect
+}
+
 export function createText(x: number, y: number, text: string, fontSize: string, fill: string, stroke: string = "", strokeWidth: string = "", textAnchor: "start" | "middle" | "end" = "start", dominantBaseline: "auto" | "middle" | "hanging" = "auto") {
     const textElement = document.createElementNS("http://www.w3.org/2000/svg", "text")
     textElement.setAttribute("x", (x + centerX).toString())
