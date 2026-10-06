@@ -12,7 +12,7 @@ jobs:
       TZ: 'Asia/Tokyo'
     steps:
       - name: Checkout build branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: build
           fetch-depth: 0
@@ -30,16 +30,14 @@ jobs:
           rm -rf scripts
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
-          node-version: '20'
+          node-version: '24'
 
       - name: Compile TypeScript
         run: |
           cd src
-          npm install typescript
-          npm install terser
-          npm install @webgpu/types
+          npm install
           npx tsc
           cd ../scripts
           for f in $(ls *.js); do
