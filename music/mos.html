@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Type" content="text/html" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="author" content="mino-ri" />
+  <meta name="copyright" content="copyright(C) 2026 mino-ri All rights reserved." />
+  <meta name="viewport" content="width=device-width">
+  <link rel="stylesheet" type="text/css" href="./../styles/color_standard.css" />
+  <link rel="stylesheet" type="text/css" href="./../styles/style.css" />
+  <script type="module" src="./../scripts/mos.js"></script>
+  <script type="module" src="./../scripts/language_switcher.js"></script>
+  <title>MOS試聴</title>
+</head>
+
+<body>
+  <header>
+    <a class="back" href="../">back</a>
+    <h1 data-ls-en="MOS test">MOS試聴</h1>
+    <nav class="language-switcher">
+      <label>
+        <input type="radio" name="language" value="ja" checked />
+        JP
+      </label>
+      <label>
+        <input type="radio" name="language" value="en" />
+        EN
+      </label>
+    </nav>
+  </header>
+  <section>
+    <article>
+      <h3 data-ls-en="MOS test">MOS試聴</h3>
+      <div class="control-list">
+        <label style="flex: 1; min-width: 200px;">
+          <span data-ls-en="Generator">ジェネレータ</span>
+          <input type="range" id="input_generator" min="1715" max="10285" value="7000" style="width: 100%;" />
+        </label>
+      </div>
+      <div>
+        <svg viewBox="-1000 0 26000 6000" style="width: 100%; height: auto;">
+          <g>
+            <line x1="7019.55" x2="7019.55" y1="0" y2="1500" stroke="#DF4121" stroke-width="20" stroke-dasharray="150 50" />
+            <line x1="3863.14" x2="3863.14" y1="0" y2="1500" stroke="#339564" stroke-width="20" stroke-dasharray="150 50" />
+            <line x1="9688.26" x2="9688.26" y1="0" y2="1500" stroke="#217BDF" stroke-width="20" stroke-dasharray="150 50" />
+            <line x1="5513.18" x2="5513.18" y1="0" y2="1500" stroke="#C3B827" stroke-width="20" stroke-dasharray="150 50" />
+            <line x1="8405.28" x2="8405.28" y1="0" y2="1500" stroke="#C838C8" stroke-width="20" stroke-dasharray="150 50" />
+
+            <line x1="19019.55" x2="19019.55" y1="0" y2="1500" stroke="#DF4121" stroke-width="20" stroke-dasharray="150 50" />
+            <line x1="15863.14" x2="15863.14" y1="0" y2="1500" stroke="#339564" stroke-width="20" stroke-dasharray="150 50" />
+            <line x1="21688.26" x2="21688.26" y1="0" y2="1500" stroke="#217BDF" stroke-width="20" stroke-dasharray="150 50" />
+            <line x1="17513.18" x2="17513.18" y1="0" y2="1500" stroke="#C3B827" stroke-width="20" stroke-dasharray="150 50" />
+            <line x1="20405.28" x2="20405.28" y1="0" y2="1500" stroke="#C838C8" stroke-width="20" stroke-dasharray="150 50" />
+          </g>
+          <g id="g_pitches"></g>
+          <g id="g_keyboard"></g>
+        </svg>
+      </div>
+    </article>
+  </section>
+  <footer>
+    copyright&copy; 2026 mino-ri All rights reserved.
+  </footer>
+</body>
+
+</html>
