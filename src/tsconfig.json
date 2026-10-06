@@ -27,9 +27,9 @@
     "allowUnusedLabels": false,
 
     /* Completeness */
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "types": ["@webgpu/types"]
   },
   "include": ["**/*"],
-  "exclude": ["node_modules"],
-  "types": ["@webgpu/types"]
+  "exclude": ["node_modules"]
 }
