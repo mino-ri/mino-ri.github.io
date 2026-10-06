@@ -20,8 +20,21 @@ class MosTester {
                 this.createSvg()
                 this.createKeyboard()
             }
+            history.replaceState(null, "", `${location.pathname}#${inputGenerator.value}`)
         }
+        window.addEventListener("hashchange", () => {
+            const value = parseInt(location.hash.replace('#', ''))
+            if (isFinite(value) && parseInt(inputGenerator.min) <= value && value <= parseInt(inputGenerator.max) && value.toString() != inputGenerator.value) {
+                inputGenerator.value = value.toString()
+                eventListner()
+            }
+        })
         inputGenerator.addEventListener("input", eventListner)
+
+        const value = parseInt(location.hash.replace('#', ''))
+        if (isFinite(value) && parseInt(inputGenerator.min) <= value && value <= parseInt(inputGenerator.max) && value.toString() != inputGenerator.value) {
+            inputGenerator.value = value.toString()
+        }
         eventListner()
     }
 
