@@ -17,7 +17,7 @@ class MosTester {
             const newGenerator = parseInt(inputGenerator.value)
             if (Number.isFinite(newGenerator)) {
                 this.calcMos(newGenerator)
-                this.createSvg()
+                this.createSvg(newGenerator)
                 this.createKeyboard()
             }
             history.replaceState(null, "", `${location.pathname}#${inputGenerator.value}`)
@@ -88,7 +88,7 @@ class MosTester {
         this.subPitchPlaces = this.subPitches.map((s) => this.mainPitches.findLastIndex((x) => x <= s) + 0.5)
     }
 
-    private createSvg() {
+    private createSvg(generator: number) {
         const svgWidth = 25400
         const svgOffset = -700
         const mainKeyCount = this.mainPitches.length * 2 + 1
@@ -101,8 +101,9 @@ class MosTester {
         })
 
         this.mainPitches.forEach((l, i) => {
-            this.svgGroupPitch.appendChild(createPolyLine([[l, 0], [l, 1000], [mainKeyInterval * (i + 0.5) + svgOffset, 1500]], "#FF9900", "100", "square"))
-            this.svgGroupPitch.appendChild(createPolyLine([[l + 12000, 0], [l + 12000, 1000], [mainKeyInterval * (i + this.mainPitches.length + 0.5) + svgOffset, 1500]], "#FF9900", "100", "square"))
+            const color = l === generator ? "#DF4121" : "#FF9900"
+            this.svgGroupPitch.appendChild(createPolyLine([[l, 0], [l, 1000], [mainKeyInterval * (i + 0.5) + svgOffset, 1500]], color, "100", "square"))
+            this.svgGroupPitch.appendChild(createPolyLine([[l + 12000, 0], [l + 12000, 1000], [mainKeyInterval * (i + this.mainPitches.length + 0.5) + svgOffset, 1500]], color, "100", "square"))
         })
 
         this.svgGroupPitch.appendChild(createPolyLine([[24000, 0], [24000, 1000], [mainKeyInterval * (mainKeyCount - 0.5) + svgOffset, 1500]], "#FF9900", "100", "square"))
