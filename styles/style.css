@@ -315,6 +315,44 @@ table.sticky>thead {
     top: 2.25rem;
 }
 
+/* 上端のセル */
+table.vh-sticky>thead {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+/* 左上のセル */
+table.vh-sticky>thead>tr>th:first-child {
+  position: sticky;
+  top: 0;
+  left: 0;
+  background-color: var(--color-table-header-background);
+  color: var(--color-table-header-text);
+  z-index: 3;
+}
+
+/* 左端のセル */
+table.vh-sticky>tbody>tr>th:first-child {
+  position: sticky;
+  left: 0;
+  background-color: var(--color-table-header-background);
+  color: var(--color-table-header-text);
+  z-index: 1;
+}
+
+/* 縦横両方にスクロールできるテーブル */
+.vh-table-container {
+    overflow-x: auto;
+    overflow-y: auto;
+    max-height: 300px; /* calc(100% - 3rem) */
+
+    & td,
+    th {
+        text-wrap: nowrap;
+    }
+}
+
 /* テーブル: チェッカー模様 */
 table.cell-alt tbody tr:nth-child(odd) td:nth-child(even),
 table.cell-alt tbody tr:nth-child(even) td:nth-child(odd) {

@@ -161,7 +161,7 @@ export class AudioSource {
 
     static createFromMonzoSerial(monzos: Monzo[], baseHz: number, seconds: number, quantizeEdo: number): string {
         const data = new WaveData(Math.floor(seconds * 44100 * monzos.length))
-        const volume = 0.9
+        const volume = 0.5
         let index = 0
         for (const monzo of monzos) {
             data.addSaw(baseHz * monzo.quantizedValue(quantizeEdo), volume,
