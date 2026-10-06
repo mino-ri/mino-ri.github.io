@@ -86,14 +86,14 @@ class MosTester {
         this.mainPitches.forEach((l, i) => {
             const rect0 = createRect(mainKeyInterval * i + svgOffset, 1500, mainKeyInterval, 4400, "#EEEEEE", "#000000", "20")
             const rect1 = createRect(mainKeyInterval * (i + this.mainPitches.length) + svgOffset, 1500, mainKeyInterval, 4400, "#EEEEEE", "#000000", "20")
-            rect0.addEventListener("mousedown", () => this.playTone(l))
-            rect1.addEventListener("mousedown", () => this.playTone(l + 12000))
+            rect0.addEventListener("pointerdown", () => this.playTone(l))
+            rect1.addEventListener("pointerdown", () => this.playTone(l + 12000))
             this.svgGroupKeyboard.appendChild(rect0)
             this.svgGroupKeyboard.appendChild(rect1)
         })
         
         const rectLast = createRect(mainKeyInterval * (mainKeyCount - 1) + svgOffset, 1500, mainKeyInterval, 4400, "#EEEEEE", "#000000", "20")
-        rectLast.addEventListener("mousedown", () => this.playTone(24000))
+        rectLast.addEventListener("pointerdown", () => this.playTone(24000))
         this.svgGroupKeyboard.appendChild(rectLast)
 
         const subKeyWidth = mainKeyInterval * 0.75
@@ -102,8 +102,8 @@ class MosTester {
             const place = this.subPitchPlaces[i] ?? 0
             const rect0 = createRect(mainKeyInterval * place + svgOffset + subKeyOffset, 1500, subKeyWidth, 2250, "#222222", "#000000", "20")
             const rect1 = createRect(mainKeyInterval * (place + this.mainPitches.length) + svgOffset + subKeyOffset, 1500, subKeyWidth, 2250, "#222222", "#000000", "20")
-            rect0.addEventListener("mousedown", () => this.playTone(s))
-            rect1.addEventListener("mousedown", () => this.playTone(s + 12000))
+            rect0.addEventListener("pointerdown", () => this.playTone(s))
+            rect1.addEventListener("pointerdown", () => this.playTone(s + 12000))
             this.svgGroupKeyboard.appendChild(rect0)
             this.svgGroupKeyboard.appendChild(rect1)
         })
