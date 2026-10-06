@@ -13,7 +13,7 @@ class MosTester {
         private svgGroupPitch: SVGGElement,
         private svgGroupKeyboard: SVGGElement,
     ) {
-        const eventListner = () => {
+        const handleGeneratorChanged = () => {
             const newGenerator = parseInt(inputGenerator.value)
             if (Number.isFinite(newGenerator)) {
                 this.calcMos(newGenerator)
@@ -22,20 +22,38 @@ class MosTester {
             }
             history.replaceState(null, "", `${location.pathname}#${inputGenerator.value}`)
         }
+        const setGenerator = (value: number) => {
+            inputGenerator.value = value.toString()
+            handleGeneratorChanged()
+        }
+        
         window.addEventListener("hashchange", () => {
             const value = parseInt(location.hash.replace('#', ''))
             if (isFinite(value) && parseInt(inputGenerator.min) <= value && value <= parseInt(inputGenerator.max) && value.toString() != inputGenerator.value) {
-                inputGenerator.value = value.toString()
-                eventListner()
+                setGenerator(value)
             }
         })
-        inputGenerator.addEventListener("input", eventListner)
+        inputGenerator.addEventListener("input", handleGeneratorChanged)
 
         const value = parseInt(location.hash.replace('#', ''))
         if (isFinite(value) && parseInt(inputGenerator.min) <= value && value <= parseInt(inputGenerator.max) && value.toString() != inputGenerator.value) {
             inputGenerator.value = value.toString()
         }
-        eventListner()
+
+        for (const button of document.querySelectorAll<HTMLInputElement>("input[data-generator]")) {
+            const genString = button.getAttribute("data-generator")
+            if (!genString) {
+                continue
+            }
+            const gen = parseInt(genString)
+            if (isNaN(gen)) {
+                continue
+            }
+
+            button.addEventListener("click", () => setGenerator(gen))
+        }
+
+        handleGeneratorChanged()
     }
 
     private calcMos(generator: number) {
@@ -99,14 +117,14 @@ class MosTester {
         this.mainPitches.forEach((l, i) => {
             const rect0 = createRect(mainKeyInterval * i + svgOffset, 1500, mainKeyInterval, 4400, "#EEEEEE", "#000000", "20")
             const rect1 = createRect(mainKeyInterval * (i + this.mainPitches.length) + svgOffset, 1500, mainKeyInterval, 4400, "#EEEEEE", "#000000", "20")
-            rect0.addEventListener("pointerdown", () => this.playTone(l))
-            rect1.addEventListener("pointerdown", () => this.playTone(l + 12000))
+            rect0.addEventListener("pointerdown", (ev) => { ev.preventDefault(); this.playTone(l) })
+            rect1.addEventListener("pointerdown", (ev) => { ev.preventDefault(); this.playTone(l + 12000) })
             this.svgGroupKeyboard.appendChild(rect0)
             this.svgGroupKeyboard.appendChild(rect1)
         })
         
         const rectLast = createRect(mainKeyInterval * (mainKeyCount - 1) + svgOffset, 1500, mainKeyInterval, 4400, "#EEEEEE", "#000000", "20")
-        rectLast.addEventListener("pointerdown", () => this.playTone(24000))
+        rectLast.addEventListener("pointerdown", (ev) => { ev.preventDefault(); this.playTone(24000) })
         this.svgGroupKeyboard.appendChild(rectLast)
 
         const subKeyWidth = mainKeyInterval * 0.75
@@ -115,8 +133,8 @@ class MosTester {
             const place = this.subPitchPlaces[i] ?? 0
             const rect0 = createRect(mainKeyInterval * place + svgOffset + subKeyOffset, 1500, subKeyWidth, 2250, "#222222", "#000000", "20")
             const rect1 = createRect(mainKeyInterval * (place + this.mainPitches.length) + svgOffset + subKeyOffset, 1500, subKeyWidth, 2250, "#222222", "#000000", "20")
-            rect0.addEventListener("pointerdown", () => this.playTone(s))
-            rect1.addEventListener("pointerdown", () => this.playTone(s + 12000))
+            rect0.addEventListener("pointerdown", (ev) => { ev.preventDefault(); this.playTone(s) })
+            rect1.addEventListener("pointerdown", (ev) => { ev.preventDefault(); this.playTone(s + 12000) })
             this.svgGroupKeyboard.appendChild(rect0)
             this.svgGroupKeyboard.appendChild(rect1)
         })
@@ -125,17 +143,17 @@ class MosTester {
     playTone(mill: number) {
         const osc = this.audioContext.createOscillator()
         const gain = this.audioContext.createGain()
-        osc.type = "triangle"
+        osc.type = "sawtooth"
         osc.frequency.value = (2 ** (mill / 12000)) * 174.6141157165
         const now = this.audioContext.currentTime
 
         gain.gain.setValueAtTime(0, now)
         gain.gain.linearRampToValueAtTime(0.25, now + 0.02)
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 1.2)
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 2.5)
         osc.connect(gain)
         gain.connect(this.audioContext.destination)
         osc.start(now)
-        osc.stop(now + 1.2)
+        osc.stop(now + 2.5)
     }
 }
 
