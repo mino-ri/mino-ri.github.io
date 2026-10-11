@@ -1,18 +1,69 @@
 import { setCenter, createPolyLine, createRect, clearChildren } from "./svg_generator.js"
 
+const svgMargin = 700
+
+type MosSetting = {
+    period: number
+    periodCount: number
+    minMosSize: number
+    defaultPitch: number
+    minPitch: number
+    maxPitch: number
+    calcFrequency: (mill: number) => number
+}
+
+const mosSettingMap = new Map<string, MosSetting>([
+    ["octave", {
+        period: 12000,
+        periodCount: 2,
+        minMosSize: 6,
+        defaultPitch: 7000,
+        minPitch: 1800,
+        maxPitch: 10200,
+        calcFrequency: (mill: number) => (2 ** (mill / 12000)) * 174.6141157165,
+    }],
+    ["half-octave", {
+        period: 6000,
+        periodCount: 4,
+        minMosSize: 3,
+        defaultPitch: 1000,
+        minPitch: 100,
+        maxPitch: 500,
+        calcFrequency: (mill: number) => (2 ** (mill / 12000)) * 174.6141157165,
+    }],
+    ["tritave", {
+        period: 12000,
+        periodCount: 2,
+        minMosSize: 6,
+        defaultPitch: 7000,
+        minPitch: 1200,
+        maxPitch: 10800,
+        calcFrequency: (mill: number) => (3 ** (mill / 12000)) * 120,
+    }],
+])
+
 class MosTester {
     private audioContext = new AudioContext()
     private period = 12000
+    private periodCount = 2
     private minMosSize = 6
     private mainPitches: number[] = []
     private subPitches: number[] = []
     private subPitchPlaces: number[] = []
+    private calcFrequency = (mill: number) => (2 ** (mill / 12000)) * 174.6141157165
 
     constructor(
+        setting: MosSetting,
         inputGenerator: HTMLInputElement,
+        inputReverse: HTMLInputElement,
         private svgGroupPitch: SVGGElement,
         private svgGroupKeyboard: SVGGElement,
     ) {
+        this.period = setting.period
+        this.periodCount = setting.periodCount
+        this.minMosSize = setting.minMosSize
+        this.calcFrequency = setting.calcFrequency
+
         const handleGeneratorChanged = () => {
             const newGenerator = parseInt(inputGenerator.value)
             if (Number.isFinite(newGenerator)) {
@@ -29,7 +80,7 @@ class MosTester {
             handleGeneratorChanged()
             setHash()
         }
-        
+
         window.addEventListener("hashchange", () => {
             const value = parseInt(location.hash.replace('#', ''))
             if (isFinite(value) && parseInt(inputGenerator.min) <= value && value <= parseInt(inputGenerator.max) && value.toString() != inputGenerator.value) {
@@ -56,6 +107,13 @@ class MosTester {
 
             button.addEventListener("click", () => setGenerator(gen))
         }
+
+        inputReverse.addEventListener("click", () => {
+            const gen = parseInt(inputGenerator.value)
+            if (Number.isFinite(gen)) {
+                setGenerator(this.period - gen)
+            }
+        })
 
         handleGeneratorChanged()
     }
@@ -93,63 +151,93 @@ class MosTester {
     }
 
     private createSvg(generator: number) {
-        const svgWidth = 25400
-        const svgOffset = -700
-        const mainKeyCount = this.mainPitches.length * 2 + 1
+        const svgWidth = this.period * this.periodCount + svgMargin * 2
+        const svgOffset = -svgMargin
+        const mainKeyCount = this.mainPitches.length * this.periodCount + 1
         const mainKeyInterval = svgWidth / mainKeyCount
         clearChildren(this.svgGroupPitch)
-        this.subPitches.forEach((s, i) => {
-            const place = this.subPitchPlaces[i] ?? 0
-            this.svgGroupPitch.appendChild(createPolyLine([[s, 0], [s, 1000], [mainKeyInterval * (place + 0.5) + svgOffset, 1500]], "#287950", "100", "square"))
-            this.svgGroupPitch.appendChild(createPolyLine([[s + 12000, 0], [s + 12000, 1000], [mainKeyInterval * (place + this.mainPitches.length + 0.5) + svgOffset, 1500]], "#287950", "100", "square"))
-        })
 
-        this.mainPitches.forEach((l, i) => {
-            const color = l === 0 ? "#AAAAAA" : l === generator ? "#DF4121" : "#FF9900"
-            this.svgGroupPitch.appendChild(createPolyLine([[l, 0], [l, 1000], [mainKeyInterval * (i + 0.5) + svgOffset, 1500]], color, "100", "square"))
-            this.svgGroupPitch.appendChild(createPolyLine([[l + 12000, 0], [l + 12000, 1000], [mainKeyInterval * (i + this.mainPitches.length + 0.5) + svgOffset, 1500]], color, "100", "square"))
-        })
+        // 黒鍵
+        for (let cycle = 0; cycle < this.periodCount; cycle++) {
+            const millOffset = this.period * cycle
+            const keyOffset = this.mainPitches.length * cycle
+            this.subPitches.forEach((s, i) => {
+                const place = this.subPitchPlaces[i] ?? 0
+                this.svgGroupPitch.appendChild(createPolyLine(
+                    [
+                        [s + millOffset, 0],
+                        [s + millOffset, 1000],
+                        [mainKeyInterval * (place + keyOffset + 0.5) + svgOffset, 1500],
+                    ], "#287950", "100", "square"))
+            })
+        }
 
-        this.svgGroupPitch.appendChild(createPolyLine([[24000, 0], [24000, 1000], [mainKeyInterval * (mainKeyCount - 0.5) + svgOffset, 1500]], "#AAAAAA", "100", "square"))
+        // 白鍵
+        for (let cycle = 0; cycle < this.periodCount; cycle++) {
+            const millOffset = this.period * cycle
+            const keyOffset = this.mainPitches.length * cycle
+            this.mainPitches.forEach((l, i) => {
+                const color = l === 0 ? "#AAAAAA" : l === generator ? "#DF4121" : "#FF9900"
+                this.svgGroupPitch.appendChild(createPolyLine(
+                    [
+                        [l + millOffset, 0],
+                        [l + millOffset, 1000],
+                        [mainKeyInterval * (i + keyOffset + 0.5) + svgOffset, 1500],
+                    ], color, "100", "square"))
+            })
+        }
+
+        // 白鍵 (最高音)
+        this.svgGroupPitch.appendChild(createPolyLine(
+            [
+                [this.period * this.periodCount, 0],
+                [this.period * this.periodCount, 1000],
+                [mainKeyInterval * (mainKeyCount - 0.5) + svgOffset, 1500],
+            ], "#AAAAAA", "100", "square"))
     }
 
     createKeyboard() {
-        const svgWidth = 25400
-        const svgOffset = -700
-        const mainKeyCount = this.mainPitches.length * 2 + 1
+        const svgWidth = this.period * this.periodCount + svgMargin * 2
+        const svgOffset = -svgMargin
+        const mainKeyCount = this.mainPitches.length * this.periodCount + 1
         const mainKeyInterval = svgWidth / mainKeyCount
         clearChildren(this.svgGroupKeyboard)
-        this.mainPitches.forEach((l, i) => {
-            const rect0 = createRect(mainKeyInterval * i + svgOffset, 1500, mainKeyInterval, 4400, "#EEEEEE", "#000000", "20")
-            const rect1 = createRect(mainKeyInterval * (i + this.mainPitches.length) + svgOffset, 1500, mainKeyInterval, 4400, "#EEEEEE", "#000000", "20")
-            rect0.addEventListener("pointerdown", (ev) => { ev.preventDefault(); this.playTone(l) })
-            rect1.addEventListener("pointerdown", (ev) => { ev.preventDefault(); this.playTone(l + 12000) })
-            this.svgGroupKeyboard.appendChild(rect0)
-            this.svgGroupKeyboard.appendChild(rect1)
-        })
-        
+
+        // 白鍵
+        for (let cycle = 0; cycle < this.periodCount; cycle++) {
+            this.mainPitches.forEach((l, i) => {
+                const rect = createRect(mainKeyInterval * (i + this.mainPitches.length * cycle) + svgOffset, 1500, mainKeyInterval, 4400, "#EEEEEE", "#000000", "20")
+                const freq = this.calcFrequency(l + this.period * cycle)
+                rect.addEventListener("pointerdown", (ev) => { ev.preventDefault(); this.playTone(freq) })
+                this.svgGroupKeyboard.appendChild(rect)
+            })
+        }
+
+        // 白鍵 (最高音)
         const rectLast = createRect(mainKeyInterval * (mainKeyCount - 1) + svgOffset, 1500, mainKeyInterval, 4400, "#EEEEEE", "#000000", "20")
-        rectLast.addEventListener("pointerdown", (ev) => { ev.preventDefault(); this.playTone(24000) })
+        const highestFreq = this.calcFrequency(this.period * this.periodCount)
+        rectLast.addEventListener("pointerdown", (ev) => { ev.preventDefault(); this.playTone(highestFreq) })
         this.svgGroupKeyboard.appendChild(rectLast)
 
+        // 黒鍵
         const subKeyWidth = mainKeyInterval * 0.75
         const subKeyOffset = (mainKeyInterval - subKeyWidth) / 2
-        this.subPitches.forEach((s, i) => {
-            const place = this.subPitchPlaces[i] ?? 0
-            const rect0 = createRect(mainKeyInterval * place + svgOffset + subKeyOffset, 1500, subKeyWidth, 2250, "#222222", "#000000", "20")
-            const rect1 = createRect(mainKeyInterval * (place + this.mainPitches.length) + svgOffset + subKeyOffset, 1500, subKeyWidth, 2250, "#222222", "#000000", "20")
-            rect0.addEventListener("pointerdown", (ev) => { ev.preventDefault(); this.playTone(s) })
-            rect1.addEventListener("pointerdown", (ev) => { ev.preventDefault(); this.playTone(s + 12000) })
-            this.svgGroupKeyboard.appendChild(rect0)
-            this.svgGroupKeyboard.appendChild(rect1)
-        })
+        for (let cycle = 0; cycle < this.periodCount; cycle++) {
+            this.subPitches.forEach((s, i) => {
+                const x = mainKeyInterval * ((this.subPitchPlaces[i] ?? 0) + this.mainPitches.length * cycle) + svgOffset + subKeyOffset
+                const rect = createRect(x, 1500, subKeyWidth, 2250, "#222222", "#000000", "20")
+                const freq = this.calcFrequency(s + this.period * cycle)
+                rect.addEventListener("pointerdown", (ev) => { ev.preventDefault(); this.playTone(freq) })
+                this.svgGroupKeyboard.appendChild(rect)
+            })
+        }
     }
 
-    playTone(mill: number) {
+    playTone(freq: number) {
         const osc = this.audioContext.createOscillator()
         const gain = this.audioContext.createGain()
         osc.type = "sawtooth"
-        osc.frequency.value = (2 ** (mill / 12000)) * 174.6141157165
+        osc.frequency.value = freq
         const now = this.audioContext.currentTime
 
         gain.gain.setValueAtTime(0, now)
@@ -165,7 +253,12 @@ class MosTester {
 window.addEventListener("load", () => {
     setCenter(0, 0)
     const inputGenerator = document.getElementById("input_generator") as HTMLInputElement
+    const inputMosId = document.getElementById("input_mos_id") as HTMLInputElement
+    const inputReverse = document.getElementById("input_reverse") as HTMLInputElement
     const svgGroupPitch = document.getElementById("g_pitches") as unknown as SVGGElement
     const svgGroupKeyboard = document.getElementById("g_keyboard") as unknown as SVGGElement
-    new MosTester(inputGenerator, svgGroupPitch, svgGroupKeyboard)
+    const setting = mosSettingMap.get(inputMosId.value)
+    if (setting) {
+        new MosTester(setting, inputGenerator, inputReverse, svgGroupPitch, svgGroupKeyboard)
+    }
 })
