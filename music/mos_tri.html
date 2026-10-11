@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Type" content="text/html" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="author" content="mino-ri" />
+  <meta name="copyright" content="copyright(C) 2026 mino-ri All rights reserved." />
+  <meta name="viewport" content="width=device-width">
+  <link rel="stylesheet" type="text/css" href="./../styles/color_standard.css" />
+  <link rel="stylesheet" type="text/css" href="./../styles/style.css" />
+  <script type="module" src="./../scripts/mos.js"></script>
+  <script type="module" src="./../scripts/language_switcher.js"></script>
+  <title>MOS試聴 (トリターブ)</title>
+</head>
+
+<body>
+  <header>
+    <a class="back" href="../">back</a>
+    <h1>
+      <span data-ls-en="MOS Tester (Tritave)">MOS試聴(トリターブ)</span>
+      <a href="./mos.html" data-ls-en="Octave" style="padding: 0 0.25rem">オクターブ</a>
+      <a href="./mos_half.html" data-ls-en="Half-octave" style="padding: 0 0.25rem">半オクターブ</a>
+    </h1>
+    <nav class="language-switcher">
+      <label>
+        <input type="radio" name="language" value="ja" checked />
+        JP
+      </label>
+      <label>
+        <input type="radio" name="language" value="en" />
+        EN
+      </label>
+    </nav>
+  </header>
+  <section>
+    <article>
+      <div class="control-list">
+        <label style="flex: 1; min-width: 200px;">
+          <span data-ls-en="Generator">ジェネレータ</span>
+          <input type="range" id="input_generator" min="1200" max="10800" value="4615" style="width: 100%;" />
+        </label>
+        
+        <input type="hidden" id="input_mos_id" value="tritave" />
+      </div>
+      <ul class="link-list">
+        <li><input type="button" id="input_reverse" data-ls-value-en="reverse" value="反転" /></li>
+      </ul>
+      <div>
+        <svg viewBox="-1000 0 26000 1500" style="width: 100%; height: auto; display:block;">
+          <g id="g_pitches"></g>
+          <g>
+            <line x1="8858" x2="8858" y1="0" y2="1000" stroke="#339564" stroke-width="20" stroke-dasharray="150 50" />
+            <line x1="6420" x2="6420" y1="0" y2="1000" stroke="#C3B827" stroke-width="20" stroke-dasharray="150 50" />
+            <line x1="4429" x2="4429" y1="0" y2="1000" stroke="#DF4121" stroke-width="20" stroke-dasharray="150 50" />
+            <line x1="2745" x2="2745" y1="0" y2="1000" stroke="#C838C8" stroke-width="20" stroke-dasharray="150 50" />
+            <line x1="1287" x2="1287" y1="0" y2="1000" stroke="#217BDF" stroke-width="20" stroke-dasharray="150 50" />
+
+            <line x1="15142" x2="15142" y1="0" y2="1000" stroke="#339564" stroke-width="20" stroke-dasharray="150 50" />
+            <line x1="17580" x2="17580" y1="0" y2="1000" stroke="#C3B827" stroke-width="20" stroke-dasharray="150 50" />
+            <line x1="19571" x2="19571" y1="0" y2="1000" stroke="#DF4121" stroke-width="20" stroke-dasharray="150 50" />
+            <line x1="21255" x2="21255" y1="0" y2="1000" stroke="#C838C8" stroke-width="20" stroke-dasharray="150 50" />
+            <line x1="22713" x2="22713" y1="0" y2="1000" stroke="#217BDF" stroke-width="20" stroke-dasharray="150 50" />
+          </g>
+          <g>
+            <text x="8858" y="100" fill="#339564" font-size="400" font-weight="bold" text-anchor="middle" dominant-baseline="hanging">/4</text>
+            <text x="6420" y="100" fill="#C3B827" font-size="400" font-weight="bold" text-anchor="middle" dominant-baseline="hanging">/5</text>
+            <text x="4429" y="100" fill="#DF4121" font-size="400" font-weight="bold" text-anchor="middle" dominant-baseline="hanging">/2</text>
+            <text x="2745" y="100" fill="#C838C8" font-size="400" font-weight="bold" text-anchor="middle" dominant-baseline="hanging">/7</text>
+            <text x="1287" y="100" fill="#217BDF" font-size="400" font-weight="bold" text-anchor="middle" dominant-baseline="hanging">/8</text>
+
+            <text x="15142" y="100" fill="#339564" font-size="400" font-weight="bold" text-anchor="middle" dominant-baseline="hanging">4</text>
+            <text x="17580" y="100" fill="#C3B827" font-size="400" font-weight="bold" text-anchor="middle" dominant-baseline="hanging">5</text>
+            <text x="19571" y="100" fill="#DF4121" font-size="400" font-weight="bold" text-anchor="middle" dominant-baseline="hanging">2</text>
+            <text x="21255" y="100" fill="#C838C8" font-size="400" font-weight="bold" text-anchor="middle" dominant-baseline="hanging">7</text>
+            <text x="22713" y="100" fill="#217BDF" font-size="400" font-weight="bold" text-anchor="middle" dominant-baseline="hanging">8</text>
+          </g>
+        </svg><svg viewBox="-1000 1500 26000 4500" style="width: 100%; height: auto; display:block;">
+          <g id="g_keyboard"></g>
+        </svg>
+      </div>
+      <h4 data-ls-en="Scales">音階</h4>
+      <ul class="link-list">
+        <li><input type="button" data-ls-value-en="Bohlen-Pierce" value="ボーレンピアース" data-generator="4615" /></li>
+      </ul>
+    </article>
+  </section>
+  <footer>
+    copyright&copy; 2026 mino-ri All rights reserved.
+  </footer>
+</body>
+
+</html>
