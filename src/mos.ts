@@ -18,8 +18,8 @@ const mosSettingMap = new Map<string, MosSetting>([
         periodCount: 2,
         minMosSize: 6,
         defaultPitch: 7000,
-        minPitch: 1800,
-        maxPitch: 10200,
+        minPitch: 1200,
+        maxPitch: 10800,
         calcFrequency: (mill: number) => (2 ** (mill / 12000)) * 174.6141157165,
     }],
     ["half-octave", {
@@ -27,8 +27,8 @@ const mosSettingMap = new Map<string, MosSetting>([
         periodCount: 4,
         minMosSize: 3,
         defaultPitch: 1000,
-        minPitch: 100,
-        maxPitch: 500,
+        minPitch: 500,
+        maxPitch: 5500,
         calcFrequency: (mill: number) => (2 ** (mill / 12000)) * 174.6141157165,
     }],
     ["tritave", {
@@ -56,6 +56,8 @@ class MosTester {
         setting: MosSetting,
         inputGenerator: HTMLInputElement,
         inputReverse: HTMLInputElement,
+        inputPlus: HTMLInputElement | null,
+        inputMinus: HTMLInputElement | null,
         private svgGroupPitch: SVGGElement,
         private svgGroupKeyboard: SVGGElement,
     ) {
@@ -112,6 +114,18 @@ class MosTester {
             const gen = parseInt(inputGenerator.value)
             if (Number.isFinite(gen)) {
                 setGenerator(this.period - gen)
+            }
+        })
+        inputPlus?.addEventListener("click", () => {
+            const gen = parseInt(inputGenerator.value)
+            if (Number.isFinite(gen) && gen < setting.maxPitch) {
+                setGenerator(gen + 1)
+            }
+        })
+        inputMinus?.addEventListener("click", () => {
+            const gen = parseInt(inputGenerator.value)
+            if (Number.isFinite(gen) && gen > setting.minPitch) {
+                setGenerator(gen - 1)
             }
         })
 
@@ -278,10 +292,12 @@ window.addEventListener("load", () => {
     const inputGenerator = document.getElementById("input_generator") as HTMLInputElement
     const inputMosId = document.getElementById("input_mos_id") as HTMLInputElement
     const inputReverse = document.getElementById("input_reverse") as HTMLInputElement
+    const inputPlus =  document.getElementById("input_plus") as HTMLInputElement | null
+    const inputMinus = document.getElementById("input_minus") as HTMLInputElement | null
     const svgGroupPitch = document.getElementById("g_pitches") as unknown as SVGGElement
     const svgGroupKeyboard = document.getElementById("g_keyboard") as unknown as SVGGElement
     const setting = mosSettingMap.get(inputMosId.value)
     if (setting) {
-        new MosTester(setting, inputGenerator, inputReverse, svgGroupPitch, svgGroupKeyboard)
+        new MosTester(setting, inputGenerator, inputReverse, inputPlus, inputMinus, svgGroupPitch, svgGroupKeyboard)
     }
 })
