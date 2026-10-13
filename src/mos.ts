@@ -206,18 +206,16 @@ class MosTester {
         // 白鍵
         for (let cycle = 0; cycle < this.periodCount; cycle++) {
             this.mainPitches.forEach((l, i) => {
-                const rect = createRect(mainKeyInterval * (i + this.mainPitches.length * cycle) + svgOffset, 1500, mainKeyInterval, 4400, "#EEEEEE", "#000000", "20")
+                const x = mainKeyInterval * (i + this.mainPitches.length * cycle) + svgOffset
                 const freq = this.calcFrequency(l + this.period * cycle)
-                rect.addEventListener("pointerdown", (ev) => { ev.preventDefault(); this.playTone(freq) })
-                this.svgGroupKeyboard.appendChild(rect)
+                this.addMainKey(x, mainKeyInterval, freq)
             })
         }
 
         // 白鍵 (最高音)
-        const rectLast = createRect(mainKeyInterval * (mainKeyCount - 1) + svgOffset, 1500, mainKeyInterval, 4400, "#EEEEEE", "#000000", "20")
+        const highestX = mainKeyInterval * (mainKeyCount - 1) + svgOffset
         const highestFreq = this.calcFrequency(this.period * this.periodCount)
-        rectLast.addEventListener("pointerdown", (ev) => { ev.preventDefault(); this.playTone(highestFreq) })
-        this.svgGroupKeyboard.appendChild(rectLast)
+        this.addMainKey(highestX, mainKeyInterval, highestFreq)
 
         // 黒鍵
         const subKeyWidth = mainKeyInterval * 0.75
@@ -225,15 +223,40 @@ class MosTester {
         for (let cycle = 0; cycle < this.periodCount; cycle++) {
             this.subPitches.forEach((s, i) => {
                 const x = mainKeyInterval * ((this.subPitchPlaces[i] ?? 0) + this.mainPitches.length * cycle) + svgOffset + subKeyOffset
-                const rect = createRect(x, 1500, subKeyWidth, 2250, "#222222", "#000000", "20")
                 const freq = this.calcFrequency(s + this.period * cycle)
-                rect.addEventListener("pointerdown", (ev) => { ev.preventDefault(); this.playTone(freq) })
-                this.svgGroupKeyboard.appendChild(rect)
+                this.addSubKey(x, subKeyWidth, freq)
             })
         }
     }
 
-    playTone(freq: number) {
+    private addMainKey(x: number, width: number, freq: number) {
+        const rect = createRect(x, 1500, width, 4400, "#EEEEEE", "#000000", "20")
+        rect.classList.add("key-main")
+        rect.addEventListener("pointerdown", (ev) => { 
+            ev.preventDefault()
+            this.playTone(freq)
+            rect.classList.remove("flash")
+            void rect.getBoundingClientRect()
+            rect.classList.add("flash")
+        })
+        this.svgGroupKeyboard.appendChild(rect)
+    }
+
+    private addSubKey(x: number, width: number, freq: number) {
+        const rect = createRect(x, 1500, width, 2250, "#222222", "#000000", "20")
+        rect.classList.add("key-sub")
+        rect.addEventListener("pointerdown", (ev) => {
+            ev.preventDefault()
+            this.playTone(freq)
+            rect.classList.remove("flash")
+            void rect.getBoundingClientRect()
+            rect.classList.add("flash")
+        })
+        this.svgGroupKeyboard.appendChild(rect)
+
+    }
+
+    private playTone(freq: number) {
         const osc = this.audioContext.createOscillator()
         const gain = this.audioContext.createGain()
         osc.type = "sawtooth"
