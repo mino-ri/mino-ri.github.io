@@ -1,0 +1,22 @@
+@charset "UTF-8";
+
+.key-main {
+    --base-fill: #EEEEEE;
+}
+
+.key-sub {
+    --base-fill: #222222;
+}
+
+.key-main.flash, .key-sub.flash {
+    animation: flash-back 0.75s ease-out;
+}
+
+@keyframes flash-back {
+  from {
+    fill: #FF9900;
+  }
+  to {
+    fill: var(--base-fill);
+  }
+}
