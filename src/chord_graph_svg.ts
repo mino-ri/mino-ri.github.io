@@ -26,18 +26,20 @@ function getIntervalDelta(prime: number, power: number, option: Option) {
     }
 
     const pitchClass = getPrimePitchClass(prime, option.isAngleLog)
-    const dx = (Math.log2(prime) * power - option.xLengthType.getOctaveFactor(new Monzo(new Map([[prime, power]]))))
-        * option.xLengthType.scale
+    const unitX = Math.round((Math.log2(prime) - option.xLengthType.getOctaveFactor(new Monzo(new Map([[prime, 1]]))))
+        * option.xLengthType.scale)
+    const dx = unitX * power
     let tangent = Math.tan(Math.PI * (pitchClass - 0.5))
-    let dy = Math.round(prime === 2 ? 0 : dx * tangent)
+    let unitY = Math.round(prime === 2 ? 0 : unitX * tangent)
     let middlePoint: { dx: number, dy: number } | null = null
-    if (option.yLengthLimit && Math.abs(dy) > 512) {
-        dy = Math.sign(dy) * 512
-        middlePoint = { dx: Math.round(dy / tangent), dy }
+    if (option.yLengthLimit && Math.abs(unitY) > 512) {
+        unitY = Math.sign(unitY) * 512
+        middlePoint = { dx: Math.round(unitY / tangent), dy: unitY }
     }
+    const dy = unitY * power
 
     return {
-        dx: Math.round(dx),
+        dx,
         dy,
         middlePoint,
     }

@@ -64,8 +64,10 @@ export class Monzo {
         return maxPrime
     }
 
-    toPitchClassMonzo() {
-        const power = Math.floor(Math.log2(this.value))
+    toPitchClassMonzo(edo?: number) {
+        const power = edo && edo > 1
+            ? Math.floor(Math.log2(this.quantizedValue(edo)))
+            : Math.floor(Math.log2(this.value))
         return Monzo.divide(this, Monzo.from2Factor(power))
     }
 
