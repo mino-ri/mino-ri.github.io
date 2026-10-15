@@ -43,7 +43,7 @@ function playSound() {
 
     const quantizeEdo = checkboxQuantize.checked ? Number(textEdo.value) : 0
     const soundPitches = pitches.filter((p) => !p.mute).map((p) => ({
-        monzo: p.originalMonzo.toPitchClassMonzo(),
+        monzo: p.originalMonzo.toPitchClassMonzo(quantizeEdo),
         pitchClass: p.originalMonzo.quantizedPitchClass(quantizeEdo),
     }))
 
