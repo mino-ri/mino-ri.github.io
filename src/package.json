@@ -1,7 +1,0 @@
-{
-  "devDependencies": {
-    "@webgpu/types": "latest",
-    "terser": "latest",
-    "typescript": "latest"
-  }
-}
