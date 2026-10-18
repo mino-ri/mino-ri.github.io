@@ -181,6 +181,11 @@ rye	名称	0	9	9	9		9の、9個の		9	9	9		of 9
 #ta	名称	0	10	10	10		10の、10個の		10	10	10		of 10		
 #sa	名称	0	100	100	100		100の、100個の		100	100	100		of 100		
 #na	名称	0	1000	1000	1000		1000の、1000個の		1000	1000	1000		of 1000		
+#ka	名称	0	100万	100万	100万		100万の、100万個の		million	million	million		of million		
+#ga	名称	0	10憶	10憶	10憶		10憶の、10憶個の		billion	billion	billion		of billion		
+#qa	名称	0	1兆	1兆	1兆		1兆の、1兆個の		trillion	trillion	trillion		of trillion		
+#pa	名称	0	1000兆	1000兆	1000兆		1000兆の、1000兆個の		quadrillion	quadrillion	quadrillion		of quadrillion		
+#ba	名称	0	100京	100京	100京		100京の、100京個の		quintillion	quintillion	quintillion		of quintillion		
 nana	名称	0	時間	時間	時間		時間の		time	Time.	time		of time		
 a	名称	0	私	私	私		私の		I	I.	I; me		my		
 u	名称	0	あなた	あなた	あなた		あなたの		you	You.	you		your		
